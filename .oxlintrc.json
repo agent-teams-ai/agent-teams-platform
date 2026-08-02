@@ -1,0 +1,8 @@
+{
+  "extends": [
+    "./node_modules/@agent-teams/engineering-foundation/presets/oxlint/node.json"
+  ],
+  "ignorePatterns": [
+    "node_modules/**"
+  ]
+}

@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-teams.ai/schemas/platform/managed-installation-policy/v1",
+  "title": "Agent Teams managed installation architecture policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "policyVersion",
+    "profileId",
+    "architectureStatus",
+    "ownership",
+    "authority",
+    "connectivity",
+    "offline",
+    "runtimeDistribution",
+    "operationJournal",
+    "workspace",
+    "diagnostics",
+    "distinctAuthorityDimensions",
+    "customerProjectionStatuses",
+    "requiredConditions",
+    "terminology",
+    "evidenceRefs"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "policyVersion": { "const": 1 },
+    "profileId": { "const": "managed-byoc" },
+    "architectureStatus": { "const": "DESIGNED" },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platformAggregate",
+        "platformOwner",
+        "customerControlPlane",
+        "customerAuthorityAggregate",
+        "orchestratorRole",
+        "runtimeRole",
+        "aclState"
+      ],
+      "properties": {
+        "platformAggregate": { "const": "PlatformInstallation" },
+        "platformOwner": { "const": "PLATFORM_DEPLOYMENT_MANAGEMENT" },
+        "customerControlPlane": { "const": "CUSTOMER_INSTALLATION_CONTROL_PLANE" },
+        "customerAuthorityAggregate": { "const": "InstallationEnrollment" },
+        "orchestratorRole": { "const": "SCOPE_AND_RUN_ORCHESTRATION_ONLY" },
+        "runtimeRole": { "const": "RUNTIME_SCOPES_TOOLCHAINS_CREDENTIALS_WORKSPACES_EXECUTION_EFFECTS_AND_RECOVERY" },
+        "aclState": { "const": "STATELESS" }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "planAcceptance",
+        "expansionPolicy",
+        "reductionPolicy",
+        "localWriterPolicy",
+        "kmsIsWriterFence",
+        "authorityAnchorLocation"
+      ],
+      "properties": {
+        "planAcceptance": { "const": "TWO_STAGE_SIGNED_PLAN_AND_CUSTOMER_ACCEPTANCE" },
+        "expansionPolicy": { "const": "DUAL_CONSENT_REQUIRED" },
+        "reductionPolicy": { "const": "ANY_AUTHORIZED_DENY_SOURCE" },
+        "localWriterPolicy": { "const": "SINGLE_SHORT_LIVED_FENCED_WRITER" },
+        "kmsIsWriterFence": { "const": false },
+        "authorityAnchorLocation": { "const": "OUTSIDE_ORDINARY_INSTALLATION_BACKUP" }
+      }
+    },
+    "connectivity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "steadyStateDirection",
+        "channelAuthentication",
+        "platformStandingCloudAdmin",
+        "platformSecretDecryption",
+        "sshSteadyStateControlPlane"
+      ],
+      "properties": {
+        "steadyStateDirection": { "const": "CUSTOMER_OUTBOUND_ONLY" },
+        "channelAuthentication": { "const": "MUTUAL_CHALLENGE_BOUND" },
+        "platformStandingCloudAdmin": { "const": "FORBIDDEN" },
+        "platformSecretDecryption": { "const": "FORBIDDEN" },
+        "sshSteadyStateControlPlane": { "const": "FORBIDDEN" }
+      }
+    },
+    "offline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acceptedPlanReconciliation",
+        "authorityExpansionAfterExpiry",
+        "existingRunPolicyOwner",
+        "unknownOutcome",
+        "silentFallback"
+      ],
+      "properties": {
+        "acceptedPlanReconciliation": { "const": "ALLOWED_UNTIL_PLAN_EXPIRY" },
+        "authorityExpansionAfterExpiry": { "const": "FORBIDDEN" },
+        "existingRunPolicyOwner": { "const": "ORCHESTRATOR_AND_AGENT_RUNTIME" },
+        "unknownOutcome": { "const": "RECONCILE_REQUIRED" },
+        "silentFallback": { "const": "FORBIDDEN" }
+      }
+    },
+    "runtimeDistribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "orchestratorAndArComponentInstallationOwner",
+        "providerToolchainLifecycleOwner",
+        "artifactVerification",
+        "activation",
+        "rollback"
+      ],
+      "properties": {
+        "orchestratorAndArComponentInstallationOwner": { "const": "CUSTOMER_INSTALLATION_CONTROL_PLANE" },
+        "providerToolchainLifecycleOwner": { "const": "AGENT_RUNTIME_CAPABILITY" },
+        "artifactVerification": { "const": "SIGNATURE_DIGEST_PROVENANCE_AND_HEALTHCHECK_REQUIRED" },
+        "activation": { "const": "ATOMIC_GENERATION_PUBLICATION" },
+        "rollback": { "const": "EXPLICIT_COMPATIBILITY_GATED" }
+      }
+    },
+    "operationJournal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "durability",
+        "phaseCheckpoints",
+        "ambiguousEffects",
+        "cleanupObligations",
+        "diagnosticCorrelation",
+        "restartRecovery"
+      ],
+      "properties": {
+        "durability": { "const": "DURABLE" },
+        "phaseCheckpoints": { "const": "REQUIRED" },
+        "ambiguousEffects": { "const": "RECONCILE_BEFORE_RETRY" },
+        "cleanupObligations": { "const": "DURABLE_UNTIL_RECEIPT" },
+        "diagnosticCorrelation": { "const": "REQUIRED" },
+        "restartRecovery": { "const": "REQUIRED" }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "externalSourceDisposition",
+        "managedWorktreeDefaultDisposition",
+        "automaticGitMutation",
+        "automaticWorktreeRemoval"
+      ],
+      "properties": {
+        "externalSourceDisposition": { "const": "UNLINK_ONLY" },
+        "managedWorktreeDefaultDisposition": { "const": "RETAIN" },
+        "automaticGitMutation": { "const": "FORBIDDEN" },
+        "automaticWorktreeRemoval": { "const": "FORBIDDEN" }
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultCustody",
+        "exportApproval",
+        "redactionAndPreview",
+        "supportAccess"
+      ],
+      "properties": {
+        "defaultCustody": { "const": "CUSTOMER" },
+        "exportApproval": { "const": "EXPLICIT" },
+        "redactionAndPreview": { "const": "REQUIRED_BEFORE_EXPORT" },
+        "supportAccess": { "const": "CUSTOMER_INITIATED_TIME_BOUNDED_AND_AUDITED" }
+      }
+    },
+    "distinctAuthorityDimensions": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 8,
+      "items": {
+        "enum": [
+          "PlatformDesiredRevision",
+          "InstallationEnrollmentIncarnation",
+          "InstallationAuthorityEpoch",
+          "InstallationWriterLease",
+          "RuntimeBindingGeneration",
+          "ARDeploymentAuthorityGeneration",
+          "RunAuthorityGeneration",
+          "ExecutionAuthorityLease"
+        ]
+      }
+    },
+    "customerProjectionStatuses": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 8,
+      "items": {
+        "enum": [
+          "SETTING_UP",
+          "OPERATIONAL",
+          "DEGRADED",
+          "ACTION_REQUIRED",
+          "DRAINING",
+          "SUSPENDED",
+          "QUARANTINED",
+          "RETIRED"
+        ]
+      }
+    },
+    "requiredConditions": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 9,
+      "items": {
+        "enum": [
+          "Connectivity",
+          "ConfigurationSync",
+          "InstallationMutationAuthority",
+          "KmsAvailability",
+          "OrchestratorComponentHealth",
+          "ARControlPlaneComponentHealth",
+          "ProviderToolchainCompatibility",
+          "UpgradeStatus",
+          "DataDisposition"
+        ]
+      }
+    },
+    "terminology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ambiguousBareProvisioningInNewDesign",
+        "installationLifecycle",
+        "executionLifecycle",
+        "scopeLifecycle"
+      ],
+      "properties": {
+        "ambiguousBareProvisioningInNewDesign": { "const": "FORBIDDEN" },
+        "installationLifecycle": {
+          "type": "array",
+          "minItems": 5,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^Installation[A-Z][A-Za-z]+$" }
+        },
+        "executionLifecycle": {
+          "type": "array",
+          "minItems": 5,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 5 }
+        },
+        "scopeLifecycle": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^Scope[A-Z][A-Za-z]+$" }
+        }
+      }
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^docs/[^\\s]+\\.md$"
+      }
+    }
+  }
+}

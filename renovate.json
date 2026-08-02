@@ -1,0 +1,5 @@
+{
+  "extends": [
+    "github>agent-teams-ai/.github:renovate-config.json"
+  ]
+}

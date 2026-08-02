@@ -1,0 +1,189 @@
+schemaVersion: 1
+vocabularyVersion: 1
+
+invariants:
+  coreImplementation: SHARED
+  profileSelectionOwner: COMPOSITION_ROOT
+  profileBranchingInDomainApplication: FORBIDDEN
+  capabilityNegotiation: TYPED_REQUIRED
+  fallbackPolicy: EXPLICIT_FAILURE
+  profileVocabularyOwnerPaths: []
+
+designEvidenceSets:
+  - id: cross-system-profile-baseline-v1
+    extendsEvidenceSetIds: []
+    evidenceRefs:
+      - docs/decisions/0001-deployment-profile-lifecycle-and-v1-scope.md
+      - docs/decisions/0002-personal-space-tenant-ownership.md
+      - docs/decisions/0003-subject-bound-run-revocation-policy.md
+      - docs/decisions/0004-project-retirement-authority-and-disposition.md
+      - docs/architecture/deployment-profiles.md
+      - docs/architecture/platform-orchestrator-review/01-authority-ownership-matrix.md
+      - docs/architecture/platform-orchestrator-review/02-resource-identity-binding-matrix.md
+      - docs/architecture/platform-orchestrator-review/03-principal-delegation-model.md
+      - docs/architecture/platform-orchestrator-review/04-capability-authorization-port-catalog.md
+      - docs/architecture/platform-orchestrator-review/05-decision-freshness-failure-matrix.md
+      - docs/architecture/platform-orchestrator-review/06-project-provisioning-binding-state-machine.md
+      - docs/architecture/platform-orchestrator-review/07-deployment-administration-capability-matrix.md
+      - docs/architecture/platform-orchestrator-review/08-contract-conformance-ownership.md
+
+  - id: managed-byoc-control-v1
+    extendsEvidenceSetIds:
+      - cross-system-profile-baseline-v1
+    evidenceRefs:
+      - architecture/managed-installation/managed-installation-policy.yaml
+      - docs/decisions/0005-managed-customer-installation-control.md
+      - docs/architecture/managed-installation-control.md
+
+qualificationGateCatalog:
+  - id: contract-conformance
+    requiredForQualification: true
+    allowNotApplicable: false
+    requiredClaims:
+      - INSTALLATION_EXECUTION_LIFECYCLE_SEPARATION
+      - INSTALLATION_COMMAND_SEMANTIC_SEPARATION
+      - RUN_LIFECYCLE_COMMAND_SEMANTIC_SEPARATION
+      - AR_RECOVERY_DIAGNOSTIC_CORRELATION
+  - id: identity
+    requiredForQualification: true
+    allowNotApplicable: false
+    requiredClaims: []
+  - id: isolation
+    requiredForQualification: true
+    allowNotApplicable: false
+    requiredClaims: []
+  - id: persistence
+    requiredForQualification: true
+    allowNotApplicable: false
+    requiredClaims:
+      - INSTALLATION_OPERATION_DURABILITY
+      - RUN_OPERATION_DURABILITY
+  - id: security
+    requiredForQualification: true
+    allowNotApplicable: false
+    requiredClaims:
+      - REDACTED_DIAGNOSTICS_EXPORT
+  - id: restore-and-disaster-recovery
+    requiredForQualification: true
+    allowNotApplicable: false
+    requiredClaims: []
+  - id: fencing
+    requiredForQualification: true
+    allowNotApplicable: false
+    requiredClaims:
+      - DISTINCT_AUTHORITY_TYPES
+  - id: offline-behavior
+    requiredForQualification: true
+    allowNotApplicable: false
+    requiredClaims:
+      - NO_SILENT_FALLBACK
+  - id: upgrades
+    requiredForQualification: true
+    allowNotApplicable: false
+    requiredClaims:
+      - INSTALLATION_CONDITION_BASED_READINESS
+      - RUN_PARTICIPANT_READINESS
+  - id: project-lifecycle-and-disposition
+    requiredForQualification: true
+    allowNotApplicable: false
+    requiredClaims:
+      - USER_SOURCE_UNLINK_ONLY
+      - MANAGED_WORKTREE_RETAIN_DEFAULT
+      - NO_AUTOMATIC_GIT_MUTATION
+
+profiles:
+  - id: local-standalone-desktop
+    name: Local Standalone Desktop
+    category: LOCAL_STANDALONE
+    currentStatus: DESIGNED
+    v1TargetStatus: QUALIFIED
+    v1Scope: QUALIFY
+    authorityMode: STANDALONE_AUTHORITY
+    orchestratorPlacement: USER_DEVICE
+    runtimePlacement: USER_DEVICE
+    designEvidenceSetId: cross-system-profile-baseline-v1
+    implementation:
+      compositionRoot: null
+      adapterPackages: []
+      evidence: []
+    activeQualificationRef: null
+
+  - id: standalone-server
+    name: Standalone Server
+    category: STANDALONE_SERVER
+    currentStatus: DESIGNED
+    v1TargetStatus: QUALIFIED
+    v1Scope: QUALIFY
+    authorityMode: STANDALONE_AUTHORITY
+    orchestratorPlacement: CUSTOMER_INFRASTRUCTURE
+    runtimePlacement: CUSTOMER_INFRASTRUCTURE
+    designEvidenceSetId: cross-system-profile-baseline-v1
+    implementation:
+      compositionRoot: null
+      adapterPackages: []
+      evidence: []
+    activeQualificationRef: null
+
+  - id: managed-shared-saas
+    name: Managed Shared SaaS
+    category: MANAGED_SHARED
+    currentStatus: DESIGNED
+    v1TargetStatus: QUALIFIED
+    v1Scope: QUALIFY
+    authorityMode: PLATFORM_AUTHORITY
+    orchestratorPlacement: PLATFORM_SHARED
+    runtimePlacement: PLATFORM_SHARED
+    designEvidenceSetId: cross-system-profile-baseline-v1
+    implementation:
+      compositionRoot: null
+      adapterPackages: []
+      evidence: []
+    activeQualificationRef: null
+
+  - id: managed-dedicated
+    name: Managed Dedicated
+    category: MANAGED_DEDICATED
+    currentStatus: DESIGNED
+    v1TargetStatus: DESIGNED
+    v1Scope: DESIGN_ONLY
+    authorityMode: PLATFORM_AUTHORITY
+    orchestratorPlacement: PLATFORM_DEDICATED
+    runtimePlacement: PLATFORM_DEDICATED
+    designEvidenceSetId: cross-system-profile-baseline-v1
+    implementation:
+      compositionRoot: null
+      adapterPackages: []
+      evidence: []
+    activeQualificationRef: null
+
+  - id: managed-byoc
+    name: Managed BYOC
+    category: MANAGED_BYOC
+    currentStatus: DESIGNED
+    v1TargetStatus: DESIGNED
+    v1Scope: DESIGN_ONLY
+    authorityMode: PLATFORM_AUTHORITY
+    orchestratorPlacement: CUSTOMER_CLOUD
+    runtimePlacement: CUSTOMER_CLOUD
+    designEvidenceSetId: managed-byoc-control-v1
+    implementation:
+      compositionRoot: null
+      adapterPackages: []
+      evidence: []
+    activeQualificationRef: null
+
+  - id: hybrid-connected-runtime
+    name: Hybrid Connected Runtime
+    category: HYBRID_CONNECTED_RUNTIME
+    currentStatus: DESIGNED
+    v1TargetStatus: DESIGNED
+    v1Scope: DESIGN_ONLY
+    authorityMode: PLATFORM_AUTHORITY
+    orchestratorPlacement: PLATFORM_SHARED
+    runtimePlacement: CUSTOMER_INFRASTRUCTURE
+    designEvidenceSetId: cross-system-profile-baseline-v1
+    implementation:
+      compositionRoot: null
+      adapterPackages: []
+      evidence: []
+    activeQualificationRef: null

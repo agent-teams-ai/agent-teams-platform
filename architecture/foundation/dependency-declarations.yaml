@@ -1,0 +1,20 @@
+schemaVersion: 1
+packageManager:
+  kind: pnpm
+  workspaceManifest: pnpm-workspace.yaml
+policies:
+  externalDependencies: catalog
+  catalogVersions: exact
+  internalDependencies: workspace-protocol
+  reservedScopes:
+    - "@agent-teams/"
+  developmentOnlyPackages:
+    - "@ast-grep/napi"
+    - "@types/node"
+    - ajv
+    - markdownlint-cli2
+    - oxlint
+    - typescript
+    - yaml
+  exactRegistryDevelopmentOnlyPackages:
+    - "@agent-teams/engineering-foundation"

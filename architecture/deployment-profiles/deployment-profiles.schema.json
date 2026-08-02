@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-teams.ai/schemas/platform/deployment-profiles/v1",
+  "title": "Agent Teams deployment profile catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "vocabularyVersion",
+    "invariants",
+    "designEvidenceSets",
+    "qualificationGateCatalog",
+    "profiles"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "vocabularyVersion": {
+      "const": 1
+    },
+    "invariants": {
+      "$ref": "#/$defs/invariants"
+    },
+    "designEvidenceSets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/designEvidenceSet"
+      }
+    },
+    "qualificationGateCatalog": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/qualificationGate"
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/profile"
+      }
+    }
+  },
+  "$defs": {
+    "evidenceRef": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 300,
+      "pattern": "^(architecture|docs|reports|tests)/[^\\s]+$"
+    },
+    "invariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coreImplementation",
+        "profileSelectionOwner",
+        "profileBranchingInDomainApplication",
+        "capabilityNegotiation",
+        "fallbackPolicy",
+        "profileVocabularyOwnerPaths"
+      ],
+      "properties": {
+        "coreImplementation": {
+          "const": "SHARED"
+        },
+        "profileSelectionOwner": {
+          "const": "COMPOSITION_ROOT"
+        },
+        "profileBranchingInDomainApplication": {
+          "const": "FORBIDDEN"
+        },
+        "capabilityNegotiation": {
+          "const": "TYPED_REQUIRED"
+        },
+        "fallbackPolicy": {
+          "const": "EXPLICIT_FAILURE"
+        },
+        "profileVocabularyOwnerPaths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^packages/contexts/[a-z][a-z0-9-]*$"
+          }
+        }
+      }
+    },
+    "designEvidenceSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "extendsEvidenceSetIds",
+        "evidenceRefs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "extendsEvidenceSetIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          }
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/evidenceRef"
+          }
+        }
+      }
+    },
+    "qualificationGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "requiredForQualification",
+        "allowNotApplicable",
+        "requiredClaims"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "requiredForQualification": {
+          "type": "boolean"
+        },
+        "allowNotApplicable": {
+          "type": "boolean"
+        },
+        "requiredClaims": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          }
+        }
+      }
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compositionRoot",
+        "adapterPackages",
+        "evidence"
+      ],
+      "properties": {
+        "compositionRoot": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(apps|packages)/[a-z0-9-/]+$"
+        },
+        "adapterPackages": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(apps|packages)/[a-z0-9-/]+$"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/evidenceRef"
+          }
+        }
+      }
+    },
+    "qualificationRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordId",
+        "contentDigest"
+      ],
+      "properties": {
+        "recordId": {
+          "type": "string",
+          "pattern": "^qualification-[a-z0-9][a-z0-9-]*$"
+        },
+        "contentDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "category",
+        "currentStatus",
+        "v1TargetStatus",
+        "v1Scope",
+        "authorityMode",
+        "orchestratorPlacement",
+        "runtimePlacement",
+        "designEvidenceSetId",
+        "implementation",
+        "activeQualificationRef"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 3
+        },
+        "category": {
+          "enum": [
+            "LOCAL_STANDALONE",
+            "STANDALONE_SERVER",
+            "MANAGED_SHARED",
+            "MANAGED_DEDICATED",
+            "MANAGED_BYOC",
+            "HYBRID_CONNECTED_RUNTIME"
+          ]
+        },
+        "currentStatus": {
+          "enum": [
+            "DESIGNED",
+            "IMPLEMENTED",
+            "QUALIFIED"
+          ]
+        },
+        "v1TargetStatus": {
+          "enum": [
+            "DESIGNED",
+            "QUALIFIED"
+          ]
+        },
+        "v1Scope": {
+          "enum": [
+            "QUALIFY",
+            "DESIGN_ONLY"
+          ]
+        },
+        "authorityMode": {
+          "enum": [
+            "STANDALONE_AUTHORITY",
+            "PLATFORM_AUTHORITY"
+          ]
+        },
+        "orchestratorPlacement": {
+          "enum": [
+            "USER_DEVICE",
+            "CUSTOMER_INFRASTRUCTURE",
+            "PLATFORM_SHARED",
+            "PLATFORM_DEDICATED",
+            "CUSTOMER_CLOUD"
+          ]
+        },
+        "runtimePlacement": {
+          "enum": [
+            "USER_DEVICE",
+            "CUSTOMER_INFRASTRUCTURE",
+            "PLATFORM_SHARED",
+            "PLATFORM_DEDICATED",
+            "CUSTOMER_CLOUD"
+          ]
+        },
+        "designEvidenceSetId": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "implementation": {
+          "$ref": "#/$defs/implementation"
+        },
+        "activeQualificationRef": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/qualificationRef"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
