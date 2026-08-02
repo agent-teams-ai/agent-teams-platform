@@ -26,7 +26,7 @@
     "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"
   },
   "devDependencies": {
-    "@agent-teams/engineering-foundation": "0.2.0",
+    "@agent-teams/engineering-foundation": "0.3.0",
     "@ast-grep/napi": "catalog:",
     "@types/node": "catalog:",
     "ajv": "catalog:",

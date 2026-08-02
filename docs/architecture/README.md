@@ -13,6 +13,9 @@ summary: Navigation for current and proposed Platform architecture.
 - [Managed installation control](managed-installation-control.md) defines the
   accepted split-control, plan acceptance, fencing, offline, upgrade, and custody
   model for future customer-hosted installations.
+- [Engineering Foundation adoption](engineering-foundation-adoption.md) records
+  exact-version automation, active capabilities, and parity gates before local
+  tooling can be replaced.
 - [Platform-Orchestrator boundary direction](platform-orchestrator-boundary.md)
   records the proposed cross-system model that must be proven by matrices and
   failure traces before a superseding ADR.
