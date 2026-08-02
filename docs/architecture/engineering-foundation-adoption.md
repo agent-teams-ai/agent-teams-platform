@@ -17,11 +17,11 @@ Production code cannot import Foundation.
 ## Version policy
 
 The manifest and lockfile pin the latest reviewed version that actually exists
-in the npm registry. The organization Renovate configuration opens an
-exact-version update pull request after a new release appears. It never
-automerge Foundation updates. `latest`, ranges, Git branches, unpublished
-release branches, local links, and tarball overrides are forbidden in committed
-or CI state.
+in the npm registry. The repository Dependabot configuration checks every
+weekday and opens a dedicated exact-version update pull request after a new
+release appears. It never automerges Foundation updates. `latest`, ranges, Git
+branches, unpublished release branches, local links, and tarball overrides are
+forbidden in committed or CI state.
 
 A package update does not enable a capability. Capability configuration changes
 are separate architecture changes with Platform-owned evidence.
