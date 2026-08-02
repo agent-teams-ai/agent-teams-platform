@@ -66,9 +66,9 @@ capacity is a separate readiness input. A read model may display
 | `CONFIRMED` | ProjectAdmissionAuthority | Platform Project Management | Effective gate, admission revision, lifecycle epoch | Restriction mutation and gate revision commit atomically |
 | `PROPOSED` | ManagedProjectProvisioningProcess | Platform Provisioning | Operation ID, immutable request digest, and step receipts | Eventual convergence; unknown steps queried by stable ID |
 | `CONFIRMED` | ProductProjectRetirementProcess | Platform Project Management | Commitment, policy and catalog revisions, participant obligations, opaque receipt refs | Cancel and commit race by ProductProject CAS; participant outcomes converge independently |
-| `PROPOSED` | OrchestrationProject | Orchestration Scope | Stable identity, local admission authority, lifecycle and deletion epochs | Orchestrator-local CAS and owner-local outbox |
-| `PROPOSED` | OrchestrationProjectDispositionProcess | Orchestration Scope | Versioned participant plan, owner obligations, exact receipt refs | Coordinates but never mutates another context's data |
-| `PROPOSED` | RuntimeScopeBinding | Orchestration Scope | Binding ID, generation, opaque AR references | Desired-state commit followed by activation CAS; retirement fixes a generation high-water mark |
+| `CONFIRMED` | OrchestrationProject | Orchestration Scope | Stable identity, local admission authority, lifecycle and deletion epochs | Ownership and terminal lifecycle accepted by Orchestrator ADR-0080; tactical aggregate split remains under OD-006 |
+| `CONFIRMED` | OrchestrationProjectDispositionProcess | Orchestration Scope | Versioned participant plan, owner obligations, exact receipt refs | Coordination owner accepted by Orchestrator ADR-0080; it never mutates another context's data |
+| `CONFIRMED` | RuntimeScopeBinding | Orchestration Scope | Binding ID, generation, opaque AR references | Ownership and lifecycle accepted by Orchestrator ADR-0080; activation contract remains proposed |
 | `CONFIRMED` | ManagedRuntimeBinding | Run Orchestration | Participant and selected binding generation | Run-local commit; no unbounded operation or receipt collection |
 | `CONFIRMED` | AR runtime-scope disposition | AR | AR-owned scope, cutoff, inventory, category actions, and technical receipts | Immutable technical plan, owner-local execution, truthful unknown and reconciliation |
 

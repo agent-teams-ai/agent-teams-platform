@@ -28,12 +28,12 @@ related:
 | `CONFIRMED` | InstallationWriterLease | Customer-local lease ID | Installation authority epoch, writer identity, plan revision, and expiry | At most one mutation-authoritative lease per installation authority epoch |
 | `PROPOSED` | PlatformPrincipal | `PlatformPrincipalId` | IdP issuer, external subject, source incarnation | Many-to-many Tenant membership; Platform is authoritative |
 | `PROPOSED` | OrchestrationPrincipal | Tenant-scoped `OrchestrationPrincipalId` | Authority realm, external principal, source incarnation | Orchestrator authorship identity remains stable across IdP migration |
-| `PROPOSED` | OrchestrationTenant | `OrchestrationTenantId` | Opaque Platform or Standalone scope | Orchestrator owns stable API identity and binding lifecycle |
-| `PROPOSED` | OrchestrationProject | `OrchestrationProjectId` | ProductProject identity and incarnation | Orchestrator owns stable API identity and local lifecycle |
-| `PROPOSED` | RuntimeScopeBinding | Stable Orchestrator-owned binding ID | Runtime deployment, incarnation, opaque AR scope refs | Multiple bindings are allowed; one active generation per binding ID |
+| `CONFIRMED` | OrchestrationTenant | `OrchestrationTenantId` | Opaque Platform or Standalone scope | Orchestration Scope owns stable identity and binding lifecycle; public representation remains open |
+| `CONFIRMED` | OrchestrationProject | `OrchestrationProjectId` | ProductProject identity and incarnation | Orchestration Scope owns stable identity, terminal lifecycle, and admission; public representation remains open |
+| `CONFIRMED` | RuntimeScopeBinding | Stable Orchestrator-owned binding ID | Runtime authority realm, deployment, incarnation, and opaque AR scope refs | Orchestration Scope owns the lifecycle; multiple bindings are allowed and one generation is active per binding ID |
 | `CONFIRMED` | ManagedRuntimeBinding | Run participant identity | RuntimeScopeBinding ID and expected generation | Run Orchestration owns the bounded participant-to-runtime association; it does not contain an unbounded operation or receipt collection |
 | `PROPOSED` | Run runtime target inventory entry | Run-owned target-entry identity | Opaque AR operation/session target, authority generation, expected revisions, and effect identity | One durable entry per target; cutoff scans bounded pages and records per-target obligations |
-| `PROPOSED` | AR RuntimeAuthorityRealm and RuntimeDeployment | AR-owned opaque IDs | Trust root, independently fenced authority cell, incarnation, and monotonic authority generation | Proposed by AR ADR-0004; endpoint or host changes do not rename the realm or deployment |
+| `OPEN` | AR RuntimeAuthorityRealm and RuntimeDeployment | AR-owned opaque IDs | Trust root, independently fenced authority cell, incarnation, and monotonic authority generation | Design direction exists, but AR has not accepted its public identity or provisioning contract; endpoint or host changes must not be assumed to rename a logical deployment |
 | `PROPOSED` | AR RuntimeProjectScope | AR-owned opaque ID | Stable authenticated Orchestrator provisioning identity | AR owns scope identity and lifecycle; exact Published Language names and schemas are not frozen |
 
 ## Cardinality
@@ -119,9 +119,11 @@ signed evidence. AR decides `stale` from its own target identity, scope revision
 deployment incarnation, authority generation, and control-grant semantics.
 
 AR ADR-0003 accepts the technical identity dimensions used by cutoff and
-disposition but leaves their exact names open. The fuller realm, deployment,
-incarnation, external-anchor lease, scope-provisioning, and technical-grant model
-remains proposed in AR ADR-0004 and cannot be treated as qualified capability.
+disposition but leaves their exact names open. AR ADR-0004 separately accepts the
+pre-materialization negative operation-intent guard. The fuller realm,
+deployment, incarnation, external-anchor lease, scope-provisioning, and
+technical-grant model remains open and cannot be treated as a qualified
+capability.
 
 `OPEN`: the concrete recovery protocol when Platform, Orchestrator, and AR are
 restored to different timestamps.
