@@ -43,10 +43,11 @@ Platform or Standalone Authority identity
 - AR's accepted cutoff and scope-disposition architecture closes the strategic
   ownership boundary. Exact Published Language names, fields, retention windows,
   and production HA mechanisms remain proposed or open until AR freezes them.
-- AR deployment/scope authority, external authority-anchor leases, technical
-  scope provisioning, and `TechnicalExecutionGrant` semantics remain a separate
-  proposed AR ADR-0004. They are not implementation authority until AR accepts
-  that decision and publishes conformance fixtures.
+- AR ADR-0004 accepts the pre-materialization negative operation-intent guard.
+  Deployment/scope authority, external authority-anchor leases, technical scope
+  provisioning, and `TechnicalExecutionGrant` remain open follow-up contracts.
+  They are not implementation authority until AR accepts them and publishes
+  conformance fixtures.
 - Cross-system IDs remain opaque. Shared domain packages are forbidden.
 - Platform authority evidence binds an explicit outcome to authority realm,
   audience, typed tenant or project scope, action, actor, subject, client,
@@ -108,10 +109,10 @@ Platform or Standalone Authority identity
   references, effect identities, feed cursors, or receipts inside one binding
   aggregate.
 - Run-specific cutoff that reaches AR before the original operation command
-  requires an AR-owned durable negative operation-intent guard serialized with
-  operation acceptance and dispatch. A scoped `not_found` response or an
-  Orchestrator-local tombstone is not equivalent proof; this remains an explicit
-  contract gate.
+  uses the AR-owned durable negative operation-intent guard accepted by AR
+  ADR-0004. It serializes with operation acceptance and dispatch. A scoped
+  `not_found` response or an Orchestrator-local tombstone is not equivalent
+  proof. Exact wire schemas and producer fixtures remain implementation gates.
 - In v1, sharing one RuntimeSession across unrelated Runs is disabled by default.
   A future profile may enable it only through an explicit, qualified operation-
   isolation capability and policy.

@@ -29,7 +29,7 @@ related:
 | `CONFIRMED` | Customer-side installation plan acceptance and writer authority | Customer Installation Control Plane | Customer installation use case | Customer authority store, `InstallationEnrollment`, local authority epoch, and short-lived fenced writer lease |
 | `CONFIRMED` | Managed installation software reconciliation | Customer Installation Control Plane | Installation operation executor | Customer-side operation journal, verified artifacts, activation generation, and receipts |
 | `PROPOSED` | Stable orchestration principal identity | Orchestration Principal Registry | Trusted binding and rebinding use cases | Orchestrator DB |
-| `PROPOSED` | Stable orchestration scope and authority binding | Orchestration Scope | Trusted provisioning use case | Orchestrator DB |
+| `CONFIRMED` | Stable orchestration scope and authority binding | Orchestration Scope | Trusted provisioning use case | Orchestrator DB |
 | `CONFIRMED` | Teams, Work, Runs, Messages, product approvals | Owning Orchestrator BC | Owning use case | Owning Orchestrator persistence |
 | `CONFIRMED` | Runtime scopes, execution, technical permissions, fencing | AR | AR use case | AR persistence |
 | `CONFIRMED` | Provider toolchain and provider credential lifecycle | AR capability | AR-owned installer and secret adapters | AR-owned capability state and opaque secret references |
@@ -83,6 +83,10 @@ related:
   acceptance and execution, requires a fenced single writer, forbids standing
   Platform cloud administration, and keeps installation authority independent
   from Orchestrator Run and AR execution authority.
+- `CONFIRMED`: Orchestrator ADR-0080 makes Orchestration Scope the sole owner of
+  stable orchestration tenant/Project identity, coarse admission,
+  `RuntimeScopeBinding`, and whole-Project disposition coordination. Tactical
+  aggregate and public-contract details remain open without reopening ownership.
 
 ## Open decisions
 

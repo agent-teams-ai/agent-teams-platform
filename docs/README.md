@@ -15,6 +15,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 - [Architecture index](architecture/README.md)
 - [Deployment profiles](architecture/deployment-profiles.md)
 - [Managed installation control](architecture/managed-installation-control.md)
+- [Engineering Foundation adoption](architecture/engineering-foundation-adoption.md)
 - [Platform-Orchestrator boundary direction](architecture/platform-orchestrator-boundary.md)
 - [Platform-Orchestrator design review](architecture/platform-orchestrator-review/README.md)
 
@@ -35,6 +36,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 | Current profile status and evidence | `architecture/deployment-profiles/deployment-profiles.yaml` |
 | Exact manifest shape | `architecture/deployment-profiles/deployment-profiles.schema.json` |
 | Managed BYOC installation invariants | `architecture/managed-installation/managed-installation-policy.yaml` |
+| Shared engineering-tool adoption | `architecture/engineering-foundation-adoption.md` |
 | Current architecture rules | Architecture documents |
 | Cross-system proposal under review | Proposed boundary document and its eight review artifacts |
 

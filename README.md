@@ -21,3 +21,17 @@ Run all current deterministic checks with:
 pnpm install --frozen-lockfile
 pnpm check
 ```
+
+## Engineering Foundation
+
+The repository pins the latest reviewed and published
+`@agent-teams/engineering-foundation` as an exact root `devDependency`.
+Production code never imports it. `pnpm foundation:check` runs declared
+capabilities and proves both development-only placement and registry-backed
+lockfile integrity.
+
+The organization Renovate policy watches the package and opens an exact-version
+update pull request whenever npm publishes a newer version. Foundation upgrades
+are never floating or automerged: the pull request must pass Foundation and all
+Platform checks before the exact pin advances. Adding a capability is a separate
+architecture change and is not implied by a package-version update.

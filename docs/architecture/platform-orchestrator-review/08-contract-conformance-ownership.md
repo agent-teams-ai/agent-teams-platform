@@ -20,8 +20,9 @@ related:
 | `CONFIRMED` | Private Platform Project lifecycle contract | Platform | ProductProject epoch, admission revision, retirement operation, and policy/catalog references | Platform producer suite plus Managed Lifecycle ACL consumer fixtures |
 | `CONFIRMED` | AR Published Language | AR | AR runtime state, feeds, and receipts | AR wire suite plus Orchestrator consumer-port suite |
 | `PROPOSED` | Orchestration project disposition API | Orchestrator | OrchestrationProject deletion epoch, participant obligations, and owner-local receipt refs | Orchestrator producer suite plus Platform reconciliation and lost-acknowledgement fixtures |
-| `PROPOSED` | AR runtime-scope provisioning, control, and disposition API | AR | AR scope, cutoff, reconciliation, and context-owned disposition receipts | Cutoff/disposition semantics are accepted in AR ADR-0003; scope authority, provisioning, and grants remain proposed in AR ADR-0004; exact schemas and producer fixtures remain gates |
-| `OPEN` | AR pre-materialization negative operation-intent guard | AR Agent Execution | Guard receipt serialized with operation acceptance and dispatch claim | AR producer fixtures must prove both race orders, delayed original command, exact replay, digest conflict, and restore resurrection before Orchestrator ADR-0079 can be accepted |
+| `CONFIRMED` | AR cutoff, scope-admission, and technical-disposition semantics | AR | AR scope, cutoff, reconciliation, and context-owned disposition receipts | Semantics are accepted by AR ADR-0003 and consumed by Orchestrator ADR-0079; exact schemas and producer fixtures remain implementation gates |
+| `CONFIRMED` | AR pre-materialization negative operation-intent guard | AR Agent Execution | Guard receipt serialized with operation acceptance and dispatch claim | Semantics are accepted by AR ADR-0004; producer fixtures must still prove both race orders, delayed original command, exact replay, digest conflict, and restore resurrection |
+| `OPEN` | AR runtime-scope provisioning and `TechnicalExecutionGrant` API | AR | AR-owned runtime scope and technical authority state | Public identities, handshake, command schemas, grant shape, compatibility policy, generated client, and producer fixtures require a follow-up AR Published Language decision |
 | `PROPOSED` | Producer qualification attestation | Producing repository or pipeline | Producer append-only evidence | Producer signs and supersedes; consumer verifies digest and scope |
 | `PROPOSED` | Composite profile qualification | Qualification pipeline | Exact release-set verdict | Missing, mismatched, or stale producer evidence fails release admission |
 | `CONFIRMED` | Platform installation desired-state contract | Platform Deployment Management | PlatformInstallation desired revision and immutable signed DeploymentPlan chain | Platform producer fixtures; customer control plane verifies signature, digest, predecessor, expiry, capability semantics, and negative cases |
@@ -30,9 +31,9 @@ related:
 | `PROPOSED` | Durable Run operation ledger and lifecycle receipts | Orchestrator Run Orchestration | Orchestrator-owned operation identities, fingerprints, attempts, cancellation, relaunch, and recovery state | Orchestrator producer attestation proves UI disconnect survival, exact replay, lost-ack recovery, and distinct command semantics |
 | `PROPOSED` | Per-participant readiness contract | Orchestrator Run Orchestration with AR observations | Participant-local readiness truth and opaque AR observation refs | Orchestrator conformance proves partial readiness and that process liveness never implies provider readiness |
 | `PROPOSED` | AR stop, recovery, and diagnostic-correlation contract | AR | AR-owned operation/effect state, containment, recovery, and redacted diagnostic refs | AR producer attestation plus Orchestrator consumer fixtures for ambiguous acceptance and stale execution evidence |
-| `OPEN` | Business-effect to runtime-effect binding | Business intent owner and AR across a versioned boundary | Owner-local immutable binding between `BusinessEffectId`, opaque `RuntimeEffectId`, and canonical fingerprint | Both suites prove no new business identity bypasses uncertain runtime acceptance and AR never infers business equivalence |
-| `OPEN` | Workspace risk and technical access boundary | Orchestrator Policy/Workspace and AR Runtime Security separately | Orchestrator risk/isolation requirement and AR path/capability authorization remain separate | ACL conformance proves translation without importing or copying either aggregate |
-| `OPEN` | Runtime binding persistence authority | Orchestration Scope for Project-level binding; Run Orchestration for participant-level binding | Owning Orchestrator stores after its accepted runtime-binding ADR is superseded | Implementation is blocked until one accepted Orchestrator ownership model replaces the conflicting predecessor |
+| `CONFIRMED` | Business-effect to AR external-effect identity semantics | Business intent owner and AR across a versioned boundary | Intent owner persists `BusinessEffectId` and canonical fingerprint; AR persists its technical effect ledger against the opaque caller identity | AR ADR-0003 accepts the semantic split and forbids AR inference of business equivalence; exact wire names and cross-repository fixtures remain implementation gates |
+| `CONFIRMED` | Workspace risk and technical access ownership | Orchestrator Policy/Workspace and AR Runtime Security separately | Orchestrator risk/isolation requirement and AR path/capability authorization remain separate | Ownership is accepted; exact ACL mapping and conformance fixtures remain implementation gates and cannot import or copy either aggregate |
+| `CONFIRMED` | Runtime binding persistence authority | Orchestration Scope for Project-level binding; Run Orchestration for participant-level binding | Each owning Orchestrator context persists its own binding and process state | Orchestrator ADR-0079 supersedes ADR-0008 and ADR-0080 accepts Orchestration Scope ownership; conformance must still prove generation, replay, and stale-observation behavior |
 | `PROPOSED` | Team draft publication | Client for local-only draft; Team Topology for collaborative durable draft | Client storage or Team Topology draft plus immutable published `TeamVersion` | Run creation accepts only a published TeamVersion; autosave never becomes a launch command |
 | `PROPOSED` | Installation disposition and support bundle | Customer Installation Control Plane | Customer-local drain, uninstall, retained-anchor, diagnostic, redaction, approval, and export receipts | Conformance proves uninstall cannot imply Project retirement, AR effect completion, provider deletion, or worktree deletion |
 
@@ -111,19 +112,25 @@ remain proposed until AR freezes its Published Language.
   response is recovered by stable identity, activation is atomic, rollback is
   compatibility-gated, and old backup state cannot regain writer authority.
 
-## Cross-repository acceptance blockers
+## Cross-repository implementation and qualification gates
 
 The following are recorded here so Platform qualification cannot outrun its
 producers. They are not accepted Platform domain models:
 
-- Orchestrator must accept one runtime-binding ownership ADR before persistence
-  implementation: Project-level `RuntimeScopeBinding` belongs to Orchestration
-  Scope; participant-level `ManagedRuntimeBinding` belongs to Run Orchestration.
-- The intent owner and AR need distinct `BusinessEffectId` and opaque
-  `RuntimeEffectId` identities plus one immutable fingerprinted binding. Neither
-  side may mint a replacement identity to bypass an uncertain effect.
+- Runtime binding ownership is accepted: Project-level `RuntimeScopeBinding`
+  belongs to Orchestration Scope, while participant-level
+  `ManagedRuntimeBinding` belongs to Run Orchestration. Implementation still
+  requires generation, stale-observation, replay, and recovery fixtures.
+- The intent owner and AR keep distinct business and technical identities plus
+  one immutable fingerprint. Neither side may mint a replacement identity to
+  bypass an uncertain effect. Exact AR wire names and cross-repository fixtures
+  remain open.
 - Orchestrator workspace risk/isolation requirements and AR technical path and
-  capability authorization need different names, aggregates, and conformance.
+  capability authorization have separate owners. Exact ACL mappings and
+  conformance remain open.
+- AR must accept and publish the runtime-scope provisioning,
+  `TechnicalExecutionGrant`, handshake, compatibility, and generated-client
+  contract before managed runtime provisioning can be implemented.
 - Orchestrator installation-authority evidence must stay separate from external
   integration credentials and AR-owned provider credential bindings.
 - Orchestrator and AR must own accepted evidence for durable Run operations,
