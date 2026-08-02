@@ -23,6 +23,11 @@ release appears. It never automerges Foundation updates. `latest`, ranges, Git
 branches, unpublished release branches, local links, and tarball overrides are
 forbidden in committed or CI state.
 
+Dependabot may propose any newer Foundation version because every Foundation
+upgrade is isolated and reviewed. Platform remains on the accepted Node 24
+runtime baseline, so major `@types/node` upgrades require a separate toolchain
+decision; patch and minor updates within 24.x remain automated.
+
 A package update does not enable a capability. Capability configuration changes
 are separate architecture changes with Platform-owned evidence.
 
