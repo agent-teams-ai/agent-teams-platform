@@ -32,9 +32,9 @@ are separate architecture changes with Platform-owned evidence.
 | --- | --- |
 | `workspace.dependency-declarations` | Blocking now; validates generic workspace and exact dependency policy |
 | `architecture.source-dependencies` | Deferred until production package topology exists and parity with Platform's local boundary fixtures is proven |
-| `quality.suppression-governance` | Candidate after Foundation ADR-0003 and a Platform-owned waiver/protected-rule decision are accepted |
+| `quality.suppression-governance` | Available but not enabled; requires a Platform-owned waiver, expiry, ownership, and protected-rule policy plus consumer parity evidence |
 | `package.public-api-compatibility` | Deferred until Platform publishes a versioned TypeScript API or SDK with release-owned baselines |
-| `repository.security-baseline` | Candidate after Foundation ADR-0005 and Platform's exact workflow, privileged-job, SBOM, and publishable-package inventory are accepted |
+| `repository.security-baseline` | Not applicable while Platform publishes no package; the accepted combined profile must not be enabled with fabricated package evidence |
 
 For every new capability, Platform pins its schema, supplies strict data-only
 configuration, dual-runs any local donor check, and proves normalized diagnostic
@@ -44,3 +44,7 @@ is an exact dependency revert.
 
 Foundation ADR status remains independent from Platform adoption. Publishing a
 package containing candidate code does not make the policy accepted here.
+
+As of 2026-08-02, `0.4.1` is the latest reviewed registry release and the exact
+dependency target. Foundation ADR-0003, ADR-0004, and ADR-0005 are accepted,
+but that acceptance does not activate their capabilities in Platform.
