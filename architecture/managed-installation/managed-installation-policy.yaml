@@ -1,0 +1,118 @@
+schemaVersion: 1
+policyVersion: 1
+profileId: managed-byoc
+architectureStatus: DESIGNED
+
+ownership:
+  platformAggregate: PlatformInstallation
+  platformOwner: PLATFORM_DEPLOYMENT_MANAGEMENT
+  customerControlPlane: CUSTOMER_INSTALLATION_CONTROL_PLANE
+  customerAuthorityAggregate: InstallationEnrollment
+  orchestratorRole: SCOPE_AND_RUN_ORCHESTRATION_ONLY
+  runtimeRole: RUNTIME_SCOPES_TOOLCHAINS_CREDENTIALS_WORKSPACES_EXECUTION_EFFECTS_AND_RECOVERY
+  aclState: STATELESS
+
+authority:
+  planAcceptance: TWO_STAGE_SIGNED_PLAN_AND_CUSTOMER_ACCEPTANCE
+  expansionPolicy: DUAL_CONSENT_REQUIRED
+  reductionPolicy: ANY_AUTHORIZED_DENY_SOURCE
+  localWriterPolicy: SINGLE_SHORT_LIVED_FENCED_WRITER
+  kmsIsWriterFence: false
+  authorityAnchorLocation: OUTSIDE_ORDINARY_INSTALLATION_BACKUP
+
+connectivity:
+  steadyStateDirection: CUSTOMER_OUTBOUND_ONLY
+  channelAuthentication: MUTUAL_CHALLENGE_BOUND
+  platformStandingCloudAdmin: FORBIDDEN
+  platformSecretDecryption: FORBIDDEN
+  sshSteadyStateControlPlane: FORBIDDEN
+
+offline:
+  acceptedPlanReconciliation: ALLOWED_UNTIL_PLAN_EXPIRY
+  authorityExpansionAfterExpiry: FORBIDDEN
+  existingRunPolicyOwner: ORCHESTRATOR_AND_AGENT_RUNTIME
+  unknownOutcome: RECONCILE_REQUIRED
+  silentFallback: FORBIDDEN
+
+runtimeDistribution:
+  orchestratorAndArComponentInstallationOwner: CUSTOMER_INSTALLATION_CONTROL_PLANE
+  providerToolchainLifecycleOwner: AGENT_RUNTIME_CAPABILITY
+  artifactVerification: SIGNATURE_DIGEST_PROVENANCE_AND_HEALTHCHECK_REQUIRED
+  activation: ATOMIC_GENERATION_PUBLICATION
+  rollback: EXPLICIT_COMPATIBILITY_GATED
+
+operationJournal:
+  durability: DURABLE
+  phaseCheckpoints: REQUIRED
+  ambiguousEffects: RECONCILE_BEFORE_RETRY
+  cleanupObligations: DURABLE_UNTIL_RECEIPT
+  diagnosticCorrelation: REQUIRED
+  restartRecovery: REQUIRED
+
+workspace:
+  externalSourceDisposition: UNLINK_ONLY
+  managedWorktreeDefaultDisposition: RETAIN
+  automaticGitMutation: FORBIDDEN
+  automaticWorktreeRemoval: FORBIDDEN
+
+diagnostics:
+  defaultCustody: CUSTOMER
+  exportApproval: EXPLICIT
+  redactionAndPreview: REQUIRED_BEFORE_EXPORT
+  supportAccess: CUSTOMER_INITIATED_TIME_BOUNDED_AND_AUDITED
+
+distinctAuthorityDimensions:
+  - PlatformDesiredRevision
+  - InstallationEnrollmentIncarnation
+  - InstallationAuthorityEpoch
+  - InstallationWriterLease
+  - RuntimeBindingGeneration
+  - ARDeploymentAuthorityGeneration
+  - RunAuthorityGeneration
+  - ExecutionAuthorityLease
+
+customerProjectionStatuses:
+  - SETTING_UP
+  - OPERATIONAL
+  - DEGRADED
+  - ACTION_REQUIRED
+  - DRAINING
+  - SUSPENDED
+  - QUARANTINED
+  - RETIRED
+
+requiredConditions:
+  - Connectivity
+  - ConfigurationSync
+  - InstallationMutationAuthority
+  - KmsAvailability
+  - OrchestratorComponentHealth
+  - ARControlPlaneComponentHealth
+  - ProviderToolchainCompatibility
+  - UpgradeStatus
+  - DataDisposition
+
+terminology:
+  ambiguousBareProvisioningInNewDesign: FORBIDDEN
+  installationLifecycle:
+    - InstallationPlan
+    - InstallationOperation
+    - InstallationReconciliation
+    - InstallationUpgrade
+    - InstallationDisposition
+  executionLifecycle:
+    - RunAdmission
+    - RuntimeAllocation
+    - ExecutionDispatch
+    - RuntimeOperation
+    - ExecutionRecovery
+  scopeLifecycle:
+    - ScopeAdmission
+    - ScopeBinding
+
+evidenceRefs:
+  - docs/decisions/0005-managed-customer-installation-control.md
+  - docs/architecture/managed-installation-control.md
+  - docs/architecture/platform-orchestrator-boundary.md
+  - docs/architecture/platform-orchestrator-review/07-deployment-administration-capability-matrix.md
+  - docs/architecture/platform-orchestrator-review/08-contract-conformance-ownership.md

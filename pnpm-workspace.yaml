@@ -1,0 +1,21 @@
+packages:
+  - "apps/*"
+  - "packages/**"
+  - "tooling/*"
+
+catalogMode: strict
+
+catalog:
+  "@ast-grep/napi": 0.45.0
+  "@types/node": 24.13.3
+  ajv: 8.20.0
+  markdownlint-cli2: 0.23.2
+  oxlint: 1.76.0
+  typescript: 7.0.2
+  yaml: 2.9.0
+
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+
+minimumReleaseAgeExclude:
+  - "@agent-teams/engineering-foundation"
