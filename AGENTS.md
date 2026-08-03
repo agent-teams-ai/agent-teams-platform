@@ -41,6 +41,8 @@ Start here:
 
 ## Verification
 
-Run `pnpm check` before proposing a change. The deployment profile validator is
-blocking and scans future `domain/` and `application/` source for forbidden
-profile coupling.
+Run `pnpm check:changed` during implementation, then `pnpm check:fast` before
+handoff. Run the authoritative `pnpm check` before opening or merging a pull
+request. A passing changed-file or fast check never replaces the complete gate.
+The deployment profile validator is blocking and scans future `domain/` and
+`application/` source for forbidden profile coupling.
