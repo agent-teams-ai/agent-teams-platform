@@ -2,5 +2,7 @@ schemaVersion: 1
 project:
   id: agent-teams-platform
 capabilities:
+  repository.agent-workflow:
+    configPath: architecture/foundation/repository-agent-workflow.yaml
   workspace.dependency-declarations:
     configPath: architecture/foundation/dependency-declarations.yaml

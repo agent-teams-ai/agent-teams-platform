@@ -15,6 +15,8 @@
     "architecture:immutability": "node scripts/architecture/validate-qualification-record-history.mjs",
     "architecture:test": "node --test --test-concurrency=1 scripts/architecture/*.test.mjs",
     "check": "pnpm foundation:check && pnpm docs:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm lint && pnpm typecheck",
+    "check:changed": "agent-teams-foundation agent-workflow changed --consumer .",
+    "check:fast": "pnpm foundation:check && pnpm architecture:check && pnpm lint && pnpm typecheck",
     "docs:check": "markdownlint-cli2 README.md AGENTS.md 'docs/**/*.md'",
     "foundation:assert-dev-only": "agent-teams-foundation assert-dev-only",
     "foundation:assert-registry": "agent-teams-foundation assert-registry",
@@ -23,10 +25,11 @@
     "foundation:detach": "agent-teams-foundation detach",
     "foundation:status": "agent-teams-foundation status",
     "lint": "oxlint --config .oxlintrc.json --deny-warnings --disable-nested-config .",
+    "lint:files": "oxlint --config .oxlintrc.json --deny-warnings --disable-nested-config --format agent --no-error-on-unmatched-pattern",
     "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"
   },
   "devDependencies": {
-    "@agent-teams/engineering-foundation": "0.4.1",
+    "@agent-teams/engineering-foundation": "0.5.0",
     "@ast-grep/napi": "catalog:",
     "@types/node": "catalog:",
     "ajv": "catalog:",
