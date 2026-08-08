@@ -10,11 +10,16 @@ packages:
     path: packages/contexts/tenancy
     package_name: "@agent-teams/platform-tenancy"
     owner_document: domain.contexts.tenancy
-  - id: context.identity-access
+  - id: context.identity
     role: bounded-context
-    path: packages/contexts/identity-access
-    package_name: "@agent-teams/platform-identity-access"
-    owner_document: domain.contexts.identity-access
+    path: packages/contexts/identity
+    package_name: "@agent-teams/platform-identity"
+    owner_document: domain.contexts.identity
+  - id: context.access-authority
+    role: bounded-context
+    path: packages/contexts/access-authority
+    package_name: "@agent-teams/platform-access-authority"
+    owner_document: domain.contexts.access-authority
   - id: context.project-management
     role: bounded-context
     path: packages/contexts/project-management

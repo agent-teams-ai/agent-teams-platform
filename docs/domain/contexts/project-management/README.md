@@ -45,16 +45,20 @@ external evidence referenced opaquely.
 - `ProductProject` owns only stable identity, lifecycle revision, and monotonic
   retirement epoch.
 - `ProjectRestriction` and `ProjectAdmissionAuthority` form a separate
-  consistency boundary from ProductProject identity.
+  consistency boundary from ProductProject identity after initialization.
 - `ProductProjectRetirementProcess` owns commitment, immutable policy/catalog
   references, bounded obligations, and opaque receipts.
-- The exact persistence boundary for create-command receipt and
-  ManagedProjectScopeAdmissionProcess remains open.
+- The proposed create Unit of Work atomically initializes ProductProject, a
+  denied ProjectAdmissionAuthority, command receipt, scope-admission process
+  intent, and outbox before any external call.
 
 ## Invariants
 
 - ProductProject transitions only `OPEN -> RETIRED`; retirement is terminal and
   identity/incarnation is never reused.
+- Missing ProjectAdmissionAuthority means denied; no read path defaults open.
+- Project creation commits all initial owner-local authority and recovery records
+  together or does not create ProductProject.
 - Provisioning, readiness, suspension, export, and physical disposition are not
   ProductProject identity states.
 - One restriction source can clear only its exact identity and source revision.
@@ -80,8 +84,9 @@ Proposed commands are `CreateProductProject`, `AddProjectRestriction`,
 `CancelProductProjectRetirement`, and `CommitProductProjectRetirement`.
 Proposed domain events cover identity creation, exact restriction changes,
 admission revision, retirement commitment, and local process transitions.
-Orchestrator commands and receipts are integration messages owned by their
-respective producer, not ProductProject domain events.
+Orchestrator commands belong to the receiving Orchestrator Published Language.
+Platform owns its intent and consumer port; the ACL maps between them. Receipts
+and events belong to their publishers and are not ProductProject domain events.
 
 ## Features
 
@@ -95,15 +100,17 @@ respective producer, not ProductProject domain events.
 
 ## Dependencies
 
-Tenancy supplies an opaque active TenantRef and lifecycle evidence. Identity and
-Access supplies operation-specific authority. Commercial Access contributes
+Tenancy supplies an opaque active TenantRef and lifecycle evidence. Access and
+Authority supplies operation-specific authority. Commercial Access contributes
 exact restriction facts. Deployment Management may supply placement intent.
-Orchestration Scope is an external downstream owner behind a consumer-owned port.
+Orchestration Scope is an external downstream owner behind the Project
+Management-owned `OrchestrationScopeAdmissionPort`.
 
 ## Integration
 
-The private Managed Lifecycle ACL maps Platform intent into an
-Orchestrator-owned service contract. Platform treats Orchestrator as one
+The private Managed Lifecycle ACL implements the Project Management-owned
+`OrchestrationScopeAdmissionPort` by mapping Platform intent into an
+Orchestrator-owned provider contract. Platform treats Orchestrator as one
 participant and never imports OrchestrationProject, RuntimeScopeBinding, Run,
 Work, Workspace, or AR domain models. Lost acknowledgement is resolved through
 the original request/Operation identity and exact receipt query.
@@ -140,8 +147,9 @@ runtime scope identity, and AR readiness never enter this language.
 This is the recommended first package, but materialization remains forbidden
 until an accepted decision closes `PO-PLAT-003`, fixes the create transaction
 boundary, accepts ManagedProjectScopeAdmissionProcess as a feature-owned process
-manager, and defines the first consumer-owned Orchestrator port and fake
-conformance contract. The first feature slice must land with the package.
+manager, and defines Project Management-owned Tenant-admission,
+create-Project-authority, and Orchestration-scope-admission ports with fake
+conformance contracts. The first feature slice must land with the package.
 
 ## Open Decisions
 
@@ -149,4 +157,5 @@ conformance contract. The first feature slice must land with the package.
 - Whether create receipt and scope-admission process share one Project
   Management transaction boundary.
 - Exact Project create input and uniqueness policy; names never become identity.
+- `PO-PLAT-007`: Project name uniqueness, rename, and retired-name reuse.
 - Orchestrator managed scope-admission service schema and compatibility window.

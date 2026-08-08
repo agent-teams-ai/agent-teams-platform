@@ -71,7 +71,8 @@ events replayed into another aggregate.
 
 ## Features
 
-- create Tenant under an exact CustomerOwnerRef;
+- create Tenant under an exact Tenancy-owned `TenantOwnerRef` built from one
+  observed concrete owner reference;
 - change owner only through an explicit future migration;
 - close and inspect Tenant admission;
 - coordinate Tenant retirement with a fixed Project index boundary;
@@ -79,9 +80,9 @@ events replayed into another aggregate.
 
 ## Dependencies
 
-Customer Ownership supplies owner identity. Identity and Access supplies scoped
-administrative authority. Project Management owns ProductProject and performs
-owner-local retirement. Deployment Management owns placement intent.
+Customer Ownership supplies concrete owner identity facts. Access and Authority
+supplies scoped administrative authority. Project Management owns ProductProject
+and performs owner-local retirement. Deployment Management owns placement intent.
 
 ## Integration
 
@@ -122,5 +123,6 @@ TenantOwnerRef alone is insufficient.
 ## Open Decisions
 
 - `PO-PLAT-001`: membership scopes and administrative inheritance.
-- Tenant transfer, merge/split, suspension, retirement, and restoration policy.
+- `PO-PLAT-006`: Tenant transfer, merge/split, suspension, retirement, and
+  restoration policy.
 - Region/residency policy reference and whether it changes Tenant identity.

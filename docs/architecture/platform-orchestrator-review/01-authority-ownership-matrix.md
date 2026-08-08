@@ -16,19 +16,20 @@ related:
 
 | Status | Capability | Semantic owner | Writer | Persistence and source of truth | Acceptance source and limit |
 | --- | --- | --- | --- | --- | --- |
-| `PROPOSED` | Customer organization lifecycle | Platform Customer Organization | Platform use case | Platform DB and aggregate | Review proposal; exact Platform bounded context remains open |
+| `PROPOSED` | Customer organization lifecycle | Platform Customer Ownership | Customer Ownership use case | Customer Ownership store | Review proposal; exact aggregate boundary remains open |
 | `PROPOSED` | Tenant isolation and lifecycle | Platform Tenancy or Standalone Authority | Owning authority use case | Owning authority store | Platform ADR-0002 confirms owner references, not the complete Tenancy boundary |
 | `CONFIRMED` | Product project identity lifecycle | Platform Project Management | Platform use case | Platform DB and ProductProject `OPEN -> RETIRED` aggregate | Platform ADR-0004 |
 | `CONFIRMED` | Project admission restrictions and effective gate | Owning Platform authority capability plus Project Management gate | Typed source command and gate use case | Exact restriction records and Project admission authority | Platform ADR-0004 |
 | `CONFIRMED` | Product project retirement commitment | Platform Project Management | ProductProjectRetirementProcess | Commitment, policy/catalog revisions, obligations, and opaque receipts in Platform DB | Platform ADR-0004 |
 | `CONFIRMED` | Owner-local Project disposition | Each Platform, Orchestrator, or AR data owner | Owning disposition use case | Owner-local records, receipts, tombstones, and outbox | Platform ADR-0004, Orchestrator ADR-0080, and AR ADR-0003; exact contracts remain owner-local follow-ups |
-| `PROPOSED` | Principal and membership lifecycle | Platform Identity and Access | Identity provisioning and membership use cases | Platform authority store | Orchestrator OD-012 remains open; no Platform authority ADR accepts the aggregate boundary |
+| `PROPOSED` | Stable Platform principal and external identity lifecycle | Platform Identity | Identity registration, binding, migration, disablement, erasure, and tombstone use cases | Platform identity store | Platform ADR-0002 confirms independent identity ownership and privacy constraints, not the complete aggregate boundary |
+| `PROPOSED` | Membership, grant, delegation, revocation, and product authority | Platform Access and Authority | Membership, grant, delegation, revocation, and capability-decision use cases | Platform product-authority store | Platform ADR-0002 confirms independent access ownership; exact aggregates and decision API remain open |
 | `PROPOSED` | Commercial entitlements | Platform Commercial Access | Platform entitlement use case | Platform commercial store | Review proposal; commercial bounded-context split remains open |
 | `CONFIRMED` | Personal customer ownership | Platform customer-ownership domain | PersonalSpace lifecycle use cases | Platform DB and PersonalSpace aggregate | Platform ADR-0002 |
 | `CONFIRMED` | Managed installation desired state and signed plan | Platform Deployment Management | Platform installation use case | Platform DB, `PlatformInstallation`, and immutable signed `DeploymentPlan` | Platform ADR-0005; exact wire schema and packaging remain unqualified |
 | `CONFIRMED` | Customer-side installation plan acceptance and writer authority | Customer Installation Control Plane | Customer installation use case | Customer authority store, `InstallationEnrollment`, local authority epoch, and short-lived fenced writer lease | Platform ADR-0005; exact control protocol remains unqualified |
 | `CONFIRMED` | Managed installation software reconciliation | Customer Installation Control Plane | Installation operation executor | Customer-side operation journal, verified artifacts, activation generation, and receipts | Platform ADR-0005; no implementation qualification is implied |
-| `PROPOSED` | Stable orchestration principal identity | Orchestration Principal Registry | Trusted binding and rebinding use cases | Orchestrator DB | Orchestrator OD-012 remains open |
+| `OPEN` | Stable orchestration principal identity | Owner unresolved under Orchestrator OD-012 | Future owning identity and binding use cases | Future owner-local Orchestrator persistence | Orchestrator OD-012 remains open; Platform does not assign an external BC name |
 | `CONFIRMED` | Stable orchestration scope and authority binding | Orchestration Scope | Trusted scope-admission and binding use cases | Orchestrator DB | Orchestrator ADR-0079 and ADR-0080; exact aggregates and public representation remain open |
 | `CONFIRMED` | Run lifecycle and Work execution-effect ownership | Run Orchestration and Work Coordination separately | Owning use case | Owning Orchestrator persistence | Orchestrator ADR-0079; exact tactical aggregates remain under their owning design tracks |
 | `PROPOSED` | Teams, team messages, and product approval lifecycles | Proposed Team Topology, Agent Communication, and Approval Management contexts | Owning use case | Future owner-local Orchestrator persistence | Current Orchestrator context map keeps these context boundaries proposed |
@@ -95,8 +96,8 @@ related:
 
 ## Open decisions
 
-- `OPEN`: exact bounded contexts for Platform Identity, Tenancy, and Project
-  Management.
+- `OPEN`: exact aggregate boundaries and first slices inside proposed Platform
+  Identity, Access and Authority, Tenancy, and Project Management contexts.
 - `OPEN`: cloud-specific external authority anchors, workload identities, and
   fencing mechanisms are qualification choices. Their required semantics are
   fixed by ADR-0005; no provider is selected by the domain.

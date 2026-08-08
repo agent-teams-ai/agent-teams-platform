@@ -449,9 +449,9 @@ validity deadline
 
 ## Remaining open decisions
 
-- exact Platform bounded context and aggregate owning the managed scope-admission
-  process;
-- exact fail-closed Project creation transaction and restriction representation;
+- exact Project Management aggregate split after the proposed atomic
+  fail-closed initialization;
+- exact Project restriction representation after initial denied authority;
 - managed Orchestrator command, query, receipt, and authoritative-negative
   schemas;
 - terminal customer semantics for cancellation, abandonment, and `BLOCKED`;

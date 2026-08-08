@@ -16,7 +16,8 @@ related:
 
 - `PersonalSpace`: stable personal customer owner identity.
 - `CustomerOrganization`: stable business customer owner identity.
-- `CustomerOwnerRef`: closed reference to either owner kind.
+- `PersonalSpaceRef` and `CustomerOrganizationRef`: concrete opaque owner
+  identities consumed by Tenancy.
 - `OwnershipMigration`: explicit future process; never aggregate type mutation.
 
 The bare term `Organization` is forbidden where it could mean either
@@ -80,8 +81,8 @@ and versioned; domain events are never exported directly.
 
 ## Dependencies
 
-Identity and Access supplies opaque verified principal references. Tenancy owns
-the authoritative `TenantOwnerRef` binding. This context does not synchronously
+Platform Identity supplies opaque verified principal references. Tenancy owns
+the authoritative closed `TenantOwnerRef` binding. This context does not synchronously
 mutate either owner.
 
 ## Integration
@@ -92,14 +93,15 @@ port. Cross-context imports of aggregates are forbidden.
 
 ## Published Language
 
-The proposed internal Published Language contains the closed `CustomerOwnerRef`
-and minimal revisioned `CustomerOwnerLifecycleFact`. It excludes PII, login
-identities, memberships, Tenant lists, billing, and aggregate snapshots. Tenancy
-maps these facts into its own owner-binding model through an ACL.
+The proposed internal Published Language contains concrete typed
+`PersonalSpaceRef` or `CustomerOrganizationRef` lifecycle facts. It never defines
+the closed `TenantOwnerRef`; Tenancy constructs and owns that union. Lifecycle
+facts exclude PII, login identities, memberships, Tenant lists, billing, and
+aggregate snapshots.
 
 ## Forbidden Dependencies
 
-- no import of Identity and Access principals or external identity bindings;
+- no import of Platform Identity principals or external identity bindings;
 - no Tenant, ProductProject, subscription, or billing repository access;
 - no ownership lookup by email, display name, workspace path, or IdP subject;
 - no cross-context transaction that creates an owner and Tenant atomically;
@@ -123,4 +125,4 @@ package.
 
 - `PO-PLAT-001`: organization-level versus Tenant-level membership semantics.
 - `PO-PLAT-005`: merge/split, PII erasure, tombstones, and IdP migration.
-- Organization creation, retirement, recovery, and owner-transfer policy.
+- `PO-PLAT-006`: organization retirement, recovery, and owner-transfer policy.

@@ -15,7 +15,8 @@ materialization gate.
 
 - [Customer Ownership](customer-ownership/README.md)
 - [Tenancy](tenancy/README.md)
-- [Identity and Access](identity-access/README.md)
+- [Platform Identity](identity/README.md)
+- [Access and Authority](access-authority/README.md)
 - [Project Management](project-management/README.md)
 - [Commercial Access](commercial-access/README.md)
 - [Deployment Management](deployment-management/README.md)

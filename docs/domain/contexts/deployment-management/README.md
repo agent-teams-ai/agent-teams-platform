@@ -25,9 +25,10 @@ related:
 ## Ownership
 
 Deployment Management owns managed placement intent, PlatformInstallation,
-desired revision, release policy, commercial deployment authority, and signed
-DeploymentPlan publication. ADR-0005 confirms this semantic ownership, not the
-complete bounded context or wire schema.
+desired revision, placement and release decisions constrained by typed commercial
+inputs, and signed DeploymentPlan publication. Commercial Access remains the
+owner of commercial entitlements and restrictions. ADR-0005 confirms deployment
+intent ownership, not the complete bounded context or wire schema.
 
 ## System of Record
 

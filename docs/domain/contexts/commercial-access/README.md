@@ -5,7 +5,7 @@ status: proposed
 owner: product/commercial-access
 classification: supporting
 package_target: context.commercial-access
-summary: Proposed subscription, entitlement, credit, and commercial-restriction boundary.
+summary: Proposed commercial agreement, subscription, entitlement, and restriction boundary.
 related:
   - architecture.platform-orchestrator-review.authority-ownership
 ---
@@ -16,32 +16,29 @@ related:
 
 - `Subscription`: commercial agreement state, not an authorization role.
 - `Entitlement`: versioned commercial capability granted to a customer scope.
-- `CreditBalance`: exact commercial value with unit and revision.
 - `CommercialRestriction`: exact restriction emitted from commercial policy.
-- `CommercialUsageFact`: immutable downstream fact used for rating or billing.
 
 These names remain proposed until the product model is accepted.
 
 ## Ownership
 
 Commercial Access owns product plans, subscriptions, commercial entitlements,
-credits, and commercial restrictions. It may consume operational usage facts,
-but it never becomes the source of Run, Work, provider, or operational budget
-truth.
+and commercial restrictions. It does not own credit, rating, invoicing, payment,
+tax, Run, Work, provider, or operational budget truth.
 
 ## System of Record
 
 The proposed commercial store is authoritative for agreements, subscription and
-entitlement revisions, exact credit values, commercial restrictions, rating
-inputs, immutable corrections, and future invoice evidence. Orchestrator remains
-authoritative for operational usage and consumption governance.
+entitlement revisions, and exact commercial restrictions. Orchestrator remains
+authoritative for operational usage and consumption governance. Any future
+Commercial Accounting store requires a separately proven bounded context.
 
 ## Aggregates
 
-No aggregate boundary is accepted. Subscription, entitlement grant, credit
-ledger, invoice, and rating may prove different lifecycles and future bounded
-contexts. They must not be forced into one Billing aggregate or generic policy
-object before discovery.
+No aggregate boundary is accepted. CommercialAgreement, Subscription, and
+EntitlementGrant are candidates with potentially different consistency
+boundaries. Credit ledger, rating, invoice, tax, and payment are deliberately
+excluded rather than forced into one Billing aggregate or generic policy object.
 
 ## Invariants
 
@@ -50,55 +47,51 @@ object before discovery.
   string capability bag.
 - A commercial restriction cannot clear security, tenant, manual, or retirement
   restrictions.
-- Exact quantities and money never use JavaScript `number`.
-- Usage observation, consumed quantity, rated quantity, cost, credit, and invoice
-  are distinct facts with versioned correction semantics.
-- Unknown price or missing usage evidence never becomes an exact zero cost.
+- A missing or unavailable commercial decision never silently grants access.
+- Future exact quantities and money never use JavaScript `number` or become
+  fields of an Entitlement merely to avoid a separate accounting lifecycle.
 
 ## Lifecycle
 
-Subscription, entitlement, credit, billing, correction, and invoice lifecycles
-remain open under `PO-PLAT-004`. Operational usage continues independently during
-commercial-system outages according to explicit fail-closed admission policy;
-no silent fallback is allowed.
+Agreement, subscription, entitlement, and restriction lifecycles remain open
+under `PO-PLAT-004`. Billing, credit, rating, correction, and invoice lifecycles
+are outside this candidate context. Commercial-system outage behavior must be an
+explicit capability-specific policy; no silent fallback is allowed.
 
 ## Commands and Events
 
 Candidate command families create or change a Subscription, grant or revoke an
-exact Entitlement, apply or release a CommercialRestriction, record a usage fact,
-append a rating correction, and reserve or consume credit only after its
-consistency model is accepted. Candidate events describe revisioned commercial
-state and immutable corrections. Names and aggregate routing remain proposed
-under `PO-PLAT-004`.
+exact Entitlement, and apply or release a CommercialRestriction. Candidate events
+describe only revisioned agreement, subscription, entitlement, and restriction
+state. Credit, usage ingestion, rating, correction, payment, and invoice commands
+belong to future independently modeled capabilities.
 
 ## Features
 
 - subscription and entitlement administration;
 - capability-specific commercial access decisions;
 - exact commercial restrictions for Project admission;
-- credit reservation or balance only after its consistency model is accepted;
-- downstream usage ingestion, correction, rating, and future invoicing.
+- versioned agreement and entitlement observations.
 
 ## Dependencies
 
-Customer Ownership and Tenancy supply opaque customer scope. Orchestrator Usage
-Metering and Usage Accounting supply versioned downstream operational facts.
-Project Management consumes exact CommercialRestriction records. Payment and tax
-providers remain outbound adapters behind owning ports.
+Customer Ownership and Tenancy supply opaque customer scope. Project Management
+consumes exact CommercialRestriction records. A future Commercial Accounting ACL
+may consume Orchestrator usage facts, but Commercial Access does not import its
+ledger or payment/tax provider models.
 
 ## Integration
 
-Cross-repository contracts carry versioned capability outcomes and immutable
-usage facts, not plan names or shared tables. Corrections append new evidence;
-they do not rewrite another owner's operational accounting.
+Cross-context contracts carry versioned capability outcomes and exact restriction
+facts, not plan names, prices, invoices, usage facts, or shared tables. A future
+accounting context consumes operational facts through its own ACL.
 
 ## Published Language
 
 The proposed language contains capability-specific commercial outcomes,
-`CommercialRestrictionFact`, immutable usage-fact acceptance, and append-only
-rating/correction evidence with exact units and versions. Plan names, payment
-provider DTOs, generic policy maps, operational budget state, and JavaScript
-floating-point money are excluded.
+`CommercialRestrictionFact`, and revisioned entitlement observations. Plan names,
+payment-provider DTOs, usage facts, rating evidence, generic policy maps,
+operational budget state, and floating-point money are excluded.
 
 ## Forbidden Dependencies
 
@@ -107,26 +100,29 @@ floating-point money are excluded.
 - no direct write into Project restrictions or Orchestrator usage ledgers;
 - no plan or subscription vocabulary in Orchestrator and AR contracts;
 - no shared transaction with payment, tax, Project admission, or usage owners;
-- no `number` for exact quantity, price, credit, tax, or monetary amount.
+- no temporary credit, rating, or invoice fields inside Subscription or
+  Entitlement aggregates.
 
 ## Not Owned
 
 - authentication, memberships, roles, or product-operation policy;
 - Run/Work usage observations and operational attribution;
 - user-configured budgets, alerts, reservations, and hard operational limits;
+- credit ledger, usage rating, invoice, payment, tax, and billing corrections;
 - AR CPU, memory, process, output, or execution limits;
 - generic Project lifecycle or restriction aggregation.
 
 ## Materialization Gate
 
-Materialization is forbidden until `PO-PLAT-004` defines the commercial product,
-exact quantity and money model, failure policy, correction semantics, and first
-vertical slice. A later Commercial Accounting split remains possible without a
-shared domain package.
+Materialization is forbidden until `PO-PLAT-004` defines agreement,
+subscription, entitlement, restriction, outage behavior, and a first commercial
+access slice. Commercial Accounting remains unreserved and may be introduced
+later without a shared domain package.
 
 ## Open Decisions
 
 - `PO-PLAT-004`: subscriptions, entitlements, credits, overage, invoices, and
   billing restrictions.
-- Commercial authority during billing outage and delayed usage correction.
-- Whether rating/invoicing proves an independently evolving context.
+- Commercial authority during subscription or entitlement provider outage.
+- Whether later credit/rating/invoicing language proves one or several
+  independently evolving contexts.
