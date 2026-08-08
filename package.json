@@ -39,8 +39,13 @@
     "@types/node": "catalog:",
     "ajv": "catalog:",
     "markdownlint-cli2": "catalog:",
+    "mdast-util-to-string": "catalog:",
     "oxlint": "catalog:",
+    "remark-frontmatter": "catalog:",
+    "remark-parse": "catalog:",
     "typescript": "catalog:",
+    "unified": "catalog:",
+    "unist-util-visit": "catalog:",
     "yaml": "catalog:"
   }
 }

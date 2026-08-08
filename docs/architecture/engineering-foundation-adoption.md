@@ -75,13 +75,26 @@ does not know Platform bounded-context names or domain layers.
 
 The materializing change must:
 
-1. accept the owner document through its owning ADR;
-2. include the first accepted domain feature rather than an empty DDD tree;
-3. save and review the content-addressed Plan;
-4. apply the exact Plan without bypassing authority evidence;
-5. prove package and repository checks, crash recovery, and idempotent re-run.
+1. accept the owner document through an immutable accepted ADR whose
+   `accepts_package_targets` explicitly names the catalog target;
+2. record that ADR as `owner_decision` and the first real feature as
+   `first_feature` in the dossier;
+3. include implementation and focused tests for that feature rather than an
+   empty DDD tree;
+4. commit the content-addressed Plan at
+   `architecture/scaffolding/plans/<target-id>.json`;
+5. apply that exact Plan and commit its validated Receipt at
+   `architecture/scaffolding/receipts/<target-id>.json`;
+6. prove current authority inputs still match the Plan read set, plus package,
+   repository, crash-recovery, and idempotent re-run checks.
 
 The package catalog is a plan, not architectural acceptance. Changing a proposed
 boundary updates the catalog before materialization. Generated envelopes may be
 extended by project-owned source in the same change, but generated files are not
-hand-edited before Plan application.
+hand-edited before Plan application. Context package directories and evidence
+must be regular repository paths, never symlinks. The validator rejects both
+uncatalogued context packages and accepted targets without complete evidence.
+Foundation governance remains the sole owner of ADR canonicalization and
+immutable-digest verification. The Platform materialization gate consumes the
+Foundation-owned accepted baseline instead of reimplementing its digest
+algorithm.

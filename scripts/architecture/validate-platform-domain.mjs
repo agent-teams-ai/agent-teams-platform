@@ -1,18 +1,24 @@
-import { readFile, readdir, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 
 import Ajv2020 from "ajv/dist/2020.js";
-import YAML from "yaml";
+
+import {
+  DOSSIER_ROOT,
+  loadDossiers,
+  loadMarkdown,
+  loadYaml,
+} from "./platform-domain-documents.mjs";
+import { validateMaterialization } from "./platform-domain-materialization.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRepositoryRoot = path.resolve(scriptDirectory, "../..");
 const catalogPath = "architecture/package-catalog.yaml";
 const scaffoldingPath = "architecture/foundation/scaffolding.yaml";
 const contextMapPath = "docs/domain/context-map.md";
-const dossierIndexPath = "docs/domain/contexts/README.md";
-const dossierRoot = "docs/domain/contexts";
+const dossierIndexPath = `${DOSSIER_ROOT}/README.md`;
 const requiredScaffoldingPolicy = {
   schemaVersion: 1,
   projectId: "agent-teams-platform",
@@ -40,7 +46,7 @@ const requiredScaffoldingPolicy = {
           contractVersion: 1,
           parameters: {
             allowedStatuses: ["accepted"],
-            documentRoots: [dossierRoot],
+            documentRoots: [DOSSIER_ROOT],
           },
         },
       ],
@@ -65,42 +71,6 @@ const requiredHeadings = [
   "Materialization Gate",
   "Open Decisions",
 ];
-
-function frontmatter(source, subject, errors) {
-  const match = source.match(
-    /^---\r?\n(?<yaml>[\s\S]*?)\r?\n---(?:\r?\n|$)/u,
-  );
-  if (!match?.groups?.yaml) {
-    errors.push(`DOMAIN-DOSSIER-001 ${subject} lacks YAML frontmatter`);
-    return null;
-  }
-  return parseYaml(match.groups.yaml, subject, errors);
-}
-
-function parseYaml(source, subject, errors) {
-  const document = YAML.parseDocument(source, { uniqueKeys: true });
-  for (const error of document.errors) {
-    errors.push(`DOMAIN-YAML-001 ${subject}: ${error.message}`);
-  }
-  return document.errors.length === 0 ? document.toJS() : null;
-}
-
-async function readText(repositoryRoot, relativePath, errors) {
-  try {
-    return await readFile(path.join(repositoryRoot, relativePath), "utf8");
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      errors.push(`DOMAIN-FILE-001 missing ${relativePath}`);
-      return null;
-    }
-    throw error;
-  }
-}
-
-async function loadYaml(repositoryRoot, relativePath, errors) {
-  const source = await readText(repositoryRoot, relativePath, errors);
-  return source === null ? null : parseYaml(source, relativePath, errors);
-}
 
 async function schemaValidator(schemaSpecifier) {
   const schema = JSON.parse(
@@ -129,39 +99,6 @@ function validateSchema(value, validator, subject, errors) {
   }
 }
 
-async function loadDossiers(repositoryRoot, errors) {
-  let entries;
-  try {
-    entries = await readdir(path.join(repositoryRoot, dossierRoot), {
-      withFileTypes: true,
-    });
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      errors.push(`DOMAIN-FILE-001 missing ${dossierRoot}`);
-      return [];
-    }
-    throw error;
-  }
-  const dossiers = [];
-  for (const entry of entries.toSorted((left, right) =>
-    left.name.localeCompare(right.name, "en"))) {
-    if (!entry.isDirectory()) {
-      continue;
-    }
-    const relativePath = `${dossierRoot}/${entry.name}/README.md`;
-    const source = await readText(repositoryRoot, relativePath, errors);
-    if (source !== null) {
-      dossiers.push({
-        content: source,
-        metadata: frontmatter(source, relativePath, errors),
-        path: relativePath,
-        slug: entry.name,
-      });
-    }
-  }
-  return dossiers;
-}
-
 function duplicateValues(items, selector) {
   const seen = new Set();
   const duplicates = new Set();
@@ -175,11 +112,10 @@ function duplicateValues(items, selector) {
   return [...duplicates].toSorted();
 }
 
-function validateUniqueCatalogFields(packages, errors) {
-  const fields = ["id", "path", "package_name", "owner_document"];
+function validateUniqueFields(items, fields, subject, errors) {
   for (const field of fields) {
-    for (const duplicate of duplicateValues(packages, (item) => item[field])) {
-      errors.push(`DOMAIN-CATALOG-001 duplicate ${field}: ${duplicate}`);
+    for (const duplicate of duplicateValues(items, (item) => item[field])) {
+      errors.push(`DOMAIN-${subject}-001 duplicate ${field}: ${duplicate}`);
     }
   }
 }
@@ -195,27 +131,45 @@ function validateDossierShape(dossier, errors) {
   if (!["accepted", "proposed"].includes(metadata.status)) {
     errors.push(`DOMAIN-DOSSIER-003 ${dossier.path} has invalid status`);
   }
-  for (const field of ["id", "owner", "classification", "package_target"]) {
+  for (const field of [
+    "id",
+    "owner",
+    "classification",
+    "package_target",
+    "summary",
+  ]) {
     if (typeof metadata[field] !== "string" || metadata[field].length === 0) {
       errors.push(`DOMAIN-DOSSIER-004 ${dossier.path} lacks ${field}`);
     }
   }
+  if (
+    metadata.id !== `domain.contexts.${dossier.slug}` ||
+    metadata.package_target !== `context.${dossier.slug}`
+  ) {
+    errors.push(`DOMAIN-DOSSIER-006 ${dossier.path} violates identity convention`);
+  }
   for (const heading of requiredHeadings) {
-    if (!dossier.content.includes(`\n## ${heading}\n`)) {
+    if (!dossier.headings.has(heading)) {
       errors.push(`DOMAIN-DOSSIER-005 ${dossier.path} lacks ${heading}`);
     }
   }
-  if (
-    metadata.status === "accepted" &&
-    !(metadata.related ?? []).some((item) => /^ADR-\d{4}$/u.test(item))
-  ) {
-    errors.push(`DOMAIN-DOSSIER-006 ${dossier.path} lacks owning ADR`);
-  }
+}
+
+function validateDossierIdentities(dossiers, errors) {
+  const metadata = dossiers
+    .map((dossier) => dossier.metadata)
+    .filter((item) => item !== null);
+  validateUniqueFields(metadata, ["id", "package_target"], "DOSSIER", errors);
 }
 
 function validateCatalogBindings(catalog, dossiers, errors) {
   const packages = Array.isArray(catalog?.packages) ? catalog.packages : [];
-  validateUniqueCatalogFields(packages, errors);
+  validateUniqueFields(
+    packages,
+    ["id", "path", "package_name", "owner_document"],
+    "CATALOG",
+    errors,
+  );
   const dossiersById = new Map(
     dossiers
       .filter((dossier) => typeof dossier.metadata?.id === "string")
@@ -261,45 +215,17 @@ function validateScaffoldingPolicy(config, errors) {
   }
 }
 
-async function pathState(repositoryRoot, relativePath) {
-  try {
-    const value = await stat(path.join(repositoryRoot, relativePath));
-    return value.isDirectory() ? "directory" : "other";
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      return "absent";
-    }
-    throw error;
-  }
-}
-
-async function validateMaterialization(repositoryRoot, catalog, dossiers, errors) {
-  const dossierById = new Map(
-    dossiers.map((dossier) => [dossier.metadata?.id, dossier]),
-  );
-  for (const target of catalog?.packages ?? []) {
-    const state = await pathState(repositoryRoot, target.path);
-    const status = dossierById.get(target.owner_document)?.metadata?.status;
-    if (status !== "accepted" && state !== "absent") {
-      errors.push(`DOMAIN-MATERIALIZE-001 ${target.path} owner is not accepted`);
-    }
-    if (status === "accepted" && state !== "directory") {
-      errors.push(`DOMAIN-MATERIALIZE-002 ${target.path} must land with acceptance`);
-    }
-  }
-}
-
 function validateNavigation(contextMap, index, dossiers, errors) {
   for (const dossier of dossiers) {
     const contextLink = `contexts/${dossier.slug}/README.md`;
-    if (!contextMap?.includes(contextLink)) {
+    if (!contextMap?.links.has(contextLink)) {
       errors.push(`DOMAIN-NAV-001 context map lacks ${contextLink}`);
     }
-    if (!index?.includes(`${dossier.slug}/README.md`)) {
+    if (!index?.links.has(`${dossier.slug}/README.md`)) {
       errors.push(`DOMAIN-NAV-002 dossier index lacks ${dossier.slug}`);
     }
   }
-  if (!contextMap?.includes("../../architecture/package-catalog.yaml")) {
+  if (!contextMap?.links.has("../../architecture/package-catalog.yaml")) {
     errors.push("DOMAIN-NAV-003 context map lacks package catalog link");
   }
 }
@@ -311,14 +237,15 @@ export async function validatePlatformDomain(repositoryRoot) {
     loadYaml(repositoryRoot, catalogPath, errors),
     loadYaml(repositoryRoot, scaffoldingPath, errors),
     loadDossiers(repositoryRoot, errors),
-    readText(repositoryRoot, contextMapPath, errors),
-    readText(repositoryRoot, dossierIndexPath, errors),
+    loadMarkdown(repositoryRoot, contextMapPath, errors),
+    loadMarkdown(repositoryRoot, dossierIndexPath, errors),
   ]);
   validateSchema(catalog, catalogValidator, catalogPath, errors);
   validateSchema(scaffolding, scaffoldingValidator, scaffoldingPath, errors);
   for (const dossier of dossiers) {
     validateDossierShape(dossier, errors);
   }
+  validateDossierIdentities(dossiers, errors);
   validateCatalogBindings(catalog, dossiers, errors);
   validateScaffoldingPolicy(scaffolding, errors);
   await validateMaterialization(repositoryRoot, catalog, dossiers, errors);
