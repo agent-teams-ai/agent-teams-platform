@@ -26,11 +26,12 @@ Platform or Standalone Authority identity
   -> AR-owned runtime identity through a stateless Runtime ACL
 ```
 
-- Platform owns customer organizations, product tenancy, product projects,
-  principals, memberships, commercial entitlements, placement, and managed
-  scope-provisioning intent. Platform Deployment Management additionally owns
-  `PlatformInstallation`, desired installation revision, and the signed
-  immutable `DeploymentPlan` for Managed BYOC.
+- Platform semantic ownership covers customer organizations, product tenancy,
+  product projects, principals, memberships, commercial entitlements,
+  placement, and managed scope-admission intent. The exact Platform
+  bounded-context and aggregate split remains proposed in the strategic Context
+  Map. ADR-0005 separately confirms `PlatformInstallation`, desired installation
+  revision, and signed immutable `DeploymentPlan` ownership for Managed BYOC.
 - The Customer Installation Control Plane owns customer-side plan acceptance,
   `InstallationEnrollment`, the local authority epoch, the short-lived fenced
   writer lease, and installation reconciliation. It is not an Orchestrator
@@ -49,6 +50,9 @@ Platform or Standalone Authority identity
   provisioning, and `TechnicalExecutionGrant` remain open follow-up contracts.
   They are not implementation authority until AR accepts them and publishes
   conformance fixtures.
+- AR ADR-0005 accepts four private runtime context package identities. It does
+  not accept a wire identity, Published Language artifact, runtime-scope API, or
+  shared domain package.
 - Cross-system IDs remain opaque. Shared domain packages are forbidden.
 - Platform authority evidence binds an explicit outcome to authority realm,
   audience, typed tenant or project scope, action, actor, subject, client,

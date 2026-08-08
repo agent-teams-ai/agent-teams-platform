@@ -54,6 +54,7 @@ const acceptedSourcePatterns = [
   /\bAR ADR-0002\b/u,
   /\bAR ADR-0003\b/u,
   /\bAR ADR-0004\b/u,
+  /\bAR ADR-0005\b/u,
 ];
 const stalePhrases = [
   "Revalidate immediately before effect",

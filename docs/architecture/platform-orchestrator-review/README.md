@@ -19,10 +19,11 @@ split-control, plan-acceptance, customer-fencing, custody, and lifecycle rows.
 Orchestrator ADR-0058, ADR-0062, ADR-0071, ADR-0079, and ADR-0080 accept the
 narrow realtime, workspace/security, operation-identity, runtime-binding, and
 Orchestration Scope semantics cited below. AR ADR-0003 and ADR-0004 accept
-cutoff, disposition, and
-pre-materialization prevention semantics while deliberately leaving their wire
-contract and implementation qualification open. All remaining proposed rows
-stay review material, not permission to materialize bounded contexts.
+cutoff, disposition, and pre-materialization prevention semantics while
+deliberately leaving their wire contract and implementation qualification open.
+AR ADR-0005 accepts private runtime package identities only; it is not a wire or
+cross-repository contract. All remaining proposed rows stay review material, not
+permission to materialize bounded contexts.
 
 1. [Authority ownership matrix](01-authority-ownership-matrix.md)
 2. [Resource identity and binding matrix](02-resource-identity-binding-matrix.md)
@@ -43,7 +44,7 @@ Supporting concurrency evidence:
 | --- | --- | --- |
 | Platform | ADR-0001 through ADR-0005 | Exact Platform bounded-context split, authority wire schemas, and production packages |
 | Orchestrator | ADR-0058, ADR-0062, ADR-0071, ADR-0079, and ADR-0080 | OD-006 tactical aggregates, OD-012 principal/provider topology, OD-019 public identity representation, and OD-032 generic last-mile safety |
-| Agent Runtime | ADR-0001 through ADR-0004 | Exact Published Language identities, services, messages, fields, retention windows, implementation, and production qualification |
+| Agent Runtime | ADR-0001 through ADR-0005 | Exact Published Language identities, services, messages, fields, retention windows, implementation, and production qualification |
 
 The matrices cite these accepted sources at the narrowest applicable semantic
 boundary. A source accepted in another repository confirms only the stated

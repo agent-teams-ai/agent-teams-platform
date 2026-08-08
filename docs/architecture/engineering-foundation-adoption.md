@@ -62,13 +62,26 @@ is not an exception mechanism.
 
 ## Scaffolding admission
 
-Foundation scaffolding becomes active only when an accepted first vertical
-slice provides a real target ID, role, package path, package name, and owner
-document. The same change creates the Platform target catalog and composition,
-saves and reviews the deterministic Plan, applies it, and proves the resulting
-package with the normal checks.
+The target catalog reserves reviewed package identities without creating package
+directories. Its owner documents remain `proposed`, while the only Platform
+composition accepts `status: accepted`. Planning, applying, and recovering a
+current target therefore fail closed until the owning decision and first real
+feature slice are accepted together.
 
-No target catalog or empty package is created in advance. Current Platform ADRs
-define domain ownership but do not yet reserve concrete package identities, and
-the repository hard rule forbids using scaffolding to guess them. This gate is
-an intentional application of scaffolding authority, not a missing placeholder.
+Foundation owns the generic private Node TypeScript package envelope and the
+deterministic Plan, Apply, and Recover protocol. Platform owns target identities,
+roles, paths, names, owner documents, and future feature composition. Foundation
+does not know Platform bounded-context names or domain layers.
+
+The materializing change must:
+
+1. accept the owner document through its owning ADR;
+2. include the first accepted domain feature rather than an empty DDD tree;
+3. save and review the content-addressed Plan;
+4. apply the exact Plan without bypassing authority evidence;
+5. prove package and repository checks, crash recovery, and idempotent re-run.
+
+The package catalog is a plan, not architectural acceptance. Changing a proposed
+boundary updates the catalog before materialization. Generated envelopes may be
+extended by project-owned source in the same change, but generated files are not
+hand-edited before Plan application.

@@ -22,6 +22,13 @@ summary: Navigation for current and proposed Platform architecture.
 - [Platform-Orchestrator design review](platform-orchestrator-review/README.md)
   contains the eight proposed matrices, models, and state machines required by
   that review gate.
+- [Platform strategic context map](../domain/context-map.md) proposes Platform
+  bounded contexts, relationships, explicit exclusions, and the first vertical
+  slice without accepting production packages.
+- [Bounded-context dossiers](../domain/contexts/README.md) hold substantial
+  discovery evidence and materialization gates for each candidate.
 
-Production bounded-context dossiers are added with their first accepted domain
-slice. Empty context documentation is not used as a substitute for modeling.
+Substantial proposed dossiers may precede code when they make language,
+ownership, invariants, lifecycle, and open decisions reviewable. Empty dossiers
+and empty production packages remain forbidden. Materialization requires an
+accepted owner document and the first accepted domain slice in the same change.

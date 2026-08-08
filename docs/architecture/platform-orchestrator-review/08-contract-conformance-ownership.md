@@ -21,6 +21,7 @@ related:
 | `PROPOSED` | Private Platform Project lifecycle wire contract | Platform | Future versioned Platform contract artifact | Producer compatibility and Managed Lifecycle ACL consumer suite | Exact transport, schema, package, and compatibility window remain open |
 | `CONFIRMED` | AR Published Language ownership | AR | AR runtime state, feeds, and receipts | AR owns semantic conformance; Orchestrator owns consumer-port expectations | AR ADR-0003; ownership is confirmed, physical artifact is not |
 | `OPEN` | AR Published Language artifact | AR | Future AR versioned schemas and capability metadata | Future wire, generated-client, version-handshake, compatibility, and negative-variant suites | AR ADR-0003 explicitly requires a follow-up contract decision |
+| `CONFIRMED` | AR internal context package identities | AR | Four private AR package boundaries and their owner decision | AR package-catalog and source-boundary checks; no Platform or Orchestrator consumer contract | AR ADR-0005; package identity only, not Published Language or shared domain types |
 | `PROPOSED` | Orchestration project disposition API | Orchestrator | OrchestrationProject deletion epoch, participant obligations, and owner-local receipt refs | Orchestrator producer suite plus Platform reconciliation and lost-acknowledgement fixtures | Orchestrator ADR-0080 confirms ownership and semantics, not API schema |
 | `CONFIRMED` | AR cutoff, scope-admission, and technical-disposition semantics | AR | AR scope, cutoff, reconciliation, and context-owned disposition receipts | AR semantic suite plus Orchestrator consumer-port suite | AR ADR-0003 and Orchestrator ADR-0079; exact wire and implementation remain open |
 | `CONFIRMED` | AR pre-materialization negative operation-intent semantics | AR Agent Execution | Original acceptance, negative guard, and dispatch claim serialize on one scoped intent identity in the same Agent Execution authority store | Prove every concurrent commit order, delayed original command, exact replay, digest conflict, lost receipt, restore, and anti-resurrection | AR ADR-0004; exact command and receipt schemas remain open |
@@ -53,7 +54,9 @@ Platform Authority network Published Language
 
 Generated DTOs never become domain entities. The private Managed ACL may import
 private Platform contracts and the public Orchestrator SPI, but Orchestrator core
-imports neither the private package nor Platform domain models.
+imports neither the private package nor Platform domain models. AR private
+context packages remain internal to AR and cannot become a shortcut around its
+future Published Language.
 
 Disposition uses two explicit anti-corruption layers:
 
