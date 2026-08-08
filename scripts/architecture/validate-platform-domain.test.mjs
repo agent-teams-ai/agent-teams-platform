@@ -28,6 +28,7 @@ const foundationCli = path.join(
   "node_modules/@agent-teams/engineering-foundation/dist/cli.js",
 );
 const projectDossierPath = "docs/domain/contexts/project-management/README.md";
+const productDecisionPacketPath = "docs/domain/product-decision-packet.md";
 const packagePath = "packages/contexts/project-management";
 const decisionId = "ADR-9999";
 const decisionPath = "docs/decisions/9999-accept-project-management.md";
@@ -372,5 +373,50 @@ test("does not accept mandatory headings nested inside a blockquote", async () =
       dossier.replace("\n## Invariants\n", "\n> ## Invariants\n"),
     );
     assert.match(await validationText(root), /DOMAIN-DOSSIER-005.*Invariants/u);
+  });
+});
+
+test("rejects silent product-decision acceptance", async () => {
+  await withFixture(async (root) => {
+    const packetFile = path.join(root, productDecisionPacketPath);
+    const packet = await readFile(packetFile, "utf8");
+    await writeFile(
+      packetFile,
+      packet.replace(
+        "  PO-PLAT-003: awaiting-product-owner",
+        "  PO-PLAT-003: accepted",
+      ),
+    );
+    assert.match(await validationText(root), /DOMAIN-PO-003 PO-PLAT-003/u);
+  });
+});
+
+test("requires each product decision exactly once", async () => {
+  await withFixture(async (root) => {
+    const packetFile = path.join(root, productDecisionPacketPath);
+    const packet = await readFile(packetFile, "utf8");
+    await writeFile(
+      packetFile,
+      packet.replace(
+        "## PO-PLAT-007: ProductProject Naming",
+        "## PO-PLAT-006: ProductProject Naming",
+      ),
+    );
+    assert.match(await validationText(root), /DOMAIN-PO-004/u);
+  });
+});
+
+test("does not accept product-decision sections nested inside a blockquote", async () => {
+  await withFixture(async (root) => {
+    const packetFile = path.join(root, productDecisionPacketPath);
+    const packet = await readFile(packetFile, "utf8");
+    await writeFile(
+      packetFile,
+      packet.replace("\n### Consequences\n", "\n> ### Consequences\n"),
+    );
+    assert.match(
+      await validationText(root),
+      /DOMAIN-PO-005 PO-PLAT-001 lacks Consequences/u,
+    );
   });
 });

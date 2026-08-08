@@ -19,6 +19,23 @@ const catalogPath = "architecture/package-catalog.yaml";
 const scaffoldingPath = "architecture/foundation/scaffolding.yaml";
 const contextMapPath = "docs/domain/context-map.md";
 const dossierIndexPath = `${DOSSIER_ROOT}/README.md`;
+const productDecisionPacketPath = "docs/domain/product-decision-packet.md";
+const productDecisionIds = [
+  "PO-PLAT-001",
+  "PO-PLAT-002",
+  "PO-PLAT-003",
+  "PO-PLAT-004",
+  "PO-PLAT-005",
+  "PO-PLAT-006",
+  "PO-PLAT-007",
+];
+const requiredProductDecisionSections = [
+  "Recommendation",
+  "Product Contract",
+  "Explicitly Unsupported in V1",
+  "Consequences",
+  "Product-Owner Confirmation",
+];
 const requiredScaffoldingPolicy = {
   schemaVersion: 1,
   projectId: "agent-teams-platform",
@@ -228,18 +245,86 @@ function validateNavigation(contextMap, index, dossiers, errors) {
   if (!contextMap?.links.has("../../architecture/package-catalog.yaml")) {
     errors.push("DOMAIN-NAV-003 context map lacks package catalog link");
   }
+  if (!contextMap?.links.has("product-decision-packet.md")) {
+    errors.push("DOMAIN-NAV-004 context map lacks product decision packet");
+  }
+}
+
+function decisionSubheadings(packet, decisionId) {
+  const start = packet.rootHeadings.findIndex(
+    (heading) => heading.depth === 2 && heading.text.startsWith(`${decisionId}:`),
+  );
+  if (start === -1) {
+    return null;
+  }
+  const next = packet.rootHeadings.findIndex(
+    (heading, index) => index > start && heading.depth === 2,
+  );
+  return new Set(
+    packet.rootHeadings
+      .slice(start + 1, next === -1 ? undefined : next)
+      .filter((heading) => heading.depth === 3)
+      .map((heading) => heading.text),
+  );
+}
+
+function validateProductDecisionPacket(packet, errors) {
+  const metadata = packet?.metadata;
+  if (
+    metadata?.id !== "domain.product-decision-packet" ||
+    metadata?.type !== "product-decision-packet" ||
+    metadata?.status !== "proposed" ||
+    metadata?.owner !== "product-owner"
+  ) {
+    errors.push("DOMAIN-PO-001 product decision packet metadata is invalid");
+    return;
+  }
+  const decisions = metadata.decisions;
+  const actualIds =
+    typeof decisions === "object" && decisions !== null
+      ? Object.keys(decisions).toSorted()
+      : [];
+  if (!isDeepStrictEqual(actualIds, [...productDecisionIds].toSorted())) {
+    errors.push("DOMAIN-PO-002 product decision packet must contain exactly PO-PLAT-001...007");
+  }
+  const headingIds = packet.rootHeadings
+    .filter((heading) => heading.depth === 2)
+    .map((heading) => heading.text.match(/^(PO-PLAT-\d{3}):/u)?.[1])
+    .filter((decisionId) => decisionId !== undefined)
+    .toSorted();
+  if (!isDeepStrictEqual(headingIds, [...productDecisionIds].toSorted())) {
+    errors.push(
+      "DOMAIN-PO-004 product decision packet must define each PO-PLAT-001...007 exactly once",
+    );
+  }
+  for (const decisionId of productDecisionIds) {
+    if (decisions?.[decisionId] !== "awaiting-product-owner") {
+      errors.push(`DOMAIN-PO-003 ${decisionId} must remain awaiting-product-owner`);
+    }
+    const subheadings = decisionSubheadings(packet, decisionId);
+    if (subheadings === null) {
+      continue;
+    }
+    for (const heading of requiredProductDecisionSections) {
+      if (!subheadings.has(heading)) {
+        errors.push(`DOMAIN-PO-005 ${decisionId} lacks ${heading}`);
+      }
+    }
+  }
 }
 
 export async function validatePlatformDomain(repositoryRoot) {
   const errors = [];
   const [catalogValidator, scaffoldingValidator] = await validatorsPromise;
-  const [catalog, scaffolding, dossiers, contextMap, index] = await Promise.all([
-    loadYaml(repositoryRoot, catalogPath, errors),
-    loadYaml(repositoryRoot, scaffoldingPath, errors),
-    loadDossiers(repositoryRoot, errors),
-    loadMarkdown(repositoryRoot, contextMapPath, errors),
-    loadMarkdown(repositoryRoot, dossierIndexPath, errors),
-  ]);
+  const [catalog, scaffolding, dossiers, contextMap, index, productDecisions] =
+    await Promise.all([
+      loadYaml(repositoryRoot, catalogPath, errors),
+      loadYaml(repositoryRoot, scaffoldingPath, errors),
+      loadDossiers(repositoryRoot, errors),
+      loadMarkdown(repositoryRoot, contextMapPath, errors),
+      loadMarkdown(repositoryRoot, dossierIndexPath, errors),
+      loadMarkdown(repositoryRoot, productDecisionPacketPath, errors),
+    ]);
   validateSchema(catalog, catalogValidator, catalogPath, errors);
   validateSchema(scaffolding, scaffoldingValidator, scaffoldingPath, errors);
   for (const dossier of dossiers) {
@@ -250,6 +335,7 @@ export async function validatePlatformDomain(repositoryRoot) {
   validateScaffoldingPolicy(scaffolding, errors);
   await validateMaterialization(repositoryRoot, catalog, dossiers, errors);
   validateNavigation(contextMap, index, dossiers, errors);
+  validateProductDecisionPacket(productDecisions, errors);
   return errors;
 }
 

@@ -49,10 +49,15 @@ export function parseMarkdown(source, relativePath, errors) {
     );
   }
   const headings = new Set();
+  const rootHeadings = [];
   const links = new Set();
   visit(tree, "heading", (node, _index, parent) => {
-    if (node.depth === 2 && parent === tree) {
-      headings.add(toString(node));
+    if (parent === tree) {
+      const heading = { depth: node.depth, text: toString(node) };
+      rootHeadings.push(heading);
+      if (node.depth === 2) {
+        headings.add(heading.text);
+      }
     }
   });
   visit(tree, "link", (node) => {
@@ -67,6 +72,7 @@ export function parseMarkdown(source, relativePath, errors) {
         ? parseYaml(yamlNodes[0].value, relativePath, errors)
         : null,
     path: relativePath,
+    rootHeadings,
   };
 }
 
