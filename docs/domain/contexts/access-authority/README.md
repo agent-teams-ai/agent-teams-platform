@@ -16,9 +16,10 @@ related:
 
 ## Ubiquitous Language
 
-- `Membership`: scoped customer relationship, not a login identity or role bag.
-- `Grant`: direct product authority with exact subject, scope, actions, revision,
-  and validity.
+- `CustomerOrganizationMembership`: scoped human customer relationship, not a
+  login identity, Tenant permission, or role bag.
+- `TenantAccessGrant`: direct product authority with exact principal, Tenant,
+  capabilities, revision, validity, and membership dependency when required.
 - `Delegation`: bounded authority derived from an exact subject grant.
 - `Actor`, `Subject`, and `Client`: orthogonal request identities.
 - `AuthorityDecision`: capability-specific typed outcome and evidence.
@@ -40,10 +41,11 @@ and AR technical permissions remain in their owners.
 
 ## Aggregates
 
-Membership, direct Grant, Delegation, and revocation/freshness authority are
-candidate consistency boundaries. They must not be collapsed into one unbounded
-Principal aggregate or generic authorization-policy object. Exact aggregate,
-index, and transaction boundaries remain proposed.
+CustomerOrganizationMembership, TenantAccessGrant, Delegation, and
+revocation/freshness authority are candidate consistency boundaries. They must
+not be collapsed into one unbounded Principal aggregate or generic
+authorization-policy object. Exact aggregate, index, and transaction boundaries
+remain proposed.
 
 ## Invariants
 

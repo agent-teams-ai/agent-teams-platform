@@ -22,9 +22,11 @@ These names remain proposed until the product model is accepted.
 
 ## Ownership
 
-Commercial Access owns product plans, subscriptions, commercial entitlements,
-and commercial restrictions. It does not own credit, rating, invoicing, payment,
-tax, Run, Work, provider, or operational budget truth.
+Commercial Access owns commercial agreements, subscriptions, commercial
+entitlements, and commercial restrictions. A product offering or plan may be a
+versioned input reference or snapshot; it is not assumed to be a v1 aggregate.
+This context does not own credit, rating, invoicing, payment, tax, Run, Work,
+provider, or operational budget truth.
 
 ## System of Record
 
@@ -56,7 +58,9 @@ excluded rather than forced into one Billing aggregate or generic policy object.
 Agreement, subscription, entitlement, and restriction lifecycles remain open
 under `PO-PLAT-004`. Billing, credit, rating, correction, and invoice lifecycles
 are outside this candidate context. Commercial-system outage behavior must be an
-explicit capability-specific policy; no silent fallback is allowed.
+explicit capability-specific policy; no silent fallback is allowed. The
+[product decision packet](../../product-decision-packet.md) recommends exact v1
+semantics but does not accept them.
 
 ## Commands and Events
 
@@ -121,8 +125,8 @@ later without a shared domain package.
 
 ## Open Decisions
 
-- `PO-PLAT-004`: subscriptions, entitlements, credits, overage, invoices, and
-  billing restrictions.
+- `PO-PLAT-004`: agreement, subscription, entitlement, restriction, expiry, and
+  outage semantics; accounting remains outside this candidate context.
 - Commercial authority during subscription or entitlement provider outage.
 - Whether later credit/rating/invoicing language proves one or several
   independently evolving contexts.

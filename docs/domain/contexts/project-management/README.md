@@ -154,8 +154,8 @@ conformance contracts. The first feature slice must land with the package.
 ## Open Decisions
 
 - `PO-PLAT-003`: asynchronous acceptance, cancellation, recovery, and blocked UX.
-- Whether create receipt and scope-admission process share one Project
-  Management transaction boundary.
-- Exact Project create input and uniqueness policy; names never become identity.
+- Acceptance of the proposed atomic Project create Unit of Work and its
+  fail-closed recovery contract.
+- Exact Project create input; names never become identity.
 - `PO-PLAT-007`: Project name uniqueness, rename, and retired-name reuse.
 - Orchestrator managed scope-admission service schema and compatibility window.

@@ -44,7 +44,8 @@ PlatformPrincipal    1 -> 0..1 active PersonalSpace
 PersonalSpace        1 -> 0..N Tenant
 Tenant               1 -> 0..N ProductProject
 ProductProject       1 -> exactly one Tenant
-PlatformPrincipal    N <-> N Tenant through Membership
+PlatformPrincipal    1 -> 0..N CustomerOrganizationMembership
+PlatformPrincipal    1 -> 0..N TenantAccessGrant
 
 Tenant         -> 0..1 active AuthorityBindingSlot.PRIMARY binding
 ProductProject -> 0..1 active AuthorityBindingSlot.PRIMARY binding

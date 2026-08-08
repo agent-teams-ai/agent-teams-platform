@@ -129,23 +129,28 @@ consumer make extraction necessary.
 
 ## Product-owner decisions
 
+The [product decision packet](product-decision-packet.md) contains reviewed v1
+recommendations and edge-case contracts for these forks. Every entry remains
+`awaiting-product-owner`; recommendations do not become accepted architecture
+without an explicit immutable ADR.
+
 These product-level forks block a broad Platform domain ADR:
 
-1. `PO-PLAT-001`: whether CustomerOrganization and Tenant memberships both
-   exist, and which permissions each scope controls.
+1. `PO-PLAT-001`: separation of CustomerOrganization membership from explicit
+   Tenant access and the authority each relationship carries.
 2. `PO-PLAT-002`: whether transitive delegation exists, its maximum depth,
    renewal, expiry, and user-visible revocation behavior.
 3. `PO-PLAT-003`: the user contract for partially prepared ProductProject:
    accepted asynchronously, cancellation semantics, operator recovery, and
    terminal blocked outcomes.
-4. `PO-PLAT-004`: the commercial model for subscriptions, entitlements,
-   credits, overage, invoices, and billing restrictions.
+4. `PO-PLAT-004`: the v1 boundary between commercial access and future
+   accounting, including restriction and outage behavior.
 5. `PO-PLAT-005`: principal merge or split policy, PII erasure, audit
    tombstones, and IdP migration behavior.
 6. `PO-PLAT-006`: CustomerOrganization and Tenant transfer, retirement,
    suspension, restoration, merge, and split policy for v1.
-7. `PO-PLAT-007`: tenant-scoped ProductProject naming, uniqueness, rename, and
-   reuse behavior after retirement.
+7. `PO-PLAT-007`: ProductProject display naming and whether v1 needs a separate
+   user-addressable ProjectKey.
 
 Technical details below those policies are resolved by owning ADRs and
 conformance evidence without escalating every field or class name.
