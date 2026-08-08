@@ -12,8 +12,9 @@
   },
   "scripts": {
     "architecture:check": "node scripts/architecture/validate-deployment-profiles.mjs && node scripts/architecture/validate-managed-installation-policy.mjs && pnpm architecture:review",
+    "architecture:domain": "node scripts/architecture/validate-platform-domain.mjs",
     "architecture:immutability": "node scripts/architecture/validate-qualification-record-history.mjs",
-    "architecture:review": "node scripts/architecture/validate-deployment-profiles.mjs --references-only && node scripts/architecture/validate-platform-orchestrator-review.mjs",
+    "architecture:review": "node scripts/architecture/validate-deployment-profiles.mjs --references-only && node scripts/architecture/validate-platform-orchestrator-review.mjs && pnpm architecture:domain",
     "architecture:test": "node --test --test-concurrency=1 scripts/architecture/*.test.mjs",
     "check": "pnpm foundation:check && pnpm docs:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm lint && pnpm typecheck",
     "check:changed": "agent-teams-foundation agent-workflow changed --consumer .",
@@ -27,6 +28,9 @@
     "foundation:status": "agent-teams-foundation status",
     "lint": "oxlint --config .oxlintrc.json --deny-warnings --disable-nested-config .",
     "lint:files": "oxlint --config .oxlintrc.json --deny-warnings --disable-nested-config --format agent --no-error-on-unmatched-pattern",
+    "scaffold:apply": "agent-teams-foundation scaffold-apply",
+    "scaffold:plan": "agent-teams-foundation scaffold-plan",
+    "scaffold:recover": "agent-teams-foundation scaffold-recover",
     "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"
   },
   "devDependencies": {

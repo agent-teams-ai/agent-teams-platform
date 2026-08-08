@@ -37,6 +37,7 @@ fullScanPaths:
   - .oxlintrc.json
   - architecture/decisions
   - architecture/foundation
+  - architecture/package-catalog.yaml
   - docs
   - pnpm-lock.yaml
   - pnpm-workspace.yaml
