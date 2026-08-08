@@ -17,6 +17,10 @@ Start here:
   separate. Cross-system references are opaque and mapped by ACLs.
 - Do not create empty bounded-context, feature, adapter, or application packages.
   Materialize a package with its first accepted vertical slice.
+- For that first package slice, use the Foundation scaffolding Plan/Apply
+  protocol only after the accepted owner document defines its target ID, role,
+  package path, and package name. Commit the target catalog, reviewed Plan, and
+  resulting package together; never invent placeholder targets.
 - Domain and application code must not branch on deployment profile, cloud,
   provider, desktop, Dedicated, BYOC, or Hybrid mode unless profile vocabulary
   is part of an explicitly registered owning Platform context. Even that owner

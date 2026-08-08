@@ -27,7 +27,10 @@ changedChecks:
 fullScanPaths:
   - .github/workflows
   - .oxlintrc.json
+  - architecture/decisions
   - architecture/foundation
+  - docs
   - pnpm-lock.yaml
   - pnpm-workspace.yaml
+  - scripts/architecture
   - tsconfig.json

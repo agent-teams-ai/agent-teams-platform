@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "algorithm": "sha256",
+  "decisions": [
+    {
+      "id": "ADR-0001",
+      "path": "docs/decisions/0001-deployment-profile-lifecycle-and-v1-scope.md",
+      "immutableDigest": "sha256:e51e239ef81b5d4d75c36a4c4a4ea340799ba4bee0f7ad3ca3483cf62f2da3f5"
+    },
+    {
+      "id": "ADR-0002",
+      "path": "docs/decisions/0002-personal-space-tenant-ownership.md",
+      "immutableDigest": "sha256:a7e0ade07cee610fa56a2911c664eb37d98e4adc2b3f8f612fa46520700eab9e"
+    },
+    {
+      "id": "ADR-0003",
+      "path": "docs/decisions/0003-subject-bound-run-revocation-policy.md",
+      "immutableDigest": "sha256:17cbb43a27610e6f6129dfc2b30da885919f208e1c5aaf2cd25c236b1c2e191e"
+    },
+    {
+      "id": "ADR-0004",
+      "path": "docs/decisions/0004-project-retirement-authority-and-disposition.md",
+      "immutableDigest": "sha256:7a0c1ea458e6e360aefdb1fb38bd4c707b60ad0caa7a2e3dfe5f0d049e8c321f"
+    },
+    {
+      "id": "ADR-0005",
+      "path": "docs/decisions/0005-managed-customer-installation-control.md",
+      "immutableDigest": "sha256:670d61c705a7a1e96a2f77961f5f1c4fc0165c0665cab649a58eb5d3ccacc093"
+    }
+  ]
+}
