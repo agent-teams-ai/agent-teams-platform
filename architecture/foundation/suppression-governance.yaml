@@ -1,0 +1,6 @@
+schemaVersion: 1
+governedRoots:
+  - scripts
+nonWaivableRulePrefixes:
+  - typescript/no-unsafe-
+waivers: []
