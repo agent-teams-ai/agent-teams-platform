@@ -11,6 +11,16 @@ related:
 
 # Principal and Delegation Model
 
+## Acceptance map
+
+| Status | Semantic boundary | Acceptance source and limit |
+| --- | --- | --- |
+| `PROPOSED` | Platform principal kinds, tenant membership, and stable OrchestrationPrincipal binding | Orchestrator OD-012 remains open; no Platform identity ADR accepts the aggregate or wire model |
+| `PROPOSED` | Authority decision envelope and capability-specific decision DTOs | Review proposal; exact Platform Authority API and Orchestrator provider SPI remain unaccepted |
+| `CONFIRMED` | Subject-bound Run suspension, successor authority basis, and separate Run lifetime policy | Platform ADR-0003 and Orchestrator ADR-0079; exact DTO and aggregate representation remain owner-local |
+| `CONFIRMED` | Bounded revocation fan-out, target-specific cutoff, and predecessor barriers | Platform ADR-0003, Orchestrator ADR-0079, AR ADR-0003, and AR ADR-0004 |
+| `OPEN` | Delegation depth, renewal, principal privacy lifecycle, and authority propagation SLO | Platform authority decision and Orchestrator OD-012/OD-031 |
+
 ## Orthogonal identities
 
 ```text
@@ -19,16 +29,19 @@ actor    who or what actually acts
 client   which application carries the request
 ```
 
-- HumanPrincipal and ServicePrincipal are principals.
-- OAuth client is not a principal unless an explicit service-principal binding
+- `PROPOSED`: HumanPrincipal and ServicePrincipal are distinct principal kinds.
+- `PROPOSED`: OAuth client is not a principal unless an explicit service-principal binding
   grants that identity.
-- `AgentProfileId` is never a principal.
-- Email and display name cannot auto-link identities.
-- One Platform principal may map to a different tenant-scoped
+- `PROPOSED`: `AgentProfileId` is not a principal in Orchestrator authority; the
+  separation is directionally agreed but has no accepted owning ADR yet.
+- `PROPOSED`: Email and display name cannot auto-link identities.
+- `PROPOSED`: One Platform principal may map to a different tenant-scoped
   `OrchestrationPrincipalId` in each Tenant.
-- Principal deletion erases PII while preserving a non-reusable audit tombstone.
+- `PROPOSED`: Principal retirement should erase or detach PII while preserving a
+  non-reusable, non-identifying audit tombstone. Exact legal-hold, erasure, and
+  merge/split semantics remain `OPEN` and cannot be inferred from this target.
 
-## Authority decision envelope
+## Proposed authority decision envelope
 
 ```text
 AuthorityDecisionEnvelope<TScope, TResult>
@@ -72,7 +85,10 @@ capabilities, and universal `limit` fields are forbidden.
 
 ## Durable Run authority basis
 
-Recommended proposal:
+Platform ADR-0003 confirms the semantic distinction between tenant-autonomous
+and subject-bound authority, immutable successor basis, Run authority
+generation, and action-specific evidence. The following field names and nesting
+remain a proposed representation:
 
 ```text
 AuthorityBasisSnapshot
@@ -134,16 +150,25 @@ eligible new authority -> ACTIVE(generation N+2, successor basis B) through CAS
 Suspension is not terminal Run cancellation and does not claim that an active
 provider effect stopped synchronously. Reauthorization cannot mutate the prior
 snapshot or reuse its generation. V1 has no automatic cancellation timeout.
-Verified `REVOKED` or `EXPIRED` authority suspends; `STALE`, `INDETERMINATE`, or
-`UNAVAILABLE` authority fails closed for new risky actions without claiming a
-verified revocation.
+Verified revocation, or verified expiry of the direct grant or delegation used
+by a `SubjectBoundBasis`, suspends that basis. Expiry of action-specific evidence
+only invalidates that evidence. `STALE`, `INDETERMINATE`, or `UNAVAILABLE`
+authority fails closed for new risky actions without claiming a verified
+revocation.
 
 ## Cutoff fan-out constraints
 
 - The suspension UoW writes one bounded cutoff trigger. It never enumerates an
   unbounded participant or runtime-operation set.
-- A durable `RunAuthorityCutoffProcess` discovers active managed runtime bindings
-  in bounded batches and creates idempotent per-target cutoff records.
+- That same Run authority transaction closes target admission, advances the
+  authority generation, captures the target-inventory sequence high-water mark,
+  records the cutoff trigger and receipt, and appends the outbox. Target
+  insertion allocates its sequence and persists its intent through the same
+  gate, so no target can commit invisibly across suspension.
+- A durable `RunAuthorityCutoffProcess` scans the authoritative Run target
+  inventory through its fixed high-water mark in bounded batches and creates
+  idempotent per-target cutoff records. A `ManagedRuntimeBinding` alone is not a
+  complete target inventory.
 - Per-target enforcement and reconciliation receipts are canonical. Run-level
   enforcement is only their aggregated projection.
 - Successor authority generation and dispatch admission are separate. Generation
@@ -155,6 +180,10 @@ verified revocation.
   fan-out because it can omit a concurrently accepted Run.
 - Duplicate or delayed revocation is matched against the exact applicability
   tuple and cannot affect a successor basis.
+- Every target exists first under a local target-intent identity with the
+  original AR command identity and digest, even before an opaque AR target ref is
+  known. Cutoff cannot skip that entry: it recovers the original AR receipt or
+  installs the AR negative operation-intent guard when prevention wins first.
 
 ## Runtime cutoff target rules
 
@@ -168,9 +197,10 @@ verified revocation.
   shortcut for ordinary Run revocation.
 - AR operation cutoff is monotonic. Reauthorization creates a new
   RuntimeOperation for new work; it cannot reopen a cut predecessor operation.
-- `PROPOSED`: v1 does not share one RuntimeSession across unrelated Runs. Future
+- `CONFIRMED`: v1 does not share one RuntimeSession across unrelated Runs. Future
   sharing requires an explicit Orchestrator policy plus qualified AR operation-
-  isolation, fencing, and provider capabilities.
+  isolation, fencing, and provider capabilities. Orchestrator ADR-0079 confirms
+  this policy; exact repository mechanics remain open under OD-006.
 
 ### Revocation index and cursor semantics
 
@@ -214,6 +244,8 @@ FanOutScanCheckpoint
 
 ## Open decisions
 
+- `OPEN`: exact Platform principal kinds, aggregate boundaries, and authority
+  decision wire representation.
 - `OPEN`: maximum delegation depth and whether transitive delegation is allowed.
 - `OPEN`: renewal rules and revocation propagation SLO.
 - `OPEN`: principal merge/split, legal hold, and PII erasure semantics.

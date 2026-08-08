@@ -10,14 +10,14 @@ related:
 
 # Capability Authorization-Port Catalog
 
-| Status | Consumer-owned port | Semantic owner | Typed result |
-| --- | --- | --- | --- |
-| `PROPOSED` | `RunAdmissionAuthority` | Run Orchestration | `RunAdmissionConstraints` |
-| `PROPOSED` | `RunContinuationAuthority` | Run Orchestration | `ContinuationConstraints` |
-| `PROPOSED` | `RuntimeDispatchAuthority` | Run Orchestration | `RuntimeDispatchConstraints` |
-| `PROPOSED` | `ApprovalDecisionAuthority` | Approval Management | `ApprovalAuthorityConstraints` |
-| `PROPOSED` | `FeedSubscriptionAuthority` | Owning feed feature | `SubscriptionConstraints` |
-| `PROPOSED` | `ScopeAdministrationAuthority` | Orchestration Scope | `ScopeTransitionConstraints` |
+| Status | Provisional consumer-owned port | Semantic owner | Typed result | Acceptance source and limit |
+| --- | --- | --- | --- | --- |
+| `PROPOSED` | `RunAdmissionAuthority` | Run Orchestration | `RunAdmissionConstraints` | Consumer-owned-port pattern is accepted; exact port remains under Orchestrator OD-012 |
+| `PROPOSED` | `RunContinuationAuthority` | Run Orchestration | `ContinuationConstraints` | Platform ADR-0003 fixes revocation behavior, not this interface |
+| `PROPOSED` | `RuntimeDispatchAuthority` | Run Orchestration | `RuntimeDispatchConstraints` | Orchestrator ADR-0079 fixes ownership and last-mile boundaries; exact port remains open |
+| `PROPOSED` | `ApprovalDecisionAuthority` | Approval Management | `ApprovalAuthorityConstraints` | Review proposal; no owning approval ADR accepts this interface |
+| `PROPOSED` | `FeedSubscriptionAuthority` | Owning feed feature | `SubscriptionConstraints` | Orchestrator security/realtime semantics are accepted; exact authority port remains open |
+| `PROPOSED` | `ScopeAdministrationAuthority` | Orchestration Scope | `ScopeTransitionConstraints` | Orchestrator ADR-0080 fixes ownership; exact authority port remains under OD-012 |
 
 ## Port rules
 
@@ -25,10 +25,10 @@ related:
   language.
 - A shared outcome algebra may express `allowed`, `denied`, `indeterminate`,
   `stale`, and `unavailable`; constraints and reasons remain feature-specific.
-- AuthorityProvider SPI is a public composition surface, not a domain service,
-  SDK transport SPI, or export of internal feature ports.
-- The concrete Managed ACL maps Platform Authority API DTOs to the
-  provider-neutral SPI and keeps no durable binding state.
+- If accepted, the AuthorityProvider SPI is a public composition surface, not a
+  domain service, SDK transport SPI, or export of internal feature ports.
+- In the proposed topology, the concrete Managed ACL maps Platform Authority API
+  DTOs to the provider-neutral SPI and keeps no durable binding state.
 - Capability negotiation reports compatibility. It cannot grant permission.
 
 ## Proposed SPI topology
@@ -41,15 +41,17 @@ Orchestrator feature-owned ports
               -> private Platform Authority API
 ```
 
-The SPI requires its own Orchestrator ADR, package reservation, semantic version
-policy, fake-provider suite, and adapter conformance suite before publication.
+This topology remains `PROPOSED`. The SPI requires its own Orchestrator ADR,
+package reservation, semantic version policy, fake-provider suite, and adapter
+conformance suite before publication. No production package may be inferred from
+this catalog.
 
-Runtime control and dispatch use separate AR-owned credentials. A short-lived
-`TechnicalExecutionGrant` authorizes a concrete dispatch intent; a separately
-scoped control grant authorizes AR runtime cutoff, technical suspension,
-`RuntimeOperation` cancellation, or runtime-scope disposition.
-Neither contract carries Platform principals, memberships, plans, billing IDs, or
-free-form policy bags. Exact AR grant names and union variants remain proposed.
+`OPEN`: the future AR Published Language must define technical dispatch and
+control authorization. `TechnicalExecutionGrant` and `control grant` are
+provisional aliases, not accepted AR types. Exact names, signing, claim unions,
+dispatch/control separation, handshake, and retention require an AR contract
+decision. Any eventual contract must exclude Platform principals, memberships,
+plans, billing IDs, and free-form policy bags.
 
 ## Batch decisions
 

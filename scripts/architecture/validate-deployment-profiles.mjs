@@ -1,11 +1,12 @@
 import { createHash } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import Ajv2020 from "ajv/dist/2020.js";
 import YAML from "yaml";
 
+import { validateDesignReferences } from "./deployment-profile-evidence.mjs";
 import {
   validateDeploymentProfileSemantics,
   validateQualificationRecordSemantics,
@@ -20,6 +21,7 @@ import {
 export {
   buildForbiddenProfileVocabulary,
   validateCoreSource,
+  validateDesignReferences,
   validateDeploymentProfileSemantics,
   validateQualificationRecordSemantics,
 };
@@ -42,6 +44,7 @@ function parseArguments(argv) {
   }
   return {
     asOf,
+    referencesOnly: argv.includes("--references-only"),
     root: rootIndex === -1 ? defaultRepositoryRoot : path.resolve(argv[rootIndex + 1]),
   };
 }
@@ -65,54 +68,6 @@ function qualificationSchemaErrors(filePath, validate) {
     (error) =>
       `DEPLOY-RECORD-SCHEMA-001 ${filePath}${error.instancePath || "/"} ${error.message ?? "is invalid"}`,
   );
-}
-
-async function pathExists(filePath) {
-  try {
-    await stat(filePath);
-    return true;
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      return false;
-    }
-    throw error;
-  }
-}
-
-async function validateEvidencePaths(repositoryRoot, catalog) {
-  const errors = [];
-  for (const evidenceSet of catalog.designEvidenceSets ?? []) {
-    for (const evidenceRef of evidenceSet.evidenceRefs ?? []) {
-      if (!(await pathExists(path.join(repositoryRoot, evidenceRef)))) {
-        errors.push(`DEPLOY-DESIGNED-002 ${evidenceSet.id}: missing design evidence ${evidenceRef}`);
-      }
-    }
-  }
-
-  for (const profile of catalog.profiles ?? []) {
-    if (!["IMPLEMENTED", "QUALIFIED"].includes(profile.currentStatus)) {
-      continue;
-    }
-    const packagePaths = [
-      profile.implementation.compositionRoot,
-      ...(profile.implementation.adapterPackages ?? []),
-    ];
-    for (const packagePath of packagePaths) {
-      if (!(await pathExists(path.join(repositoryRoot, packagePath, "package.json")))) {
-        errors.push(
-          `DEPLOY-IMPLEMENTED-002 ${profile.id}: ${packagePath} must be a materialized package`,
-        );
-      }
-    }
-    for (const evidenceRef of profile.implementation.evidence ?? []) {
-      if (!(await pathExists(path.join(repositoryRoot, evidenceRef)))) {
-        errors.push(
-          `DEPLOY-IMPLEMENTED-003 ${profile.id}: missing implementation evidence ${evidenceRef}`,
-        );
-      }
-    }
-  }
-  return errors;
 }
 
 async function loadQualificationRecords(catalogDirectory, validateRecordSchema, gateCatalog) {
@@ -169,7 +124,15 @@ export async function validateDeploymentProfiles(repositoryRoot, asOf = null) {
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   const validate = ajv.compile(schema);
   const validateRecordSchema = ajv.compile(qualificationRecordSchema);
-  const errors = validate(catalog) ? [] : schemaErrors(validate);
+  const schemaValid = validate(catalog);
+  const errors = schemaValid ? [] : schemaErrors(validate);
+  if (!schemaValid) {
+    return {
+      catalog,
+      errors: errors.toSorted(),
+      qualificationRecords: new Map(),
+    };
+  }
   const qualificationRecords = await loadQualificationRecords(
     catalogDirectory,
     validateRecordSchema,
@@ -179,7 +142,7 @@ export async function validateDeploymentProfiles(repositoryRoot, asOf = null) {
   errors.push(
     ...validateDeploymentProfileSemantics(catalog, qualificationRecords.records, asOf),
   );
-  errors.push(...(await validateEvidencePaths(repositoryRoot, catalog)));
+  errors.push(...(await validateDesignReferences(repositoryRoot, catalog)));
   errors.push(...(await validateCoreProfileIndependence(repositoryRoot, catalog)));
   return {
     catalog,
@@ -188,9 +151,30 @@ export async function validateDeploymentProfiles(repositoryRoot, asOf = null) {
   };
 }
 
+export async function validateDeploymentDesignReferences(repositoryRoot) {
+  const catalogDirectory = path.join(repositoryRoot, "architecture/deployment-profiles");
+  const schema = await readJson(
+    path.join(catalogDirectory, "deployment-profiles.schema.json"),
+  );
+  const catalog = await readYaml(
+    path.join(catalogDirectory, "deployment-profiles.yaml"),
+  );
+  const ajv = new Ajv2020({ allErrors: true, strict: true });
+  const validate = ajv.compile(schema);
+  if (!validate(catalog)) {
+    return { catalog, errors: schemaErrors(validate).toSorted() };
+  }
+  return {
+    catalog,
+    errors: (await validateDesignReferences(repositoryRoot, catalog)).toSorted(),
+  };
+}
+
 async function main() {
-  const { asOf, root } = parseArguments(process.argv.slice(2));
-  const result = await validateDeploymentProfiles(root, asOf ?? new Date());
+  const { asOf, referencesOnly, root } = parseArguments(process.argv.slice(2));
+  const result = referencesOnly
+    ? await validateDeploymentDesignReferences(root)
+    : await validateDeploymentProfiles(root, asOf ?? new Date());
   if (result.errors.length > 0) {
     for (const error of result.errors) {
       console.error(error);
@@ -198,9 +182,13 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  console.log(
-    `Deployment profiles valid: ${result.catalog.profiles.length} profiles, ${result.catalog.qualificationGateCatalog.length} qualification gates.`,
-  );
+  if (referencesOnly) {
+    console.log("Deployment design references valid.");
+  } else {
+    console.log(
+      `Deployment profiles valid: ${result.catalog.profiles.length} profiles, ${result.catalog.qualificationGateCatalog.length} qualification gates.`,
+    );
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
