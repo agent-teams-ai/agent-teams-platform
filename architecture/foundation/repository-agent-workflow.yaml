@@ -32,4 +32,5 @@ fullScanPaths:
   - docs
   - pnpm-lock.yaml
   - pnpm-workspace.yaml
+  - scripts/architecture
   - tsconfig.json
