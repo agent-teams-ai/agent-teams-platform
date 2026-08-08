@@ -230,6 +230,11 @@ export function validateReviewDocuments(documents) {
         continue;
       }
       if (statusColumnIndexes.length === 0) {
+        if (cells.some((cell) => /\bCONFIRMED\b/u.test(cell))) {
+          errors.push(
+            `REVIEW-STATUS-007 ${file} has CONFIRMED in a table without a canonical status column: ${line}`,
+          );
+        }
         continue;
       }
       const statusCells = statusColumnIndexes.map((index) => cells[index] ?? "");
@@ -239,6 +244,16 @@ export function validateReviewDocuments(documents) {
             `REVIEW-STATUS-003 ${file} has non-canonical status cell: ${statusCell}`,
           );
         }
+      }
+      if (
+        cells.some(
+          (cell, index) =>
+            !statusColumnIndexes.includes(index) && /\bCONFIRMED\b/u.test(cell),
+        )
+      ) {
+        errors.push(
+          `REVIEW-STATUS-007 ${file} has CONFIRMED outside a canonical status cell: ${line}`,
+        );
       }
       if (!statusCells.some((cell) => /\bCONFIRMED\b/u.test(cell))) {
         continue;
@@ -327,7 +342,9 @@ export function validateReviewDocuments(documents) {
   const evidenceSets = Array.isArray(profileCatalog?.designEvidenceSets)
     ? profileCatalog.designEvidenceSets.filter(
         (evidenceSet) =>
-          evidenceSet !== null && typeof evidenceSet === "object",
+          evidenceSet !== null &&
+          typeof evidenceSet === "object" &&
+          !Array.isArray(evidenceSet),
       )
     : [];
   if (!Array.isArray(profileCatalog?.designEvidenceSets)) {
@@ -352,15 +369,24 @@ export function validateReviewDocuments(documents) {
       return;
     }
     activeEvidenceSetIds.add(evidenceSetId);
-    for (const parentId of evidenceSet.extendsEvidenceSetIds ?? []) {
+    for (const parentId of Array.isArray(evidenceSet.extendsEvidenceSetIds)
+      ? evidenceSet.extendsEvidenceSetIds
+      : []) {
       visitEvidenceSet(parentId);
     }
   };
   const profiles = Array.isArray(profileCatalog?.profiles)
-    ? profileCatalog.profiles
+    ? profileCatalog.profiles.filter(
+        (profile) =>
+          profile !== null && typeof profile === "object" && !Array.isArray(profile),
+      )
     : [];
   if (!Array.isArray(profileCatalog?.profiles)) {
     errors.push("REVIEW-EVIDENCE-005 deployment manifest profiles must be an array");
+  } else if (profiles.length !== profileCatalog.profiles.length) {
+    errors.push(
+      "REVIEW-EVIDENCE-007 deployment manifest profiles contains a non-object entry",
+    );
   }
   for (const profile of profiles) {
     visitEvidenceSet(profile.designEvidenceSetId);

@@ -140,6 +140,19 @@ test("rejects non-canonical prose CONFIRMED claims", async () => {
   );
 });
 
+test("rejects CONFIRMED claims hidden in a non-status table", async () => {
+  const documents = await loadReviewDocuments(repositoryRoot);
+  const file = "01-authority-ownership-matrix.md";
+  documents.set(
+    file,
+    `${documents.get(file)}\n| Decision | Claim | Source |\n| --- | --- | --- |\n| CONFIRMED | Invented claim | Review proposal |\n`,
+  );
+  assert.match(
+    validateReviewDocuments(documents).join("\n"),
+    /REVIEW-STATUS-007/u,
+  );
+});
+
 test("reads status only from YAML frontmatter", async () => {
   const documents = await loadReviewDocuments(repositoryRoot);
   const file = "01-authority-ownership-matrix.md";
@@ -316,6 +329,18 @@ test("reports non-object evidence-set entries instead of throwing", async () => 
   assert.match(
     validateReviewDocuments(documents).join("\n"),
     /REVIEW-EVIDENCE-006/u,
+  );
+});
+
+test("reports non-object profile entries instead of throwing", async () => {
+  const documents = await loadReviewDocuments(repositoryRoot);
+  documents.set(
+    "../deployment-profiles.yaml",
+    "schemaVersion: 2\ndesignEvidenceSets: []\nprofiles: [null]\n",
+  );
+  assert.match(
+    validateReviewDocuments(documents).join("\n"),
+    /REVIEW-EVIDENCE-007/u,
   );
 });
 
