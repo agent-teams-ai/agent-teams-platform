@@ -24,6 +24,14 @@ changedChecks:
     script: architecture:check
     extensions: [.json, .yaml, .yml]
     passPaths: false
+  - id: architecture-review
+    script: architecture:review
+    extensions: [.md]
+    passPaths: false
+  - id: architecture-tests
+    script: architecture:test
+    extensions: [.mjs]
+    passPaths: false
 fullScanPaths:
   - .github/workflows
   - .oxlintrc.json

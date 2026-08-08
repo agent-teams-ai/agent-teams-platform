@@ -13,28 +13,28 @@ related:
 
 # Resource Identity and Binding Matrix
 
-| Status | Resource | Public identity | External binding | Cardinality and truth |
-| --- | --- | --- | --- | --- |
-| `PROPOSED` | CustomerOrganization | `CustomerOrganizationId` | Legal and CRM references | One organization may own many Tenant; Platform is authoritative |
-| `CONFIRMED` | PersonalSpace | `PersonalSpaceId` | One opaque human `PlatformPrincipalId` owner binding | At most one active PersonalSpace per human principal in a Platform authority realm; PersonalSpace may own many Tenant |
-| `PROPOSED` | Tenant | `PlatformTenantId` | `AuthorityBindingSlot.PRIMARY` orchestration tenant binding | One owner may have many Tenant; Tenant is product isolation boundary |
-| `CONFIRMED` | ProductProject | `ProductProjectId` | `AuthorityBindingSlot.PRIMARY` orchestration project binding | Exactly one Tenant; `OPEN -> RETIRED` identity and retirement epoch are Platform-authoritative |
-| `CONFIRMED` | ProjectRestriction | Stable restriction identity scoped to ProductProject | Typed source, capability scope, and source revision | Independent sources coexist; one exact source revision clears only its own restriction |
-| `CONFIRMED` | ProductProjectRetirementProcess | Stable retirement operation ID | Immutable command digest, policy/catalog revisions, and participant plan | One process per retirement request; obligations are bounded external records, not an aggregate collection |
-| `CONFIRMED` | PlatformInstallation | `PlatformInstallationId` | Tenant, placement target, customer control-plane identity, and desired revision | Platform owns product identity and desired state; it does not own customer-local execution state |
-| `CONFIRMED` | DeploymentPlan | Content-addressed plan ID and digest | Predecessor plan, target installation, capability requirements, validity, and signing identity | Immutable Platform-issued intent; acceptance is a separate customer-owned fact |
-| `CONFIRMED` | InstallationEnrollment | Customer-local installation identity | PlatformInstallation ref, trust anchor, and accepted plan chain | Customer control plane owns lifecycle, local policy acceptance, and authority continuity |
-| `CONFIRMED` | InstallationOperation | Stable customer-local operation ID | Accepted plan revision, immutable command digest, and target generation | One durable operation per semantic install, update, rollback, or disposition intent |
-| `CONFIRMED` | InstallationWriterLease | Customer-local lease ID | Installation authority epoch, writer identity, plan revision, and expiry | At most one mutation-authoritative lease per installation authority epoch |
-| `PROPOSED` | PlatformPrincipal | `PlatformPrincipalId` | IdP issuer, external subject, source incarnation | Many-to-many Tenant membership; Platform is authoritative |
-| `PROPOSED` | OrchestrationPrincipal | Tenant-scoped `OrchestrationPrincipalId` | Authority realm, external principal, source incarnation | Orchestrator authorship identity remains stable across IdP migration |
-| `CONFIRMED` | OrchestrationTenant | `OrchestrationTenantId` | Opaque Platform or Standalone scope | Orchestration Scope owns stable identity and binding lifecycle; public representation remains open |
-| `CONFIRMED` | OrchestrationProject | `OrchestrationProjectId` | ProductProject identity and incarnation | Orchestration Scope owns stable identity, terminal lifecycle, and admission; public representation remains open |
-| `CONFIRMED` | RuntimeScopeBinding | Stable Orchestrator-owned binding ID | Runtime authority realm, deployment, incarnation, and opaque AR scope refs | Orchestration Scope owns the lifecycle; multiple bindings are allowed and one generation is active per binding ID |
-| `CONFIRMED` | ManagedRuntimeBinding | Run participant identity | RuntimeScopeBinding ID and expected generation | Run Orchestration owns the bounded participant-to-runtime association; it does not contain an unbounded operation or receipt collection |
-| `PROPOSED` | Run runtime target inventory entry | Run-owned target-entry identity | Opaque AR operation/session target, authority generation, expected revisions, and effect identity | One durable entry per target; cutoff scans bounded pages and records per-target obligations |
-| `OPEN` | AR RuntimeAuthorityRealm and RuntimeDeployment | AR-owned opaque IDs | Trust root, independently fenced authority cell, incarnation, and monotonic authority generation | Design direction exists, but AR has not accepted its public identity or provisioning contract; endpoint or host changes must not be assumed to rename a logical deployment |
-| `PROPOSED` | AR RuntimeProjectScope | AR-owned opaque ID | Stable authenticated Orchestrator provisioning identity | AR owns scope identity and lifecycle; exact Published Language names and schemas are not frozen |
+| Semantic status | Representation status | Resource | Owner-local identity or public representation | External binding | Cardinality and truth | Acceptance source and limit |
+| --- | --- | --- | --- | --- | --- | --- |
+| `PROPOSED` | `PROPOSED` | CustomerOrganization | `CustomerOrganizationId` | Legal and CRM references | One organization may own many Tenant; Platform is authoritative | Review proposal; exact Platform bounded context remains open |
+| `CONFIRMED` | `CONFIRMED` | PersonalSpace | `PersonalSpaceId` | One opaque human `PlatformPrincipalId` owner binding | At most one active PersonalSpace per human principal in a Platform authority realm; PersonalSpace may own many Tenant | Platform ADR-0002 |
+| `PROPOSED` | `PROPOSED` | Tenant | `PlatformTenantId` | `AuthorityBindingSlot.PRIMARY` orchestration tenant binding | One owner may have many Tenant; Tenant is product isolation boundary | Platform ADR-0002 confirms the closed owner union, not the full Tenant aggregate or binding contract |
+| `CONFIRMED` | `PROPOSED` | ProductProject | Owner-local `ProductProjectId`; public resource representation remains proposed | `AuthorityBindingSlot.PRIMARY` orchestration project binding | Exactly one Tenant; `OPEN -> RETIRED` identity and retirement epoch are Platform-authoritative | Platform ADR-0004; binding and public representation remain proposed |
+| `CONFIRMED` | `CONFIRMED` | ProjectRestriction | Stable owner-local restriction identity scoped to ProductProject | Typed source, capability scope, and source revision | Independent sources coexist; one exact source revision clears only its own restriction | Platform ADR-0004 |
+| `CONFIRMED` | `CONFIRMED` | ProductProjectRetirementProcess | Stable owner-local retirement operation ID | Immutable command digest, policy/catalog revisions, and participant plan | One process per retirement request; obligations are bounded external records, not an aggregate collection | Platform ADR-0004 |
+| `CONFIRMED` | `PROPOSED` | PlatformInstallation | Owner-local `PlatformInstallationId` | Tenant, placement target, customer control-plane identity, and desired revision | Platform owns product identity and desired state; it does not own customer-local execution state | Platform ADR-0005; public representation remains unqualified |
+| `CONFIRMED` | `PROPOSED` | DeploymentPlan | Owner-local content-addressed plan ID and digest | Predecessor plan, target installation, capability requirements, validity, and signing identity | Immutable Platform-issued intent; acceptance is a separate customer-owned fact | Platform ADR-0005; exact schema remains unqualified |
+| `CONFIRMED` | `PROPOSED` | InstallationEnrollment | Customer-local installation identity | PlatformInstallation ref, trust anchor, and accepted plan chain | Customer control plane owns lifecycle, local policy acceptance, and authority continuity | Platform ADR-0005; exact protocol remains unqualified |
+| `CONFIRMED` | `PROPOSED` | InstallationOperation | Stable customer-local operation ID | Accepted plan revision, immutable command digest, and target generation | One durable operation per semantic install, update, rollback, or disposition intent | Platform ADR-0005; exact protocol remains unqualified |
+| `CONFIRMED` | `PROPOSED` | InstallationWriterLease | Customer-local lease ID | Installation authority epoch, writer identity, plan revision, and expiry | At most one mutation-authoritative lease per installation authority epoch | Platform ADR-0005; exact protocol remains unqualified |
+| `PROPOSED` | `PROPOSED` | PlatformPrincipal | `PlatformPrincipalId` | IdP issuer, external subject, source incarnation | Many-to-many Tenant membership; Platform is authoritative | Platform authority model and Orchestrator OD-012 remain open |
+| `PROPOSED` | `PROPOSED` | OrchestrationPrincipal | Tenant-scoped `OrchestrationPrincipalId` | Authority realm, external principal, source incarnation | Orchestrator authorship identity remains stable across IdP migration | Orchestrator OD-012 remains open |
+| `CONFIRMED` | `OPEN` | OrchestrationTenant | Stable owner-local identity; exact public resource name remains open | Opaque Platform or Standalone scope | Orchestration Scope owns stable identity and binding lifecycle | Orchestrator ADR-0080; exact public identity remains under OD-019 |
+| `CONFIRMED` | `OPEN` | OrchestrationProject | Stable owner-local identity; exact public resource name remains open | ProductProject identity and incarnation | Orchestration Scope owns stable identity, terminal lifecycle, and admission | Orchestrator ADR-0080; exact public identity remains under OD-019 |
+| `CONFIRMED` | `PROPOSED` | RuntimeScopeBinding | Stable private Orchestrator-owned binding identity; no public API representation is accepted | Runtime authority realm, deployment, incarnation, and opaque AR scope refs | Orchestration Scope owns the lifecycle; multiple bindings are allowed and one generation is active per binding identity | Orchestrator ADR-0079 and ADR-0080; exact resource shape remains under OD-006 and OD-019 |
+| `CONFIRMED` | `PROPOSED` | ManagedRuntimeBinding | Private `ManagedRuntimeBindingId`, distinct from `RunParticipantId` | RuntimeScopeBinding identity and expected generation | Run Orchestration owns the bounded participant-to-runtime association; it does not contain an unbounded operation or receipt collection | Orchestrator ADR-0079; binding remains a private implementation concept under OD-019 and exact aggregate shape remains under OD-006 |
+| `CONFIRMED` | `PROPOSED` | Run runtime target inventory entry | Private Run-owned target-entry identity | Opaque AR operation/session target, authority generation, expected revisions, and effect identity | One durable entry per target; cutoff scans a fixed inventory high-water mark in bounded pages and records per-target obligations | Orchestrator ADR-0079 accepts the required semantics but leaves tactical aggregate shape under OD-006 |
+| `CONFIRMED` | `OPEN` | AR technical mutation identity dimensions | Exact public identity names remain open | AR tenant and runtime-project scope, stable authority realm, logical deployment, incarnation, authority generation, and scope revision | Every accepted AR mutation is bound to applicable technical identities and preconditions | AR ADR-0003; this confirms semantics only, not a public identity or provisioning API |
+| `OPEN` | `OPEN` | AR runtime deployment and scope Published Language | Not frozen | Future authenticated Orchestrator provisioning identity, handshake, attestation, and scope references | Exact identities, provisioning cardinality, schema, external anchor, and generated clients require an AR contract decision | AR ADR-0003 and ADR-0004 explicitly defer these details |
 
 ## Cardinality
 
@@ -98,9 +98,9 @@ InstallationOperation -> exactly one immutable semantic fingerprint
 | Project authority binding | Scope aggregate commit | Authority revision, source incarnation, deletion epoch | Old realm or source revisions are ignored and audited; the external binding key is write-unique |
 | Product project admission | Restriction mutation and effective-gate CAS | Source revision, admission revision, lifecycle epoch | A source clears only its exact restriction; stale projection cannot reopen access |
 | Product project retirement | ProductProject terminal CAS | Lifecycle revision and retirement epoch | Same request replays receipt; cancel and commit have one winner |
-| Runtime scope binding | Desired-state commit, then activation CAS | Binding generation, deployment incarnation, AR scope revision | Ambiguous provisioning is queried by stable request ID |
+| Runtime scope binding | Desired-state commit, then activation CAS | Binding generation, deployment incarnation, AR scope revision | Ambiguous scope-admission work is resolved by `CanonicalCommandScope + CommandDescriptor + requestId`, canonicalization version, and semantic fingerprint; request ID alone is insufficient |
 | Run managed binding | Run-local commit | Run authority generation and expected binding generation | Stale binding blocks new dispatch, never rewrites the Run silently |
-| Run runtime target entry | Per-target inventory commit before dispatch | Run authority generation, expected AR target revision, and effect identity | Cutoff materialization is idempotent per target; historical obligations survive reauthorization through the reconciliation horizon |
+| Run runtime target entry | Dispatch-admission transaction through the Run authority gate | Run authority generation, semantic revocation fence, exact scope-admission evidence, target sequence, original AR command identity and digest, and effect identity | Target insertion and suspension serialize through one gate. Suspension atomically closes admission, advances generation, captures the target-sequence high-water mark, and records one cutoff trigger; no committed target can cross the captured boundary unnoticed |
 | Platform installation intent | PlatformInstallation commit | Desired revision, plan digest, predecessor digest, validity | Published plans are immutable; a replacement is a successor, never an in-place rewrite |
 | Customer installation enrollment | Customer-local acceptance transaction | Accepted plan head and InstallationAuthorityEpoch | Timeout recovers by plan digest and acceptance receipt; no second enrollment is guessed |
 | Installation writer authority | Customer-local lease issuance CAS | InstallationAuthorityEpoch, fencing token, expiry, and writer identity | Expired or predecessor leases cannot mutate; KMS possession alone is insufficient |
@@ -119,11 +119,11 @@ signed evidence. AR decides `stale` from its own target identity, scope revision
 deployment incarnation, authority generation, and control-grant semantics.
 
 AR ADR-0003 accepts the technical identity dimensions used by cutoff and
-disposition but leaves their exact names open. AR ADR-0004 separately accepts the
-pre-materialization negative operation-intent guard. The fuller realm,
-deployment, incarnation, external-anchor lease, scope-provisioning, and
-technical-grant model remains open and cannot be treated as a qualified
-capability.
+disposition but leaves their exact public names and transport open. AR ADR-0004
+separately accepts the pre-materialization negative operation-intent guard. The
+scope-provisioning API, handshake, attestation, external anchor, generated
+client, and technical-grant model remain open and cannot be treated as an
+implemented or qualified capability.
 
 `OPEN`: the concrete recovery protocol when Platform, Orchestrator, and AR are
 restored to different timestamps.

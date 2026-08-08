@@ -6,6 +6,8 @@ import test from "node:test";
 import {
   buildForbiddenProfileVocabulary,
   validateCoreSource,
+  validateDeploymentDesignReferences,
+  validateDesignReferences,
   validateDeploymentProfiles,
   validateDeploymentProfileSemantics,
   validateQualificationRecordSemantics,
@@ -25,6 +27,11 @@ test("accepts the canonical deployment profile catalog", async () => {
   const result = await validateDeploymentProfiles(repositoryRoot);
   assert.deepEqual(result.errors, []);
   assert.equal(result.catalog.profiles.length, 6);
+});
+
+test("accepts canonical deployment design references in the fast review gate", async () => {
+  const result = await validateDeploymentDesignReferences(repositoryRoot);
+  assert.deepEqual(result.errors, []);
 });
 
 test("does not confuse v1 qualification targets with current qualification", async () => {
@@ -177,6 +184,101 @@ test("rejects a design evidence-set inheritance cycle", async () => {
     validateDeploymentProfileSemantics(catalog).join("\n"),
     /DEPLOY-DESIGNED-005/u,
   );
+});
+
+test("rejects proposed markdown as accepted design evidence", async () => {
+  const result = await validateDeploymentProfiles(repositoryRoot);
+  const catalog = structuredClone(result.catalog);
+  const baseline = catalog.designEvidenceSets.find(
+    (evidenceSet) => evidenceSet.id === "cross-system-profile-baseline-v1",
+  );
+  const proposed = baseline.reviewInputRefs[0];
+  baseline.reviewInputRefs = baseline.reviewInputRefs.slice(1);
+  baseline.evidenceRefs.push(proposed);
+  assert.match(
+    (await validateDesignReferences(repositoryRoot, catalog)).join("\n"),
+    /DEPLOY-DESIGNED-006/u,
+  );
+});
+
+test("rejects machine-readable files as accepted design evidence", async () => {
+  const result = await validateDeploymentProfiles(repositoryRoot);
+  const catalog = structuredClone(result.catalog);
+  const baseline = catalog.designEvidenceSets.find(
+    (evidenceSet) => evidenceSet.id === "cross-system-profile-baseline-v1",
+  );
+  baseline.evidenceRefs.push(
+    "architecture/foundation/repository-agent-workflow.yaml",
+  );
+  assert.match(
+    (await validateDesignReferences(repositoryRoot, catalog)).join("\n"),
+    /DEPLOY-DESIGNED-007/u,
+  );
+});
+
+test("ties accepted evidence sets to their owning architecture decisions", async () => {
+  const result = await validateDeploymentProfiles(repositoryRoot);
+  const catalog = structuredClone(result.catalog);
+  for (const evidenceSet of catalog.designEvidenceSets) {
+    evidenceSet.evidenceRefs = [
+      "docs/decisions/0002-personal-space-tenant-ownership.md",
+    ];
+  }
+  assert.match(
+    (await validateDesignReferences(repositoryRoot, catalog)).join("\n"),
+    /DEPLOY-DESIGNED-008/u,
+  );
+});
+
+test("rejects missing or ambiguously classified review inputs", async () => {
+  const result = await validateDeploymentProfiles(repositoryRoot);
+  const catalog = structuredClone(result.catalog);
+  const baseline = catalog.designEvidenceSets.find(
+    (evidenceSet) => evidenceSet.id === "cross-system-profile-baseline-v1",
+  );
+  baseline.reviewInputRefs.push("docs/architecture/missing-review-input.md");
+  baseline.reviewInputRefs.push(baseline.evidenceRefs[0]);
+  const errors = await validateDesignReferences(repositoryRoot, catalog);
+  assert.match(errors.join("\n"), /DEPLOY-REVIEW-001/u);
+  assert.match(errors.join("\n"), /DEPLOY-REVIEW-002/u);
+});
+
+test("rejects review inputs hidden in an unused evidence set", async () => {
+  const result = await validateDeploymentProfiles(repositoryRoot);
+  const catalog = structuredClone(result.catalog);
+  const baseline = catalog.designEvidenceSets.find(
+    (evidenceSet) => evidenceSet.id === "cross-system-profile-baseline-v1",
+  );
+  const reviewInputRefs = baseline.reviewInputRefs;
+  baseline.reviewInputRefs = [];
+  catalog.designEvidenceSets.push({
+    evidenceRefs: ["docs/decisions/0001-deployment-profile-lifecycle-and-v1-scope.md"],
+    extendsEvidenceSetIds: [],
+    id: "unused-review-inputs-v1",
+    reviewInputRefs,
+  });
+  assert.match(
+    (await validateDesignReferences(repositoryRoot, catalog)).join("\n"),
+    /DEPLOY-REVIEW-003 unused-review-inputs-v1/u,
+  );
+});
+
+test("rejects traversal, directories, and cross-set evidence overlap", async () => {
+  const result = await validateDeploymentProfiles(repositoryRoot);
+  const catalog = structuredClone(result.catalog);
+  const baseline = catalog.designEvidenceSets.find(
+    (evidenceSet) => evidenceSet.id === "cross-system-profile-baseline-v1",
+  );
+  const byoc = catalog.designEvidenceSets.find(
+    (evidenceSet) => evidenceSet.id === "managed-byoc-control-v1",
+  );
+  baseline.evidenceRefs.push("docs/../package.json");
+  baseline.reviewInputRefs.push("docs");
+  byoc.evidenceRefs.push(baseline.reviewInputRefs[0]);
+  const errors = await validateDesignReferences(repositoryRoot, catalog);
+  assert.match(errors.join("\n"), /DEPLOY-DESIGNED-002.*unsafe parent traversal/u);
+  assert.match(errors.join("\n"), /DEPLOY-REVIEW-001.*not a file/u);
+  assert.match(errors.join("\n"), /DEPLOY-REVIEW-002/u);
 });
 
 test("rejects a Platform authority artifact for Standalone qualification", async () => {

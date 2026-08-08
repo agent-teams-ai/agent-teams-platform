@@ -97,9 +97,10 @@ system must not silently switch placement, authority, durability, or isolation.
   and secret custody remain adapter and deployment-policy concerns.
 - A new profile starts as `DESIGNED`; promotion requires manifest evidence and a
   passing deterministic gate.
-- A `DESIGNED` profile references existing design evidence. `IMPLEMENTED`
-  additionally requires materialized composition and adapter packages plus real
-  implementation evidence paths.
+- A `DESIGNED` profile references accepted design evidence. Proposed matrices
+  and traces are tracked separately as review inputs; they cannot establish or
+  promote profile status. `IMPLEMENTED` additionally requires materialized
+  composition and adapter packages plus real implementation evidence paths.
 - Qualification records are append-only. A successor receives a new identity;
   the profile manifest stores the active record identity and content digest.
 - All ten current qualification gates require `PASS`. Unsupported offline mode
@@ -116,7 +117,8 @@ system must not silently switch placement, authority, durability, or isolation.
 
 ## Enforcement
 
-`pnpm architecture:check` validates the strict schema and lifecycle semantics.
-It also uses the TypeScript AST to reject profile literals, profile-switch
-identifiers, and inward imports from `domain/` or `application/` source. The
-check is already active even though production source packages do not yet exist.
+`pnpm architecture:check` validates the strict schema, accepted-evidence
+maturity, review-input separation, and lifecycle semantics. It also uses the
+TypeScript AST to reject profile literals, profile-switch identifiers, and
+inward imports from `domain/` or `application/` source. The check is already
+active even though production source packages do not yet exist.

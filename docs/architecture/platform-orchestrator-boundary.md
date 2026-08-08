@@ -14,9 +14,9 @@ related:
 
 # Platform-Orchestrator Boundary Direction
 
-This direction is intentionally `proposed`. It must not become a superseding ADR
-until the required matrices, state machines, concurrency cases, and partial
-failure traces have been reviewed by both repositories.
+This direction is intentionally `proposed`. The eight matrices and supporting
+concurrency traces now exist, but they must be reviewed by the owning
+repositories before a superseding ADR accepts any remaining proposed row.
 
 ## Agreed direction
 
@@ -35,9 +35,10 @@ Platform or Standalone Authority identity
   `InstallationEnrollment`, the local authority epoch, the short-lived fenced
   writer lease, and installation reconciliation. It is not an Orchestrator
   adapter and it cannot grant product or runtime authority by itself.
-- Orchestrator owns stable orchestration tenant, project, and principal
-  identities; feature-specific decisions; local aggregate preconditions; teams,
-  work, runs, messages, and orchestration lifecycle.
+- Orchestrator owns stable orchestration tenant and project identities,
+  feature-specific decisions, and local aggregate preconditions. Stable
+  orchestration principal identity remains a proposed supporting boundary under
+  OD-012; teams, messages, and approval context boundaries also remain proposed.
 - AR owns runtime scopes, sessions, operations, technical execution authority,
   execution fencing, provider effects, and recovery.
 - AR's accepted cutoff and scope-disposition architecture closes the strategic
@@ -156,11 +157,17 @@ Before a superseding ADR, produce and review:
 7. Deployment and administration capability matrix.
 8. Cross-repository contract and conformance ownership matrix.
 
-Every row identifies semantic owner, writer, persistence owner, public identity,
-external binding, source of truth, consistency, failure behavior,
-reconciliation owner, retention/deletion owner, consistency boundary,
-linearization point, revision or fence, idempotency scope and horizon,
-stale-event behavior, and conformance owner.
+Across the eight artifacts, every claim records its applicable semantic owner,
+writer, persistence owner, public identity, external binding, source of truth,
+consistency, failure behavior, reconciliation owner, retention/deletion owner,
+consistency boundary, linearization point, revision or fence, idempotency scope
+and horizon, stale-event behavior, and conformance owner. A row may link to the
+owning matrix or failure trace instead of repeating dimensions that do not apply
+to that surface.
 
 The current proposed drafts are indexed in the
 [Platform-Orchestrator design review](platform-orchestrator-review/README.md).
+The review's
+[managed scope admission and binding traces](platform-orchestrator-review/concurrency-failure-traces.md)
+exercise lost responses, duplicate commands, stale revisions, concurrent
+suspension, and partial failure without freezing unaccepted API names.

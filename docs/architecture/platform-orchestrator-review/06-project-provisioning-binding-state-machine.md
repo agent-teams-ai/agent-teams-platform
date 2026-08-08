@@ -40,11 +40,14 @@ stateDiagram-v2
     PlacementResolving --> OrchestrationScopeProvisioning
     OrchestrationScopeProvisioning --> AuthorityBinding
     AuthorityBinding --> Verifying
-    Verifying --> Ready
+    Verifying --> ScopeAdmissionOpening
+    ScopeAdmissionOpening --> Ready
     ProjectRecorded --> ReconcileRequired
     PlacementResolving --> ReconcileRequired
     OrchestrationScopeProvisioning --> ReconcileRequired
     AuthorityBinding --> ReconcileRequired
+    Verifying --> ReconcileRequired
+    ScopeAdmissionOpening --> ReconcileRequired
     ReconcileRequired --> PlacementResolving
     ReconcileRequired --> OrchestrationScopeProvisioning
     ReconcileRequired --> AuthorityBinding
@@ -57,20 +60,55 @@ required Platform and Orchestrator authority gates allow it. Runtime provider
 capacity is a separate readiness input. A read model may display
 `PROVISIONING`, `READY`, or `BLOCKED`; those labels never mutate ProductProject.
 
+The process name and state labels remain `PROPOSED`. Binding existence and scope
+admission are separate facts. `ScopeAdmissionOpening` is an explicit
+Orchestrator-owned CAS after binding verification; neither a binding receipt nor
+a process-alive observation can open admission. A transition out of
+`ReconcileRequired` first queries or replays the original step command and then
+re-evaluates current preconditions. It is never a blind retry edge.
+
+### Creation safety requirements
+
+The proposed safety requirement is narrow: either ProductProject creation does
+not commit, or the committed ProductProject is fail closed and has durable
+owner-local recovery intent. Each owning context may atomically commit only its
+own state, receipt, and outbox. Whether the Platform Project record, customer
+command receipt, and managed scope-admission process share one bounded context
+and transaction remains `OPEN`; implementation must not choose that aggregate
+split silently.
+
+`READY` is only a Platform read projection over current Platform-owned state and
+the latest exact owner receipts. Its commit cannot compare-and-swap current
+Orchestrator state and never grants admission. Every later operation still checks
+the current Platform gate and obtains current Orchestration Scope authority from
+that owner. A remote suspension may make the projection stale until observation
+or reconciliation arrives without creating an authorization window.
+
+The following identities are distinct and durable:
+
+- the customer Platform create-command identity;
+- the managed scope-admission process identity;
+- one command identity and canonical digest for each downstream step;
+- each owner-local receipt identity.
+
+Reusing one identifier for all four concerns is forbidden. A retry reuses the
+original step command identity and digest. A changed command requires a
+successor attempt identity after fresh precondition evaluation.
+
 ## Authoritative resources and processes
 
-| Status | Resource | Owner | Durable truth | Consistency and failure |
-| --- | --- | --- | --- | --- |
-| `CONFIRMED` | ProductProject | Platform Project Management | `OPEN` or terminal `RETIRED`, lifecycle revision, retirement epoch | Aggregate CAS, receipt, audit, and outbox in one Platform transaction |
-| `CONFIRMED` | ProjectRestriction | Owning Platform authority capability through Project Management | Exact restriction identity, source, scope, revision, and status | One source clears only its exact restriction; stale or conflicting source revision fails closed |
-| `CONFIRMED` | ProjectAdmissionAuthority | Platform Project Management | Effective gate, admission revision, lifecycle epoch | Restriction mutation and gate revision commit atomically |
-| `PROPOSED` | ManagedProjectProvisioningProcess | Platform Provisioning | Operation ID, immutable request digest, and step receipts | Eventual convergence; unknown steps queried by stable ID |
-| `CONFIRMED` | ProductProjectRetirementProcess | Platform Project Management | Commitment, policy and catalog revisions, participant obligations, opaque receipt refs | Cancel and commit race by ProductProject CAS; participant outcomes converge independently |
-| `CONFIRMED` | OrchestrationProject | Orchestration Scope | Stable identity, local admission authority, lifecycle and deletion epochs | Ownership and terminal lifecycle accepted by Orchestrator ADR-0080; tactical aggregate split remains under OD-006 |
-| `CONFIRMED` | OrchestrationProjectDispositionProcess | Orchestration Scope | Versioned participant plan, owner obligations, exact receipt refs | Coordination owner accepted by Orchestrator ADR-0080; it never mutates another context's data |
-| `CONFIRMED` | RuntimeScopeBinding | Orchestration Scope | Binding ID, generation, opaque AR references | Ownership and lifecycle accepted by Orchestrator ADR-0080; activation contract remains proposed |
-| `CONFIRMED` | ManagedRuntimeBinding | Run Orchestration | Participant and selected binding generation | Run-local commit; no unbounded operation or receipt collection |
-| `CONFIRMED` | AR runtime-scope disposition | AR | AR-owned scope, cutoff, inventory, category actions, and technical receipts | Immutable technical plan, owner-local execution, truthful unknown and reconciliation |
+| Status | Resource | Owner | Durable truth | Consistency and failure | Acceptance source and limit |
+| --- | --- | --- | --- | --- | --- |
+| `CONFIRMED` | ProductProject | Platform Project Management | `OPEN` or terminal `RETIRED`, lifecycle revision, retirement epoch | Aggregate CAS, receipt, audit, and outbox in one Platform transaction | Platform ADR-0004 |
+| `CONFIRMED` | ProjectRestriction | Owning Platform authority capability through Project Management | Exact restriction identity, source, scope, revision, and status | One source clears only its exact restriction; stale or conflicting source revision fails closed | Platform ADR-0004 |
+| `CONFIRMED` | ProjectAdmissionAuthority | Platform Project Management | Effective gate, admission revision, lifecycle epoch | Restriction mutation and gate revision commit atomically | Platform ADR-0004 |
+| `PROPOSED` | Managed scope-admission process | Platform process owner remains to be accepted | Process identity, immutable request digest, and bounded step obligations with command and receipt refs | Eventual convergence; unknown steps queried by original stable identity | Review proposal; exact bounded context, aggregate, cancellation, and blocked semantics remain open |
+| `CONFIRMED` | ProductProjectRetirementProcess | Platform Project Management | Commitment, policy and catalog revisions, participant obligations, opaque receipt refs | Cancel and commit race by ProductProject CAS; participant outcomes converge independently | Platform ADR-0004 |
+| `CONFIRMED` | OrchestrationProject | Orchestration Scope | Stable identity, local admission authority, lifecycle and deletion epochs | Ownership and terminal lifecycle accepted; tactical aggregate split remains open | Orchestrator ADR-0080 and OD-006 |
+| `CONFIRMED` | OrchestrationProjectDispositionProcess | Orchestration Scope | Versioned participant plan, owner obligations, exact receipt refs | Coordinates but never mutates another context's data | Orchestrator ADR-0080 |
+| `CONFIRMED` | RuntimeScopeBinding | Orchestration Scope | Binding identity, generation, opaque AR references | Ownership and lifecycle accepted; activation contract and public shape remain proposed | Orchestrator ADR-0079 and ADR-0080 |
+| `CONFIRMED` | ManagedRuntimeBinding | Run Orchestration | Participant and selected binding generation | Run-local commit; no unbounded operation or receipt collection | Orchestrator ADR-0079 |
+| `CONFIRMED` | AR runtime-scope disposition semantics | AR | AR-owned scope, cutoff, inventory, category actions, and technical receipts | Immutable technical plan, owner-local execution, truthful unknown and reconciliation | AR ADR-0003; exact Published Language and implementation remain open |
 
 ## Product authority and retirement commitment
 
@@ -188,43 +226,50 @@ uncertainty, and unknown provider residue do not become verified deletion.
 - Break-glass can fence, stop, quarantine, retry, and reconcile, but cannot
   remove holds, rewrite evidence, reopen retired identity, or claim completion.
 
-## Required failure traces
+## Required failure evidence
 
-1. Concurrent create with one command ID produces one Project and one Operation.
-2. Lost Orchestrator response is recovered by the original Project creation
-   operation ID.
-3. Platform commit with Orchestrator unavailable remains visible and
-   reconcilable; no distributed rollback removes ProductProject.
-4. Independent billing and security restrictions cannot clear each other.
-5. Retirement cancellation racing irreversible commit has exactly one CAS
+The detailed [concurrency and failure traces](concurrency-failure-traces.md)
+define the exact commit orders, crash windows, stale-event behavior, outcomes,
+and conformance evidence for:
+
+1. lost downstream response;
+2. exact duplicate and conflicting command reuse;
+3. stale revision or generation;
+4. suspension racing scope binding and admission opening;
+5. partial failure and reconciliation.
+
+Additional qualification coverage remains mandatory:
+
+1. Independent billing and security restrictions cannot clear each other.
+2. Retirement cancellation racing irreversible commit has exactly one CAS
    winner.
-6. A queued write accepted before upstream retirement loses against the local
+3. A queued write accepted before upstream retirement loses against the local
    owner freeze or is included below its high-water mark.
-7. A legal hold arriving after plan creation but before erase wins the last-mile
+4. A legal hold arriving after plan creation but before erase wins the last-mile
    authorization check.
-8. Runtime rebind racing retirement is either rejected by the lifecycle CAS or
+5. Runtime rebind racing retirement is either rejected by the lifecycle CAS or
    included in the fixed binding lineage.
-9. A new data-owning release is blocked until its catalog, tombstone, and
+6. A new data-owning release is blocked until its catalog, tombstone, and
    disposition conformance exists.
-10. Feed gap or lost acknowledgement recovers through exact receipt query, not a
+7. Feed gap or lost acknowledgement recovers through exact receipt query, not a
     replacement command.
-11. A restored backup cannot recreate Project admission, binding authority, or
+8. A restored backup cannot recreate Project admission, binding authority, or
     disposed payload.
-12. Tenant retirement racing Project creation is serialized by the Tenant epoch
+9. Tenant retirement racing Project creation is serialized by the Tenant epoch
     and project-index high-water mark.
-13. External workspace source survives Project retirement. Owned allocations
+10. External workspace source survives Project retirement. Owned allocations
     follow typed disposition; managed clones and worktrees remain retained by
     default until destructive authorization and evidence exist.
-14. Provider `not_found`, unreachable BYOC, missing backup evidence, or shared
+11. Provider `not_found`, unreachable BYOC, missing backup evidence, or shared
     key scope cannot produce verified deletion.
-15. UI or CLI disconnect leaves a durable Project or installation operation
+12. UI or CLI disconnect leaves a durable Project or installation operation
     running; only an explicit idempotent cancellation command may stop it.
-16. A process-alive observation cannot mark a scope, participant, provider, or
+13. A process-alive observation cannot mark a scope, participant, provider, or
     installation ready. Required readiness lanes report independently.
-17. Lost acknowledgement after AR or customer-control-plane acceptance is
+14. Lost acknowledgement after AR or customer-control-plane acceptance is
     resolved by the original operation ID and semantic fingerprint, never by a
     replacement create, launch, install, or update command.
-18. Relaunch, retry, rollback, recovery, cancellation, and disposition remain
+15. Relaunch, retry, rollback, recovery, cancellation, and disposition remain
     distinct typed commands with independent authorization and receipts.
 
 Cross-tenant transfer remains `UNSUPPORTED_V1`. Standalone-to-managed migration
