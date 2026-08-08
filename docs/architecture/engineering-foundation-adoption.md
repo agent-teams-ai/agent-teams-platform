@@ -16,11 +16,12 @@ Production code cannot import Foundation.
 
 ## Version policy
 
-The manifest and lockfile pin one reviewed registry version. Dependabot checks
-for newer releases, but every Foundation upgrade remains an isolated reviewed
-change and never enables a capability implicitly. `latest`, ranges, Git refs,
-local links, tarballs, lockfile overrides, and unpublished release branches are
-forbidden in committed or CI state.
+The manifest and lockfile pin one reviewed registry version. Dependabot is
+security-only; ordinary Foundation releases are reviewed and advanced through
+manually coordinated, isolated exact-version changes. A version upgrade never
+enables a capability implicitly. `latest`, ranges, Git refs, local links,
+tarballs, lockfile overrides, and unpublished release branches are forbidden in
+committed or CI state.
 
 Foundation-owned configuration and scaffolding contracts use the sole current
 `schemaVersion: 1`. Platform updates that contract and all known consumers in
