@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
 
+import { validateReviewEvidence } from "./validate-platform-orchestrator-evidence.mjs";
+
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRepositoryRoot = path.resolve(scriptDirectory, "../..");
 const reviewDirectory = "docs/architecture/platform-orchestrator-review";
@@ -142,9 +144,7 @@ function secondLevelSection(content, traceId) {
   return nextHeading === -1 ? remainder : remainder.slice(0, nextHeading);
 }
 
-export function validateReviewDocuments(documents) {
-  const errors = [];
-
+function validateMatrixArtifacts(documents, errors) {
   for (const file of matrixFiles) {
     const content = documents.get(file);
     if (content === undefined) {
@@ -155,281 +155,236 @@ export function validateReviewDocuments(documents) {
       errors.push(`REVIEW-STATUS-001 ${file} must remain proposed`);
     }
   }
+}
 
-  for (const file of matrixFiles) {
-    const content = documents.get(file);
-    if (content === undefined) {
-      continue;
+function isDividerRow(cells) {
+  return cells.every((cell) => /^:?-{3,}:?$/u.test(cell));
+}
+
+function collectProseClaim(lines, lineIndex) {
+  const paragraph = [lines[lineIndex]];
+  for (let next = lineIndex + 1; next < lines.length; next += 1) {
+    if (/^\s*(?:$|[-#|])/u.test(lines[next])) {
+      break;
     }
-    const visibleContent = stripFencedCodeBlocks(content);
-    if (!visibleContent.includes("Acceptance source")) {
-      errors.push(`REVIEW-SOURCE-001 ${file} lacks an acceptance-source boundary`);
-    }
-    const lines = visibleContent.split("\n");
-    let statusColumnIndexes = [];
-    let foundStatusTable = false;
-    for (const [lineIndex, line] of lines.entries()) {
-      const cells = tableCells(line);
-      if (!cells) {
-        statusColumnIndexes = [];
-        if (!/\bCONFIRMED\b/u.test(line)) {
-          continue;
-        }
-        if (!/^\s*-\s+`CONFIRMED`:/u.test(line)) {
-          errors.push(
-            `REVIEW-STATUS-004 ${file} has an unvalidated prose CONFIRMED claim: ${line}`,
-          );
-          continue;
-        }
-        const paragraph = [line];
-        for (let next = lineIndex + 1; next < lines.length; next += 1) {
-          if (/^\s*(?:$|[-#|])/u.test(lines[next])) {
-            break;
-          }
-          paragraph.push(lines[next]);
-        }
-        const claim = paragraph.join("\n");
-        if (!acceptedSourcePatterns.some((source) => source.test(claim))) {
-          errors.push(
-            `REVIEW-CONFIRMED-003 ${file} has prose CONFIRMED without accepted evidence: ${line}`,
-          );
-        }
-        continue;
-      }
-      const nextCells = tableCells(lines[lineIndex + 1] ?? "");
-      const isHeader =
-        nextCells !== null &&
-        nextCells.length === cells.length &&
-        nextCells.every((cell) => /^:?-{3,}:?$/u.test(cell));
-      const headerIndexes = isHeader
-        ? cells.flatMap((cell, index) =>
-            ["status", "semantic status", "representation status"].includes(
-              normalizedHeaderCell(cell),
-            )
-              ? [index]
-              : [],
-          )
-        : [];
-      if (headerIndexes.length > 0) {
-        foundStatusTable = true;
-        for (const index of headerIndexes) {
-          if (
-            !["Status", "Semantic status", "Representation status"].includes(
-              cells[index],
-            )
-          ) {
-            errors.push(
-              `REVIEW-STATUS-006 ${file} has a non-canonical status header: ${cells[index]}`,
-            );
-          }
-        }
-        statusColumnIndexes = headerIndexes;
-        continue;
-      }
-      if (cells.every((cell) => /^:?-{3,}:?$/u.test(cell))) {
-        continue;
-      }
-      if (statusColumnIndexes.length === 0) {
-        if (cells.some((cell) => /\bCONFIRMED\b/u.test(cell))) {
-          errors.push(
-            `REVIEW-STATUS-007 ${file} has CONFIRMED in a table without a canonical status column: ${line}`,
-          );
-        }
-        continue;
-      }
-      const statusCells = statusColumnIndexes.map((index) => cells[index] ?? "");
-      for (const statusCell of statusCells) {
-        if (!/^`(?:CONFIRMED|PROPOSED|OPEN|OUT_OF_SCOPE)`$/u.test(statusCell)) {
-          errors.push(
-            `REVIEW-STATUS-003 ${file} has non-canonical status cell: ${statusCell}`,
-          );
-        }
-      }
-      if (
-        cells.some(
-          (cell, index) =>
-            !statusColumnIndexes.includes(index) && /\bCONFIRMED\b/u.test(cell),
-        )
-      ) {
-        errors.push(
-          `REVIEW-STATUS-007 ${file} has CONFIRMED outside a canonical status cell: ${line}`,
-        );
-      }
-      if (!statusCells.some((cell) => /\bCONFIRMED\b/u.test(cell))) {
-        continue;
-      }
-      const sourceCell = cells.at(-1) ?? "";
-      if (!acceptedSourcePatterns.some((source) => source.test(sourceCell))) {
-        errors.push(
-          `REVIEW-CONFIRMED-001 ${file} has CONFIRMED without accepted evidence: ${line}`,
-        );
-      }
-      if (/Review proposal/u.test(line)) {
-        errors.push(
-          `REVIEW-CONFIRMED-002 ${file} confirms review-only evidence: ${line}`,
-        );
-      }
-    }
-    if (!foundStatusTable) {
-      errors.push(`REVIEW-STATUS-005 ${file} lacks a canonical status table`);
+    paragraph.push(lines[next]);
+  }
+  return paragraph.join("\n");
+}
+
+function validateProseConfirmed(file, lines, lineIndex, errors) {
+  const line = lines[lineIndex];
+  if (!/\bCONFIRMED\b/u.test(line)) {
+    return;
+  }
+  if (!/^\s*-\s+`CONFIRMED`:/u.test(line)) {
+    errors.push(
+      `REVIEW-STATUS-004 ${file} has an unvalidated prose CONFIRMED claim: ${line}`,
+    );
+    return;
+  }
+  const claim = collectProseClaim(lines, lineIndex);
+  if (!acceptedSourcePatterns.some((source) => source.test(claim))) {
+    errors.push(
+      `REVIEW-CONFIRMED-003 ${file} has prose CONFIRMED without accepted evidence: ${line}`,
+    );
+  }
+}
+
+function statusHeaderIndexes(cells, nextCells) {
+  if (
+    nextCells === null ||
+    nextCells.length !== cells.length ||
+    !isDividerRow(nextCells)
+  ) {
+    return [];
+  }
+  const statusHeaders = ["status", "semantic status", "representation status"];
+  return cells.flatMap((cell, index) =>
+    statusHeaders.includes(normalizedHeaderCell(cell)) ? [index] : [],
+  );
+}
+
+function validateStatusHeaders(file, cells, indexes, errors) {
+  const canonicalHeaders = ["Status", "Semantic status", "Representation status"];
+  for (const index of indexes) {
+    if (!canonicalHeaders.includes(cells[index])) {
+      errors.push(
+        `REVIEW-STATUS-006 ${file} has a non-canonical status header: ${cells[index]}`,
+      );
     }
   }
+}
 
+function validateUnscopedTableRow(file, line, cells, errors) {
+  if (cells.some((cell) => /\bCONFIRMED\b/u.test(cell))) {
+    errors.push(
+      `REVIEW-STATUS-007 ${file} has CONFIRMED in a table without a canonical status column: ${line}`,
+    );
+  }
+}
+
+function validateStatusTableRow(file, line, cells, statusColumnIndexes, errors) {
+  const statusCells = statusColumnIndexes.map((index) => cells[index] ?? "");
+  for (const statusCell of statusCells) {
+    if (!/^`(?:CONFIRMED|PROPOSED|OPEN|OUT_OF_SCOPE)`$/u.test(statusCell)) {
+      errors.push(
+        `REVIEW-STATUS-003 ${file} has non-canonical status cell: ${statusCell}`,
+      );
+    }
+  }
+  const hasConfirmedOutsideStatus = cells.some(
+    (cell, index) =>
+      !statusColumnIndexes.includes(index) && /\bCONFIRMED\b/u.test(cell),
+  );
+  if (hasConfirmedOutsideStatus) {
+    errors.push(
+      `REVIEW-STATUS-007 ${file} has CONFIRMED outside a canonical status cell: ${line}`,
+    );
+  }
+  if (!statusCells.some((cell) => /\bCONFIRMED\b/u.test(cell))) {
+    return;
+  }
+  const sourceCell = cells.at(-1) ?? "";
+  if (!acceptedSourcePatterns.some((source) => source.test(sourceCell))) {
+    errors.push(
+      `REVIEW-CONFIRMED-001 ${file} has CONFIRMED without accepted evidence: ${line}`,
+    );
+  }
+  if (/Review proposal/u.test(line)) {
+    errors.push(
+      `REVIEW-CONFIRMED-002 ${file} confirms review-only evidence: ${line}`,
+    );
+  }
+}
+
+function validateMatrixStatusTables(file, content, errors) {
+  const visibleContent = stripFencedCodeBlocks(content);
+  if (!visibleContent.includes("Acceptance source")) {
+    errors.push(`REVIEW-SOURCE-001 ${file} lacks an acceptance-source boundary`);
+  }
+  const lines = visibleContent.split("\n");
+  let statusColumnIndexes = [];
+  let foundStatusTable = false;
+  for (const [lineIndex, line] of lines.entries()) {
+    const cells = tableCells(line);
+    if (!cells) {
+      statusColumnIndexes = [];
+      validateProseConfirmed(file, lines, lineIndex, errors);
+      continue;
+    }
+    const headerIndexes = statusHeaderIndexes(
+      cells,
+      tableCells(lines[lineIndex + 1] ?? ""),
+    );
+    if (headerIndexes.length > 0) {
+      foundStatusTable = true;
+      validateStatusHeaders(file, cells, headerIndexes, errors);
+      statusColumnIndexes = headerIndexes;
+      continue;
+    }
+    if (isDividerRow(cells)) {
+      continue;
+    }
+    if (statusColumnIndexes.length === 0) {
+      validateUnscopedTableRow(file, line, cells, errors);
+      continue;
+    }
+    validateStatusTableRow(file, line, cells, statusColumnIndexes, errors);
+  }
+  if (!foundStatusTable) {
+    errors.push(`REVIEW-STATUS-005 ${file} lacks a canonical status table`);
+  }
+}
+
+function validateMatrices(documents, errors) {
+  for (const file of matrixFiles) {
+    const content = documents.get(file);
+    if (content !== undefined) {
+      validateMatrixStatusTables(file, content, errors);
+    }
+  }
+}
+
+function conformanceEvidence(section, traceId) {
+  const heading = `### ${traceId} conformance evidence`;
+  const start = section.indexOf(heading);
+  if (start === -1) {
+    return null;
+  }
+  const remainder = section.slice(start + heading.length);
+  const nextSubheading = remainder.search(/^###\s+/mu);
+  return nextSubheading === -1 ? remainder : remainder.slice(0, nextSubheading);
+}
+
+function validateTraceSection(traceId, section, errors) {
+  if (section.length < 300 || !/^\d+\.\s+|^\|\s+/mu.test(section)) {
+    errors.push(`REVIEW-TRACE-004 ${traceId} lacks a substantive trace`);
+  }
+  for (const requiredTerm of requiredTraceTerms.get(traceId) ?? []) {
+    if (!section.toLowerCase().includes(requiredTerm.toLowerCase())) {
+      errors.push(
+        `REVIEW-TRACE-006 ${traceId} lacks required semantic term: ${requiredTerm}`,
+      );
+    }
+  }
+  const evidence = conformanceEvidence(section, traceId);
+  if (evidence === null) {
+    errors.push(`REVIEW-TRACE-003 ${traceId} lacks conformance evidence`);
+    return;
+  }
+  const evidenceItems = evidence.match(/^-\s+\S+/gmu) ?? [];
+  if (evidence.length < 80 || evidenceItems.length < 3) {
+    errors.push(`REVIEW-TRACE-005 ${traceId} has empty conformance evidence`);
+  }
+}
+
+function validateTraces(documents, errors) {
   const traces = documents.get(traceFile);
   if (traces === undefined) {
     errors.push(`REVIEW-TRACE-001 missing ${traceFile}`);
-  } else {
-    if (markdownFrontmatter(traces)?.status !== "proposed") {
-      errors.push(`REVIEW-STATUS-002 ${traceFile} must remain proposed`);
-    }
-    const visibleTraces = stripFencedCodeBlocks(traces);
-    for (const traceId of requiredTraceIds) {
-      const section = secondLevelSection(visibleTraces, traceId);
-      if (section === null) {
-        errors.push(`REVIEW-TRACE-002 missing ${traceId}`);
-        continue;
-      }
-      if (section.length < 300 || !/^\d+\.\s+|^\|\s+/mu.test(section)) {
-        errors.push(`REVIEW-TRACE-004 ${traceId} lacks a substantive trace`);
-      }
-      for (const requiredTerm of requiredTraceTerms.get(traceId) ?? []) {
-        if (!section.toLowerCase().includes(requiredTerm.toLowerCase())) {
-          errors.push(
-            `REVIEW-TRACE-006 ${traceId} lacks required semantic term: ${requiredTerm}`,
-          );
-        }
-      }
-      const evidenceHeading = `### ${traceId} conformance evidence`;
-      const evidenceStart = section.indexOf(evidenceHeading);
-      if (evidenceStart === -1) {
-        errors.push(`REVIEW-TRACE-003 ${traceId} lacks conformance evidence`);
-        continue;
-      }
-      const evidenceRemainder = section.slice(
-        evidenceStart + evidenceHeading.length,
-      );
-      const nextSubheading = evidenceRemainder.search(/^###\s+/mu);
-      const evidence =
-        nextSubheading === -1
-          ? evidenceRemainder
-          : evidenceRemainder.slice(0, nextSubheading);
-      const evidenceItems = evidence.match(/^-\s+\S+/gmu) ?? [];
-      if (evidence.length < 80 || evidenceItems.length < 3) {
-        errors.push(`REVIEW-TRACE-005 ${traceId} has empty conformance evidence`);
-      }
-    }
+    return;
   }
+  if (markdownFrontmatter(traces)?.status !== "proposed") {
+    errors.push(`REVIEW-STATUS-002 ${traceFile} must remain proposed`);
+  }
+  const visibleTraces = stripFencedCodeBlocks(traces);
+  for (const traceId of requiredTraceIds) {
+    const section = secondLevelSection(visibleTraces, traceId);
+    if (section === null) {
+      errors.push(`REVIEW-TRACE-002 missing ${traceId}`);
+      continue;
+    }
+    validateTraceSection(traceId, section, errors);
+  }
+}
 
+function validateStaleWordingAndIndex(documents, errors) {
   const combined = [...documents.values()].join("\n");
   for (const phrase of stalePhrases) {
     if (combined.includes(phrase)) {
       errors.push(`REVIEW-STALE-001 obsolete wording remains: ${phrase}`);
     }
   }
-
   const index = documents.get("README.md") ?? "";
   if (!index.includes(`(${traceFile})`)) {
     errors.push("REVIEW-INDEX-001 review index must link the failure traces");
   }
+}
 
-  const profileManifest = documents.get("../deployment-profiles.yaml") ?? "";
-  let profileCatalog;
-  try {
-    profileCatalog = YAML.parse(profileManifest);
-  } catch (error) {
-    errors.push(`REVIEW-EVIDENCE-000 invalid deployment manifest: ${error.message}`);
-  }
-  const evidenceSets = Array.isArray(profileCatalog?.designEvidenceSets)
-    ? profileCatalog.designEvidenceSets.filter(
-        (evidenceSet) =>
-          evidenceSet !== null &&
-          typeof evidenceSet === "object" &&
-          !Array.isArray(evidenceSet),
-      )
-    : [];
-  if (!Array.isArray(profileCatalog?.designEvidenceSets)) {
-    errors.push(
-      "REVIEW-EVIDENCE-003 deployment manifest designEvidenceSets must be an array",
-    );
-  } else if (evidenceSets.length !== profileCatalog.designEvidenceSets.length) {
-    errors.push(
-      "REVIEW-EVIDENCE-006 deployment manifest designEvidenceSets contains a non-object entry",
-    );
-  }
-  const evidenceSetsById = new Map(
-    evidenceSets.map((evidenceSet) => [evidenceSet.id, evidenceSet]),
+export function validateReviewDocuments(documents) {
+  const errors = [];
+  validateMatrixArtifacts(documents, errors);
+  validateMatrices(documents, errors);
+  validateTraces(documents, errors);
+  validateStaleWordingAndIndex(documents, errors);
+  errors.push(
+    ...validateReviewEvidence(documents, {
+      matrixFiles,
+      reviewDirectory,
+      traceFile,
+    }),
   );
-  const activeEvidenceSetIds = new Set();
-  const visitEvidenceSet = (evidenceSetId) => {
-    if (activeEvidenceSetIds.has(evidenceSetId)) {
-      return;
-    }
-    const evidenceSet = evidenceSetsById.get(evidenceSetId);
-    if (!evidenceSet) {
-      return;
-    }
-    activeEvidenceSetIds.add(evidenceSetId);
-    for (const parentId of Array.isArray(evidenceSet.extendsEvidenceSetIds)
-      ? evidenceSet.extendsEvidenceSetIds
-      : []) {
-      visitEvidenceSet(parentId);
-    }
-  };
-  const profiles = Array.isArray(profileCatalog?.profiles)
-    ? profileCatalog.profiles.filter(
-        (profile) =>
-          profile !== null && typeof profile === "object" && !Array.isArray(profile),
-      )
-    : [];
-  if (!Array.isArray(profileCatalog?.profiles)) {
-    errors.push("REVIEW-EVIDENCE-005 deployment manifest profiles must be an array");
-  } else if (profiles.length !== profileCatalog.profiles.length) {
-    errors.push(
-      "REVIEW-EVIDENCE-007 deployment manifest profiles contains a non-object entry",
-    );
-  }
-  for (const profile of profiles) {
-    visitEvidenceSet(profile.designEvidenceSetId);
-  }
-  for (const evidenceSet of evidenceSets) {
-    if (
-      (evidenceSet.reviewInputRefs?.length ?? 0) > 0 &&
-      !activeEvidenceSetIds.has(evidenceSet.id)
-    ) {
-      errors.push(
-        `REVIEW-EVIDENCE-004 ${evidenceSet.id} contains review inputs but is not referenced by any profile evidence lineage`,
-      );
-    }
-  }
-  const activeEvidenceSets = evidenceSets.filter((evidenceSet) =>
-    activeEvidenceSetIds.has(evidenceSet.id),
-  );
-  const reviewInputs = new Set(
-    activeEvidenceSets.flatMap(
-      (evidenceSet) => evidenceSet.reviewInputRefs ?? [],
-    ),
-  );
-  for (const file of [...matrixFiles, traceFile]) {
-    const requiredPath = `${reviewDirectory}/${file}`;
-    if (!reviewInputs.has(requiredPath)) {
-      errors.push(
-        `REVIEW-EVIDENCE-001 deployment review inputs must include ${requiredPath}`,
-      );
-    }
-  }
-  const acceptedEvidence = new Set(
-    activeEvidenceSets.flatMap((evidenceSet) => evidenceSet.evidenceRefs ?? []),
-  );
-  if (
-    [...acceptedEvidence].some((item) =>
-      item.startsWith(`${reviewDirectory}/`),
-    )
-  ) {
-    errors.push(
-      "REVIEW-EVIDENCE-002 proposed review artifacts cannot be accepted design evidence",
-    );
-  }
-
   return errors;
 }
 
