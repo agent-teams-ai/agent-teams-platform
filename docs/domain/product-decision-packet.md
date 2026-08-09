@@ -1,18 +1,20 @@
 ---
 id: domain.product-decision-packet
 type: product-decision-packet
-status: proposed
+status: accepted
 owner: product-owner
-summary: Recommended v1 product semantics requiring explicit product-owner confirmation.
+summary: Product-owner-confirmed v1 Platform domain semantics accepted by ADR-0007.
+owner_decision: ADR-0007
 decisions:
-  PO-PLAT-001: awaiting-product-owner
-  PO-PLAT-002: awaiting-product-owner
-  PO-PLAT-003: awaiting-product-owner
-  PO-PLAT-004: awaiting-product-owner
-  PO-PLAT-005: awaiting-product-owner
-  PO-PLAT-006: awaiting-product-owner
-  PO-PLAT-007: awaiting-product-owner
+  PO-PLAT-001: accepted
+  PO-PLAT-002: accepted
+  PO-PLAT-003: accepted
+  PO-PLAT-004: accepted
+  PO-PLAT-005: accepted
+  PO-PLAT-006: accepted
+  PO-PLAT-007: accepted
 related:
+  - ADR-0007
   - domain.context-map
   - ADR-0002
   - ADR-0003
@@ -22,10 +24,9 @@ related:
 
 # Platform Product Decision Packet
 
-This packet separates product policy from tactical implementation. Every answer
-below is a recommendation, not an accepted decision. The architecture validator
-requires all seven entries to remain `awaiting-product-owner` until an immutable
-accepted ADR records an explicit confirmation.
+This packet separates product policy from tactical implementation. Product owner
+accepted all seven recommendations on 2026-08-09. ADR-0007 is the immutable
+normative decision; this packet preserves the reviewed rationale and edge cases.
 
 ## PO-PLAT-001: Customer Membership and Tenant Access
 
@@ -69,7 +70,7 @@ records. Revocation fan-out must retain exact source revisions and dependencies.
 
 ### Product-Owner Confirmation
 
-`AWAITING_PRODUCT_OWNER`
+`ACCEPTED_BY_ADR_0006`
 
 ## PO-PLAT-002: Delegation Depth and Revocation
 
@@ -109,7 +110,7 @@ rules, depth limits, and a migration of decision evidence.
 
 ### Product-Owner Confirmation
 
-`AWAITING_PRODUCT_OWNER`
+`ACCEPTED_BY_ADR_0006`
 
 ## PO-PLAT-003: Asynchronous ProductProject Creation
 
@@ -167,7 +168,7 @@ without requiring Agent Runtime.
 
 ### Product-Owner Confirmation
 
-`AWAITING_PRODUCT_OWNER`
+`ACCEPTED_BY_ADR_0006`
 
 ## PO-PLAT-004: Commercial Access Boundary
 
@@ -216,7 +217,7 @@ changing subscription or entitlement ownership.
 
 ### Product-Owner Confirmation
 
-`AWAITING_PRODUCT_OWNER`
+`ACCEPTED_BY_ADR_0006`
 
 ## PO-PLAT-005: Principal Migration and Privacy
 
@@ -258,7 +259,7 @@ Identity does not mutate another context's records.
 
 ### Product-Owner Confirmation
 
-`AWAITING_PRODUCT_OWNER`
+`ACCEPTED_BY_ADR_0006`
 
 ## PO-PLAT-006: Owner and Tenant Lifecycle
 
@@ -305,7 +306,7 @@ owner-local processes and receipts.
 
 ### Product-Owner Confirmation
 
-`AWAITING_PRODUCT_OWNER`
+`ACCEPTED_BY_ADR_0006`
 
 ## PO-PLAT-007: ProductProject Naming
 
@@ -344,4 +345,4 @@ unproven key from becoming aggregate identity accidentally.
 
 ### Product-Owner Confirmation
 
-`AWAITING_PRODUCT_OWNER`
+`ACCEPTED_BY_ADR_0006`

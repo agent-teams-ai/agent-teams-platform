@@ -6,6 +6,7 @@ owner: architecture/authority
 summary: Proposed consumer-owned authority ports and feature-specific decision constraints.
 related:
   - architecture.platform-orchestrator-boundary
+  - ADR-0007
 ---
 
 # Capability Authorization-Port Catalog

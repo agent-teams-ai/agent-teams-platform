@@ -8,6 +8,7 @@ related:
   - architecture.platform-orchestrator-boundary
   - ADR-0004
   - ADR-0005
+  - ADR-0007
 ---
 
 # Project Scope Admission, Authority, and Retirement
@@ -61,7 +62,8 @@ model may display `SCOPE_ADMISSION_PENDING`, `SCOPE_ADMISSION_READY`, or
 different projections. Runtime placement, provider capacity, AR scope activation,
 and runtime dispatch are not inputs to this first state machine.
 
-The process name and state labels remain `PROPOSED`. Scope identity, authority
+Platform ADR-0007 confirms the process ownership and product behavior; exact
+process state names remain tactical. Scope identity, authority
 binding, and local Orchestrator admission are separate provider facts. Neither a
 binding receipt nor a process-alive observation proves admission. A transition
 out of `ReconcileRequired` first queries or replays the original step command and
@@ -69,7 +71,7 @@ then re-evaluates current preconditions. It is never a blind retry edge.
 
 ### Creation safety requirements
 
-The proposed first-slice linearization point is one Project Management
+The accepted first-slice linearization point is one Project Management
 transaction. It commits ProductProject, initial denied ProjectAdmissionAuthority,
 customer command receipt, managed scope-admission process intent, and outbox, or
 none of them. Missing ProjectAdmissionAuthority means denied. Each owning context
@@ -100,10 +102,10 @@ successor attempt identity after fresh precondition evaluation.
 
 | Status | Resource | Owner | Durable truth | Consistency and failure | Acceptance source and limit |
 | --- | --- | --- | --- | --- | --- |
-| `CONFIRMED` | ProductProject | Platform Project Management | `OPEN` or terminal `RETIRED`, lifecycle revision, retirement epoch | Retirement commit is accepted; the proposed first-slice create UoW atomically initializes identity, denied admission, receipt, process intent, and outbox | Platform ADR-0004 confirms retirement atomicity; the create UoW awaits the superseding ADR |
+| `CONFIRMED` | ProductProject | Platform Project Management | `OPEN` or terminal `RETIRED`, lifecycle revision, retirement epoch | The accepted first-slice create UoW atomically initializes identity, denied admission, receipt, process intent, and outbox | Platform ADR-0004 confirms retirement atomicity; Platform ADR-0007 confirms creation atomicity |
 | `CONFIRMED` | ProjectRestriction | Owning Platform authority capability through Project Management | Exact restriction identity, source, scope, revision, and status | One source clears only its exact restriction; stale or conflicting source revision fails closed | Platform ADR-0004 |
 | `CONFIRMED` | ProjectAdmissionAuthority | Platform Project Management | Effective gate, admission revision, lifecycle epoch | Restriction mutation and gate revision commit atomically | Platform ADR-0004 |
-| `PROPOSED` | Managed scope-admission process | Platform Project Management | Process identity, immutable request digest, generation, and bounded step obligations with command and receipt refs | Eventual convergence; unknown steps queried by original stable identity; cancellation stops new claims but does not roll back identity or inferred remote effects | Product decision packet recommendation; acceptance awaits product owner and superseding ADR |
+| `CONFIRMED` | Managed scope-admission process semantics | Platform Project Management | Process identity, immutable request digest, generation, and bounded step obligations with command and receipt refs | Eventual convergence; unknown steps queried by original stable identity; cancellation stops new claims but does not roll back identity or inferred remote effects | Platform ADR-0007; exact state names and Orchestrator contract remain proposed |
 | `CONFIRMED` | ProductProjectRetirementProcess | Platform Project Management | Commitment, policy and catalog revisions, participant obligations, opaque receipt refs | Cancel and commit race by ProductProject CAS; participant outcomes converge independently | Platform ADR-0004 |
 | `CONFIRMED` | OrchestrationProject | Orchestration Scope | Stable identity, local admission authority, lifecycle and deletion epochs | Ownership and terminal lifecycle accepted; tactical aggregate split remains open | Orchestrator ADR-0080 and OD-006 |
 | `CONFIRMED` | OrchestrationProjectDispositionProcess | Orchestration Scope | Versioned participant plan, owner obligations, exact receipt refs | Coordinates but never mutates another context's data | Orchestrator ADR-0080 |

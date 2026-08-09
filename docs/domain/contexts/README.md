@@ -1,16 +1,23 @@
 ---
 id: domain.contexts.index
 type: index
-status: proposed
+status: accepted
 owner: architecture/domain
-summary: Index of substantial proposed Platform bounded-context dossiers.
+summary: Index of accepted Platform strategic boundaries and their tactical bounded-context dossiers.
+related:
+  - ADR-0007
 ---
 
 # Platform Bounded-Context Dossiers
 
-These dossiers record discovery evidence. They are not empty package placeholders
-and do not authorize implementation. A dossier may become `accepted` only through
-an explicit owning ADR or equivalent reviewed decision that closes its stated
+ADR-0007 accepts the strategic Context Map and the seven boundaries listed here.
+That acceptance fixes semantic ownership and cross-context exclusions; it does
+not automatically accept each context's tactical aggregate model or authorize an
+empty package.
+
+Project Management is the only dossier and package target accepted for
+materialization by ADR-0007. The other six dossiers remain `proposed` until an
+owning ADR accepts a real first vertical slice and closes the local
 materialization gate.
 
 - [Customer Ownership](customer-ownership/README.md)
@@ -21,6 +28,6 @@ materialization gate.
 - [Commercial Access](commercial-access/README.md)
 - [Deployment Management](deployment-management/README.md)
 
-The [strategic context map](../context-map.md) owns relationships and
+The accepted [strategic context map](../context-map.md) owns relationships and
 cross-system exclusions. Each dossier owns only its local language, invariants,
-lifecycle candidates, features, and open decisions.
+tactical lifecycle candidates, features, and open implementation decisions.

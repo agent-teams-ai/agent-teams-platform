@@ -7,6 +7,7 @@ classification: supporting
 package_target: context.commercial-access
 summary: Proposed commercial agreement, subscription, entitlement, and restriction boundary.
 related:
+  - ADR-0007
   - architecture.platform-orchestrator-review.authority-ownership
 ---
 
@@ -18,7 +19,8 @@ related:
 - `Entitlement`: versioned commercial capability granted to a customer scope.
 - `CommercialRestriction`: exact restriction emitted from commercial policy.
 
-These names remain proposed until the product model is accepted.
+ADR-0007 accepts these names as the narrow v1 commercial boundary. Their exact
+aggregate and persistence representation remains proposed.
 
 ## Ownership
 
@@ -55,12 +57,11 @@ excluded rather than forced into one Billing aggregate or generic policy object.
 
 ## Lifecycle
 
-Agreement, subscription, entitlement, and restriction lifecycles remain open
-under `PO-PLAT-004`. Billing, credit, rating, correction, and invoice lifecycles
-are outside this candidate context. Commercial-system outage behavior must be an
-explicit capability-specific policy; no silent fallback is allowed. The
-[product decision packet](../../product-decision-packet.md) recommends exact v1
-semantics but does not accept them.
+ADR-0007 accepts the v1 distinction between agreement, subscription,
+entitlement, and exact commercial restriction, including fail-closed mutation
+behavior after evidence expiry. Billing, credit, rating, correction, and invoice
+lifecycles remain outside this candidate context. Exact aggregate state machines,
+retention, and outage thresholds remain proposed.
 
 ## Commands and Events
 
@@ -118,15 +119,18 @@ operational budget state, and floating-point money are excluded.
 
 ## Materialization Gate
 
-Materialization is forbidden until `PO-PLAT-004` defines agreement,
-subscription, entitlement, restriction, outage behavior, and a first commercial
-access slice. Commercial Accounting remains unreserved and may be introduced
-later without a shared domain package.
+ADR-0007 accepts the product semantics of `PO-PLAT-004`, but does not authorize
+this package. Materialization remains forbidden until an owning ADR accepts the
+aggregate boundaries, persistence and retention policy, outage behavior, and a
+first commercial-access slice. Commercial Accounting remains unreserved and may
+be introduced later without a shared domain package.
 
 ## Open Decisions
 
-- `PO-PLAT-004`: agreement, subscription, entitlement, restriction, expiry, and
-  outage semantics; accounting remains outside this candidate context.
-- Commercial authority during subscription or entitlement provider outage.
+- `PO-PLAT-004` is accepted by ADR-0007: the v1 boundary is narrow, commercial
+  evidence expires fail closed for affected mutations, and accounting remains
+  outside this context.
+- Exact outage windows, evidence retention, aggregate state machines, schemas,
+  and first vertical slice.
 - Whether later credit/rating/invoicing language proves one or several
   independently evolving contexts.

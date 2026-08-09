@@ -7,6 +7,7 @@ classification: supporting-security-critical
 package_target: context.access-authority
 summary: Proposed membership, grant, delegation, revocation, and product authority boundary.
 related:
+  - ADR-0007
   - ADR-0002
   - ADR-0003
   - architecture.platform-orchestrator-review.principal-delegation
@@ -62,11 +63,12 @@ remain proposed.
 
 ## Lifecycle
 
-Organization membership, Tenant access, invitation, grant, and delegation
-lifecycles remain proposed under `PO-PLAT-001` and `PO-PLAT-002`. ADR-0003
-confirms downstream subject-bound Run revocation behavior, not Platform aggregate
-shape. Membership end, grant revocation, delegation expiry, and principal
-disablement are distinct source facts.
+ADR-0007 accepts separate CustomerOrganization membership and explicit Tenant
+access, plus one-edge delegation with exact scope, expiry, and revocation.
+ADR-0003 confirms downstream subject-bound Run revocation behavior. Exact
+Platform aggregate state machines and persistence boundaries remain proposed.
+Membership end, grant revocation, delegation expiry, and principal disablement
+are distinct source facts.
 
 ## Commands and Events
 
@@ -130,14 +132,17 @@ plan name, Orchestrator deletion epoch, or AR fence is permitted.
 
 ## Materialization Gate
 
-Materialization requires `PO-PLAT-001` and `PO-PLAT-002`, accepted membership,
-grant, delegation, revocation and decision consistency boundaries,
+ADR-0007 accepts the product semantics of `PO-PLAT-001` and `PO-PLAT-002`, but
+does not authorize this package. Materialization still requires accepted
+membership, grant, delegation, revocation, and decision consistency boundaries,
 capability-specific ports, an owning package-identity ADR, and one complete
 authority feature slice.
 
 ## Open Decisions
 
-- `PO-PLAT-001`: CustomerOrganization membership versus Tenant access semantics.
-- `PO-PLAT-002`: delegation depth, renewal, expiry, and revocation UX.
+- `PO-PLAT-001` and `PO-PLAT-002` are accepted by ADR-0007: membership grants no
+  implicit Tenant access, and v1 delegation has exactly one edge.
 - Invitation, service-principal grant, batch-decision, and evidence-retention
   policy.
+- Exact aggregate boundaries, schemas, persistence model, and first vertical
+  slice.

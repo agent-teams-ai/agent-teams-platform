@@ -10,13 +10,16 @@ related:
   - ADR-0003
   - ADR-0004
   - ADR-0005
+  - ADR-0007
 ---
 
 # Platform-Orchestrator Boundary Direction
 
-This direction is intentionally `proposed`. The eight matrices and supporting
-concurrency traces now exist, but they must be reviewed by the owning
-repositories before a superseding ADR accepts any remaining proposed row.
+This document remains `proposed` for exact Platform-Orchestrator contracts and
+compatibility surfaces. ADR-0007 accepts Platform-side strategic ownership and
+the seven product decisions, but it does not accept provider protocols, ACL
+topology, wire schemas, or Orchestrator-owned models. Those rows still require
+joint review and an owning cross-repository boundary decision.
 
 ## Agreed direction
 
@@ -28,10 +31,12 @@ Platform or Standalone Authority identity
 
 - Platform semantic ownership covers customer organizations, product tenancy,
   product projects, principals, memberships, commercial entitlements,
-  placement, and managed scope-admission intent. The exact Platform
-  bounded-context and aggregate split remains proposed in the strategic Context
-  Map. ADR-0005 separately confirms `PlatformInstallation`, desired installation
-  revision, and signed immutable `DeploymentPlan` ownership for Managed BYOC.
+  placement, and managed scope-admission intent. ADR-0007 accepts the seven
+  strategic Platform boundaries and authorizes only the first Project Management
+  tactical slice. The other six tactical aggregate models and package targets
+  remain proposed. ADR-0005 separately confirms `PlatformInstallation`, desired
+  installation revision, and signed immutable `DeploymentPlan` ownership for
+  Managed BYOC.
 - The Customer Installation Control Plane owns customer-side plan acceptance,
   `InstallationEnrollment`, the local authority epoch, the short-lived fenced
   writer lease, and installation reconciliation. It is not an Orchestrator
@@ -148,9 +153,9 @@ Platform or Standalone Authority identity
   only against an accepted unexpired plan; uncertainty becomes a typed degraded
   or reconciliation state, never an implicit fallback.
 
-## Review gate
+## Remaining cross-repository review gate
 
-Before a superseding ADR, produce and review:
+Before accepting the exact Platform-Orchestrator boundary, jointly review:
 
 1. Authority ownership matrix.
 2. Resource identity and binding matrix.

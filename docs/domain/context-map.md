@@ -1,10 +1,11 @@
 ---
 id: domain.context-map
 type: architecture
-status: proposed
+status: accepted
 owner: architecture/domain
-summary: Proposed Platform bounded contexts, ownership boundaries, and materialization gates.
+summary: Accepted Platform strategic bounded contexts, ownership boundaries, and materialization gates.
 related:
+  - ADR-0007
   - ADR-0002
   - ADR-0003
   - ADR-0004
@@ -14,9 +15,10 @@ related:
 
 # Platform Strategic Context Map
 
-This map proposes Platform model boundaries. It does not accept a bounded
-context, aggregate shape, wire contract, or production package. Accepted ADRs
-confirm only the narrow semantics cited by each dossier.
+ADR-0007 accepts the strategic Platform model boundaries in this map. Strategic
+acceptance does not automatically accept a tactical aggregate shape, wire
+contract, production adapter, or package. Each dossier states its own tactical
+and materialization maturity.
 
 There is no target count for bounded contexts. A split or merge requires a real
 difference in language, invariants, lifecycle, consistency, security, ownership,
@@ -27,16 +29,17 @@ workspace package are not automatically bounded contexts.
 
 | Bounded context | Classification | Boundary status | Evidence maturity | Primary responsibility | System of record | Dossier |
 | --- | --- | --- | --- | --- | --- | --- |
-| Customer Ownership | Supporting | `PROPOSED` | PersonalSpace and owner-reference semantics partially confirmed by ADR-0002 | Personal and customer-organization ownership identities without PII, tenancy, membership, or billing state | Customer-owner identity, lifecycle, and tombstone store | [Dossier](contexts/customer-ownership/README.md) |
-| Tenancy | Supporting, security-critical | `PROPOSED` | TenantOwnerRef and selected retirement constraints partially confirmed by ADR-0002 and ADR-0004 | Product isolation boundary, owner binding, tenant admission, lifecycle epoch, and bounded Project fan-out | Tenant authority, lifecycle, admission, and retirement-process store | [Dossier](contexts/tenancy/README.md) |
-| Platform Identity | Supporting, security-critical | `PROPOSED` | Principal separation and privacy constraints partially confirmed by ADR-0002 | Stable Platform principals, external identity bindings, explicit IdP migration, privacy erasure, and identity tombstones | Platform principal identity and binding store | [Dossier](contexts/identity/README.md) |
-| Access and Authority | Supporting, security-critical | `PROPOSED` | Independent access ownership partially confirmed by ADR-0002; exact membership, grant, and delegation models remain open | Memberships, direct grants, delegations, revocation, and capability-specific product authority decisions | Product access and authority store | [Dossier](contexts/access-authority/README.md) |
-| Project Management | Core | `PROPOSED` | ProductProject, admission, restriction, and retirement semantics confirmed by ADR-0004 | ProductProject identity, admission authority, managed scope-admission process, and product retirement coordination | ProductProject, admission, command-receipt, and owner-local process store | [Dossier](contexts/project-management/README.md) |
-| Commercial Access | Supporting | `PROPOSED` | Direction only; subscription and entitlement model remains open | Commercial agreements, subscriptions, entitlements, and exact commercial restrictions without accounting or operational usage ownership | Commercial agreement, subscription, entitlement, and restriction store | [Dossier](contexts/commercial-access/README.md) |
-| Deployment Management | Supporting, strategic enabling | `PROPOSED` | PlatformInstallation and immutable plan semantics confirmed by ADR-0005 | Managed deployment intent, placement policy, release policy, desired revision, and signed DeploymentPlan publication | Platform installation intent and immutable signed-plan chain | [Dossier](contexts/deployment-management/README.md) |
+| Customer Ownership | Supporting | `ACCEPTED` | Strategic boundary accepted by ADR-0007; tactical package remains proposed | Personal and customer-organization ownership identities without PII, tenancy, membership, or billing state | Customer-owner identity, lifecycle, and tombstone store | [Dossier](contexts/customer-ownership/README.md) |
+| Tenancy | Supporting, security-critical | `ACCEPTED` | Strategic boundary accepted by ADR-0007; tactical package remains proposed | Product isolation boundary, owner binding, tenant admission, lifecycle epoch, and bounded Project fan-out | Tenant authority, lifecycle, admission, and retirement-process store | [Dossier](contexts/tenancy/README.md) |
+| Platform Identity | Supporting, security-critical | `ACCEPTED` | Strategic boundary accepted by ADR-0007; tactical package remains proposed | Stable Platform principals, external identity bindings, explicit IdP migration, privacy erasure, and identity tombstones | Platform principal identity and binding store | [Dossier](contexts/identity/README.md) |
+| Access and Authority | Supporting, security-critical | `ACCEPTED` | Strategic boundary accepted by ADR-0007; tactical package remains proposed | Memberships, direct grants, delegations, revocation, and capability-specific product authority decisions | Product access and authority store | [Dossier](contexts/access-authority/README.md) |
+| Project Management | Core | `ACCEPTED` | Strategic boundary and first package slice accepted by ADR-0007 | ProductProject identity, admission authority, managed scope-admission process, and product retirement coordination | ProductProject, admission, command-receipt, and owner-local process store | [Dossier](contexts/project-management/README.md) |
+| Commercial Access | Supporting | `ACCEPTED` | Strategic boundary accepted by ADR-0007; tactical package remains proposed | Commercial agreements, subscriptions, entitlements, and exact commercial restrictions without accounting or operational usage ownership | Commercial agreement, subscription, entitlement, and restriction store | [Dossier](contexts/commercial-access/README.md) |
+| Deployment Management | Supporting, strategic enabling | `ACCEPTED` | Strategic boundary accepted by ADR-0007; tactical package remains proposed | Managed deployment intent, placement policy, release policy, desired revision, and signed DeploymentPlan publication | Platform installation intent and immutable signed-plan chain | [Dossier](contexts/deployment-management/README.md) |
 
-`PROPOSED` means no production package may be created. Evidence maturity does
-not promote the whole boundary by implication.
+`ACCEPTED` here means the strategic ownership boundary is stable. It does not
+authorize package creation. Project Management is the only target accepted for
+materialization; the other six owner dossiers remain tactical proposals.
 
 ## Relationship map
 
@@ -96,7 +99,7 @@ external aggregate or invents an unaccepted AR Published Language.
 
 ## First vertical slice
 
-The recommended first slice remains inside Project Management:
+The accepted first slice remains inside Project Management:
 
 ```text
 CreateProductProject
@@ -113,28 +116,25 @@ Readiness never changes its identity lifecycle and never grants Orchestrator
 admission. Runtime-scope activation, technical grants, runtime dispatch, and AR
 readiness are later slices blocked on the future AR Published Language.
 
-The proposed first-slice Unit of Work is fail closed: all five owner-local records
+The accepted first-slice Unit of Work is fail closed: all five owner-local records
 commit in one Project Management transaction or no ProductProject is created.
 Missing ProjectAdmissionAuthority always means denied. External calls occur only
-after commit through durable dispatch. The superseding ADR must accept this
-linearization point before materialization. The slice also requires accepted
+after commit through durable dispatch. ADR-0007 accepts this linearization point
+and materialization target. The slice also requires
 consumer-owned ports for current Tenant admission and create-Project authority;
 fakes implement those ports in package tests without creating speculative
 upstream packages.
 
-`ManagedProjectScopeAdmissionProcess` is proposed as a feature-owned process
+`ManagedProjectScopeAdmissionProcess` is accepted as a feature-owned process
 manager in Project Management. It becomes a separate bounded context only after
 independent language, lifecycle, ownership, and at least a second proven
 consumer make extraction necessary.
 
 ## Product-owner decisions
 
-The [product decision packet](product-decision-packet.md) contains reviewed v1
-recommendations and edge-case contracts for these forks. Every entry remains
-`awaiting-product-owner`; recommendations do not become accepted architecture
-without an explicit immutable ADR.
-
-These product-level forks block a broad Platform domain ADR:
+The [product decision packet](product-decision-packet.md) contains the reviewed
+v1 rationale and edge-case contracts. Product owner accepted all seven decisions
+through ADR-0007:
 
 1. `PO-PLAT-001`: separation of CustomerOrganization membership from explicit
    Tenant access and the authority each relationship carries.
@@ -152,7 +152,7 @@ These product-level forks block a broad Platform domain ADR:
 7. `PO-PLAT-007`: ProductProject display naming and whether v1 needs a separate
    user-addressable ProjectKey.
 
-Technical details below those policies are resolved by owning ADRs and
+Technical details below those policies remain owned by focused ADRs and
 conformance evidence without escalating every field or class name.
 
 ## Explicit non-contexts
@@ -180,10 +180,12 @@ context. It is not reserved until its language and lifecycle are proven.
 
 The [package catalog](../../architecture/package-catalog.yaml) reserves package
 identities only. Foundation scaffolding accepts only owner documents with
-`status: accepted`. Every current dossier is `proposed`, so package creation is
-fail closed. Status alone does not grant materialization authority. An immutable
-accepted ADR must explicitly accept the target, and the dossier must bind that
-ADR and name its first real feature. The accepted owner, implementation and
-tests, content-addressed Foundation Plan, validated Apply Receipt, and generated
-package envelope must land in the same reviewed change. The gate also rejects
-symlinked or uncatalogued context packages and stale Plan authority inputs.
+`status: accepted`. ADR-0007 accepts only Project Management and its first real
+feature. Every other package remains fail closed. Status alone does not grant
+materialization authority: an immutable accepted ADR must explicitly accept the
+target, and the dossier must bind that ADR and name its first feature. The
+accepted owner, implementation and tests, content-addressed Foundation Plan,
+validated Apply Receipt, and generated package envelope land in the same
+reviewed change. The gate also rejects symlinked or uncatalogued context
+packages. Plan read sets remain immutable historical evidence; current owner,
+catalog, package and dependency-boundary authority are revalidated independently.

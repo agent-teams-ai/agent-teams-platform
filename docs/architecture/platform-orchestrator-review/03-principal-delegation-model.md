@@ -7,6 +7,7 @@ summary: Proposed orthogonal principal, actor, client, delegation, and durable R
 related:
   - architecture.platform-orchestrator-boundary
   - ADR-0003
+  - ADR-0007
 ---
 
 # Principal and Delegation Model
@@ -15,11 +16,13 @@ related:
 
 | Status | Semantic boundary | Acceptance source and limit |
 | --- | --- | --- |
-| `PROPOSED` | Platform principal kinds, tenant membership, and stable OrchestrationPrincipal binding | Orchestrator OD-012 remains open; no Platform identity ADR accepts the aggregate or wire model |
+| `CONFIRMED` | Platform principal identity, explicit Tenant grants, one-level delegation, and privacy lifecycle | Platform ADR-0007; tactical aggregate and wire representations remain proposed |
+| `PROPOSED` | Stable OrchestrationPrincipal binding | Orchestrator OD-012 remains open; Platform ADR-0007 does not own Orchestrator identity |
 | `PROPOSED` | Authority decision envelope and capability-specific decision DTOs | Review proposal; exact Platform Authority API and Orchestrator provider SPI remain unaccepted |
 | `CONFIRMED` | Subject-bound Run suspension, successor authority basis, and separate Run lifetime policy | Platform ADR-0003 and Orchestrator ADR-0079; exact DTO and aggregate representation remain owner-local |
 | `CONFIRMED` | Bounded revocation fan-out, target-specific cutoff, and predecessor barriers | Platform ADR-0003, Orchestrator ADR-0079, AR ADR-0003, and AR ADR-0004 |
-| `OPEN` | Delegation depth, renewal, principal privacy lifecycle, and authority propagation SLO | Platform authority decision and Orchestrator OD-012/OD-031 |
+| `CONFIRMED` | Delegation depth, renewal, and principal privacy product semantics | Platform ADR-0007; exact persistence and API forms remain tactical |
+| `OPEN` | Cross-repository authority propagation SLO | Orchestrator OD-031 and future Platform Authority API decision |
 
 ## Orthogonal identities
 
@@ -29,17 +32,20 @@ actor    who or what actually acts
 client   which application carries the request
 ```
 
-- `PROPOSED`: HumanPrincipal and ServicePrincipal are distinct principal kinds.
-- `PROPOSED`: OAuth client is not a principal unless an explicit service-principal binding
-  grants that identity.
+- `CONFIRMED`: HumanPrincipal and ServicePrincipal are distinct principal kinds
+  (Platform ADR-0002 and Platform ADR-0007).
+- `CONFIRMED`: OAuth client is not a principal unless an explicit service-principal binding
+  grants that identity (Platform ADR-0007).
 - `PROPOSED`: `AgentProfileId` is not a principal in Orchestrator authority; the
   separation is directionally agreed but has no accepted owning ADR yet.
-- `PROPOSED`: Email and display name cannot auto-link identities.
+- `CONFIRMED`: Email and display name cannot auto-link identities (Platform
+  ADR-0002 and Platform ADR-0007).
 - `PROPOSED`: One Platform principal may map to a different tenant-scoped
   `OrchestrationPrincipalId` in each Tenant.
-- `PROPOSED`: Principal retirement should erase or detach PII while preserving a
-  non-reusable, non-identifying audit tombstone. Exact legal-hold, erasure, and
-  merge/split semantics remain `OPEN` and cannot be inferred from this target.
+- `CONFIRMED`: Principal retirement erases or detaches PII while preserving an
+  approved non-reusable, non-identifying audit tombstone. Legal hold may retain
+  minimum required PII but grants no authority; principal merge and split are
+  unsupported in v1 (Platform ADR-0007).
 
 ## Proposed authority decision envelope
 
@@ -244,8 +250,14 @@ FanOutScanCheckpoint
 
 ## Open decisions
 
-- `OPEN`: exact Platform principal kinds, aggregate boundaries, and authority
-  decision wire representation.
-- `OPEN`: maximum delegation depth and whether transitive delegation is allowed.
-- `OPEN`: renewal rules and revocation propagation SLO.
-- `OPEN`: principal merge/split, legal hold, and PII erasure semantics.
+- `OPEN`: exact Platform aggregate boundaries and authority decision wire
+  representation. ADR-0007 accepts the product semantics, not a DTO.
+- `CONFIRMED`: v1 delegation depth is exactly one edge from an authoritative
+  direct grant; transitive delegation is forbidden by Platform ADR-0007.
+- `CONFIRMED`: delegation renewal creates a successor identity from fresh
+  authority evidence; an expired or revoked delegation is never revived
+  (Platform ADR-0007).
+- `OPEN`: cross-repository revocation propagation SLO.
+- `CONFIRMED`: principal merge and split are unsupported in v1; Platform ADR-0007
+  fixes the privacy and legal-hold semantics while exact retention
+  periods remain policy and jurisdiction decisions.

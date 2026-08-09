@@ -11,6 +11,7 @@ related:
   - architecture.platform-orchestrator-review.project-provisioning
   - architecture.platform-orchestrator-review.contract-conformance
   - ADR-0004
+  - ADR-0007
 ---
 
 # Platform-Orchestrator-AR Concurrency and Failure Traces
@@ -139,10 +140,10 @@ and every downstream scope-admission step. For an exact create-command replay,
 either no ProductProject commit exists or one fail-closed ProductProject exists
 with durable owner-local recovery intent. Each bounded context atomically commits
 only its own state, receipt, and outbox. Exact aggregate placement remains
-tactical. The proposed first-slice linearization point places ProductProject,
+tactical. The accepted first-slice linearization point places ProductProject,
 initial denied admission authority, customer receipt, managed-process intent,
-and outbox in one Project Management transaction. This proposal awaits the
-superseding ADR rather than remaining an undefined transaction boundary.
+and outbox in one Project Management transaction. Platform ADR-0007 accepts
+this owner-local transaction without accepting a downstream wire contract.
 
 Different command identities with the same business payload are not implicitly
 equivalent. Whether a separate business fingerprint deduplicates distinct create
@@ -307,11 +308,11 @@ reference. A single global error scalar is not canonical truth.
 
 `RECONCILE_REQUIRED` is non-terminal. `BLOCKED` means automatic progress is not
 currently possible; it is not ProductProject retirement or proof of cleanup.
-The proposed v1 contract makes cancellation generation-scoped: it stops new step
+The accepted Platform v1 semantics make cancellation generation-scoped: it stops new step
 claims, reconciles ambiguous outcomes, preserves the `OPEN` fail-closed Project,
 and yields `BLOCKED(reason=USER_CANCELLED)`. Resume creates a successor process
-generation after fresh precondition evaluation. This proposal awaits explicit
-product-owner confirmation.
+generation after fresh precondition evaluation. Platform ADR-0007 accepts these
+product semantics; exact state names and external commands remain proposed.
 
 ### CF-05 conformance evidence
 

@@ -7,6 +7,7 @@ classification: supporting-security-critical
 package_target: context.identity
 summary: Proposed stable Platform principal, external identity binding, privacy, and migration boundary.
 related:
+  - ADR-0007
   - ADR-0002
   - architecture.platform-orchestrator-review.principal-delegation
 ---
@@ -59,9 +60,10 @@ resources. Exact split, indexing, and erasure transaction boundaries remain open
 
 ## Lifecycle
 
-Provisional, active, disabled, privacy-erased, and tombstoned semantics remain
-proposed under `PO-PLAT-005`. Merge and split are not inferred from binding
-changes. Disablement, PII erasure, external-binding removal, and historical
+ADR-0007 accepts stable non-reusable principal identity, explicit proof-based
+IdP rebinding, no v1 merge/split, and PII erasure with minimal historical
+tombstones. Exact states, transactions, proof rules, and retention periods remain
+proposed. Disablement, PII erasure, external-binding removal, and historical
 tombstone retention are separate facts.
 
 ## Commands and Events
@@ -122,12 +124,17 @@ consumer-local resource history.
 
 ## Materialization Gate
 
-Materialization requires `PO-PLAT-005`, accepted principal and external-binding
-aggregate boundaries, privacy/erasure lifecycle, migration concurrency rules,
-an owning package-identity ADR, and one complete identity feature slice.
+ADR-0007 accepts the product semantics of `PO-PLAT-005`, but does not authorize
+this package. Materialization still requires accepted principal and
+external-binding aggregate boundaries, privacy/erasure retention, migration
+concurrency rules, an owning package-identity ADR, and one complete identity
+feature slice.
 
 ## Open Decisions
 
-- `PO-PLAT-005`: merge/split, PII erasure, tombstones, and IdP migration.
+- `PO-PLAT-005` is accepted by ADR-0007: merge/split is unsupported in v1, IdP
+  rebinding is explicit and proof-based, and privacy erasure preserves only
+  approved minimal tombstones.
 - Exact principal kinds and service/internal identity lifecycle.
-- Binding uniqueness, account recovery, proof, and privacy retention policy.
+- Binding uniqueness, account recovery, proof, privacy retention, schemas, and
+  first vertical slice.

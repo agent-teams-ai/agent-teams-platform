@@ -30,6 +30,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 - [ADR-0004: Project retirement authority and disposition](decisions/0004-project-retirement-authority-and-disposition.md)
 - [ADR-0005: Managed customer installation control](decisions/0005-managed-customer-installation-control.md)
 - [ADR-0006: Authority-reducing break-glass (Proposed)](decisions/0006-authority-reducing-break-glass.md)
+- [ADR-0007: Platform strategic context map and first Project Management slice](decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md)
 
 ## Sources of truth
 
@@ -40,10 +41,11 @@ Read documentation by responsibility instead of scanning the whole repository.
 | Exact manifest shape | `architecture/deployment-profiles/deployment-profiles.schema.json` |
 | Managed BYOC installation invariants | `architecture/managed-installation/managed-installation-policy.yaml` |
 | Shared engineering-tool adoption | `architecture/engineering-foundation-adoption.md` |
-| Proposed Platform domain topology | `docs/domain/context-map.md` and substantial context dossiers |
+| Accepted Platform strategic topology | `docs/domain/context-map.md` and ADR-0007 |
+| Tactical context design and materialization status | Bounded-context dossiers and their owning ADRs |
 | Reserved package identities | `architecture/package-catalog.yaml` |
 | Current architecture rules | Architecture documents |
-| Cross-system proposal under review | Proposed boundary document and its eight review artifacts |
+| Exact cross-system contracts under review | Proposed boundary document and its eight review artifacts |
 
 The manifest is operational truth. A roadmap target in an ADR never upgrades a
 profile's current status.

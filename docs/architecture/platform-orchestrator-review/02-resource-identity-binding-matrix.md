@@ -9,15 +9,16 @@ related:
   - ADR-0002
   - ADR-0004
   - ADR-0005
+  - ADR-0007
 ---
 
 # Resource Identity and Binding Matrix
 
 | Semantic status | Representation status | Resource | Owner-local identity or public representation | External binding | Cardinality and truth | Acceptance source and limit |
 | --- | --- | --- | --- | --- | --- | --- |
-| `PROPOSED` | `PROPOSED` | CustomerOrganization | `CustomerOrganizationId` | Legal and CRM references | One organization may own many Tenant; Platform is authoritative | Review proposal; exact Platform bounded context remains open |
+| `CONFIRMED` | `PROPOSED` | CustomerOrganization | Owner-local stable non-reusable identity; exact representation remains proposed | Legal and CRM references | One organization may own many Tenant; Platform is authoritative | Platform ADR-0007 confirms ownership, cardinality direction, and terminal lifecycle; tactical representation remains proposed |
 | `CONFIRMED` | `CONFIRMED` | PersonalSpace | `PersonalSpaceId` | One opaque human `PlatformPrincipalId` owner binding | At most one active PersonalSpace per human principal in a Platform authority realm; PersonalSpace may own many Tenant | Platform ADR-0002 |
-| `PROPOSED` | `PROPOSED` | Tenant | `PlatformTenantId` | `AuthorityBindingSlot.PRIMARY` orchestration tenant binding | One owner may have many Tenant; Tenant is product isolation boundary | Platform ADR-0002 confirms the closed owner union, not the full Tenant aggregate or binding contract |
+| `CONFIRMED` | `PROPOSED` | Tenant | Owner-local stable non-reusable identity; exact representation remains proposed | `AuthorityBindingSlot.PRIMARY` orchestration tenant binding | One owner may have many Tenant; Tenant is product isolation boundary | Platform ADR-0007 confirms ownership, isolation, lifecycle, and non-reuse; binding representation remains proposed |
 | `CONFIRMED` | `PROPOSED` | ProductProject | Owner-local `ProductProjectId`; public resource representation remains proposed | `AuthorityBindingSlot.PRIMARY` orchestration project binding | Exactly one Tenant; `OPEN -> RETIRED` identity and retirement epoch are Platform-authoritative | Platform ADR-0004; binding and public representation remain proposed |
 | `CONFIRMED` | `CONFIRMED` | ProjectRestriction | Stable owner-local restriction identity scoped to ProductProject | Typed source, capability scope, and source revision | Independent sources coexist; one exact source revision clears only its own restriction | Platform ADR-0004 |
 | `CONFIRMED` | `CONFIRMED` | ProductProjectRetirementProcess | Stable owner-local retirement operation ID | Immutable command digest, policy/catalog revisions, and participant plan | One process per retirement request; obligations are bounded external records, not an aggregate collection | Platform ADR-0004 |
@@ -26,7 +27,7 @@ related:
 | `CONFIRMED` | `PROPOSED` | InstallationEnrollment | Customer-local installation identity | PlatformInstallation ref, trust anchor, and accepted plan chain | Customer control plane owns lifecycle, local policy acceptance, and authority continuity | Platform ADR-0005; exact protocol remains unqualified |
 | `CONFIRMED` | `PROPOSED` | InstallationOperation | Stable customer-local operation ID | Accepted plan revision, immutable command digest, and target generation | One durable operation per semantic install, update, rollback, or disposition intent | Platform ADR-0005; exact protocol remains unqualified |
 | `CONFIRMED` | `PROPOSED` | InstallationWriterLease | Customer-local lease ID | Installation authority epoch, writer identity, plan revision, and expiry | At most one mutation-authoritative lease per installation authority epoch | Platform ADR-0005; exact protocol remains unqualified |
-| `PROPOSED` | `PROPOSED` | PlatformPrincipal | `PlatformPrincipalId` | IdP issuer, external subject, source incarnation | Platform Identity owns principal and binding continuity; scoped memberships are separate Access and Authority records | Platform identity model remains open; Orchestrator OD-012 concerns a different identity |
+| `CONFIRMED` | `PROPOSED` | PlatformPrincipal | Owner-local stable non-reusable identity; exact representation remains proposed | IdP issuer, external subject, source incarnation | Platform Identity owns principal and binding continuity; scoped memberships are separate Access and Authority records | Platform ADR-0007 confirms identity continuity, no email linking, privacy tombstones, and no v1 merge/split; tactical representation remains proposed |
 | `PROPOSED` | `PROPOSED` | OrchestrationPrincipal | Tenant-scoped `OrchestrationPrincipalId` | Authority realm, external principal, source incarnation | Orchestrator authorship identity remains stable across IdP migration | Orchestrator OD-012 remains open |
 | `CONFIRMED` | `OPEN` | OrchestrationTenant | Stable owner-local identity; exact public resource name remains open | Opaque Platform or Standalone scope | Orchestration Scope owns stable identity and binding lifecycle | Orchestrator ADR-0080; exact public identity remains under OD-019 |
 | `CONFIRMED` | `OPEN` | OrchestrationProject | Stable owner-local identity; exact public resource name remains open | ProductProject identity and incarnation | Orchestration Scope owns stable identity, terminal lifecycle, and admission | Orchestrator ADR-0080; exact public identity remains under OD-019 |

@@ -7,6 +7,7 @@ classification: supporting-strategic-enabling
 package_target: context.deployment-management
 summary: Proposed managed placement, installation intent, and signed deployment-plan boundary.
 related:
+  - ADR-0007
   - ADR-0001
   - ADR-0005
 ---
@@ -28,7 +29,8 @@ Deployment Management owns managed placement intent, PlatformInstallation,
 desired revision, placement and release decisions constrained by typed commercial
 inputs, and signed DeploymentPlan publication. Commercial Access remains the
 owner of commercial entitlements and restrictions. ADR-0005 confirms deployment
-intent ownership, not the complete bounded context or wire schema.
+intent ownership, and ADR-0007 accepts this strategic context boundary. Neither
+decision accepts the complete tactical aggregate model, package, or wire schema.
 
 ## System of Record
 
@@ -123,15 +125,19 @@ manifest remain unqualified until their owning contract decision.
 
 ## Materialization Gate
 
-Materialization requires an accepted context boundary and first Managed Shared
-SaaS placement/installation-intent slice. Managed Dedicated, BYOC, and Hybrid
-must remain design-only until their exact compositions and qualification gates
-exist. No cloud-specific package is created speculatively.
+ADR-0007 accepts the strategic context boundary but does not authorize this
+package. Materialization requires an owning ADR for the first Managed Shared
+SaaS placement/installation-intent slice, exact tactical boundaries, and
+qualification evidence. Managed Dedicated, BYOC, and Hybrid remain design-only
+until their exact compositions and gates exist. No cloud-specific package is
+created speculatively.
 
 ## Open Decisions
 
 - Managed Shared SaaS stamp/placement lifecycle and authority owner.
 - Exact PlatformInstallation aggregate, plan publication transaction, and wire
   contract.
+- First vertical slice, persistence and retention model, and package
+  materialization decision.
 - Cloud-specific external authority anchors and workload identities remain
   implementation qualification choices constrained by ADR-0005.

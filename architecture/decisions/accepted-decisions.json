@@ -26,6 +26,11 @@
       "id": "ADR-0005",
       "path": "docs/decisions/0005-managed-customer-installation-control.md",
       "immutableDigest": "sha256:670d61c705a7a1e96a2f77961f5f1c4fc0165c0665cab649a58eb5d3ccacc093"
+    },
+    {
+      "id": "ADR-0007",
+      "path": "docs/decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md",
+      "immutableDigest": "sha256:26085aa43e0bc08b6e7988bb1946b3e753c61cebf398c52f30644478be1006db"
     }
   ]
 }

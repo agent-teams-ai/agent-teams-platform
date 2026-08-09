@@ -1,12 +1,31 @@
 ---
 id: domain.contexts.project-management
 type: bounded-context
-status: proposed
+status: accepted
 owner: product/project-management
 classification: core
 package_target: context.project-management
-summary: Proposed ProductProject identity, admission, scope-admission, and retirement boundary.
+owner_decision: ADR-0007
+first_feature: managed-project-scope-admission
+first_feature_public_exports:
+  - CancelProjectPreparationResult
+  - CreateProductProjectCommand
+  - CreateProductProjectResult
+  - GetScopeAdmissionReadinessQuery
+  - GetScopeAdmissionReadinessResult
+  - Instant
+  - ProductProjectId
+  - ProjectManagementApplication
+  - ProjectPreparationCommand
+  - ProjectPreparationCommandId
+  - ProjectPreparationOperationRef
+  - ResumeProjectPreparationResult
+  - ScopeAdmissionReadiness
+  - TenantRef
+  - projectManagementInputs
+summary: Accepted ProductProject identity and first managed scope-admission slice.
 related:
+  - ADR-0007
   - ADR-0004
   - architecture.platform-orchestrator-review.project-provisioning
 ---
@@ -48,7 +67,7 @@ external evidence referenced opaquely.
   consistency boundary from ProductProject identity after initialization.
 - `ProductProjectRetirementProcess` owns commitment, immutable policy/catalog
   references, bounded obligations, and opaque receipts.
-- The proposed create Unit of Work atomically initializes ProductProject, a
+- The accepted create Unit of Work atomically initializes ProductProject, a
   denied ProjectAdmissionAuthority, command receipt, scope-admission process
   intent, and outbox before any external call.
 
@@ -68,6 +87,21 @@ external evidence referenced opaquely.
   unbounded external resource inventory.
 - Duplicate command identity plus identical digest replays its receipt; a
   conflicting digest is rejected.
+- Durable lifecycle receipts are retained only for commands that changed
+  process state. Repeated `not-found`, stale, and already-terminal no-op commands
+  do not create unbounded idempotency rows.
+- Canonical command preimages and their versions belong to Project Management;
+  composition supplies only the cryptographic digest primitive.
+- Cancel and resume identities are generation-bound. Resume creates generation
+  N+1 only when a new downstream dispatch is required; an admitted receipt is
+  re-authorized in generation N. Delayed predecessor evidence cannot mutate a
+  successor generation.
+- Scope-admission authority is checked at dispatch CAS and receipt
+  linearization. Deferred receipt authority is rechecked durably with bounded
+  retries; retry exhaustion remains blocked and explicit.
+- A dispatch lease and authority expiry are carried to the outbound adapter and
+  rechecked immediately before its first externally visible side effect.
+- Preparation generations and retained outbox/evidence growth are bounded.
 
 ## Lifecycle
 
@@ -78,9 +112,16 @@ prepared Project remains fail closed and recoverable; `READY`, `BLOCKED`,
 
 ## Commands and Events
 
-Proposed commands are `CreateProductProject`, `AddProjectRestriction`,
+The first slice accepts `CreateProductProject`, `CancelProjectPreparation`,
+`ResumeProjectPreparation`, `DispatchManagedScopeAdmission`,
+`ReconcileManagedScopeAdmission`, `RecheckScopeAdmissionAuthority`, and
+`GetScopeAdmissionReadiness`. Caller and Tenant facts are created only by a
+trusted inbound authentication adapter; public input helpers cannot mint a
+trusted requester. Later
+commands remain proposed:
+`AddProjectRestriction`,
 `ClearProjectRestriction`, `RequestManagedScopeAdmission`,
-`ReconcileManagedScopeAdmission`, `RequestProductProjectRetirement`,
+`RequestProductProjectRetirement`,
 `CancelProductProjectRetirement`, and `CommitProductProjectRetirement`.
 Proposed domain events cover identity creation, exact restriction changes,
 admission revision, retirement commitment, and local process transitions.
@@ -144,18 +185,22 @@ runtime scope identity, and AR readiness never enter this language.
 
 ## Materialization Gate
 
-This is the recommended first package, but materialization remains forbidden
-until an accepted decision closes `PO-PLAT-003`, fixes the create transaction
-boundary, accepts ManagedProjectScopeAdmissionProcess as a feature-owned process
-manager, and defines Project Management-owned Tenant-admission,
-create-Project-authority, and Orchestration-scope-admission ports with fake
-conformance contracts. The first feature slice must land with the package.
+ADR-0007 accepts this package and the `managed-project-scope-admission` first
+feature. Materialization remains fail closed unless the package, implementation,
+focused tests, content-addressed Foundation Plan, committed Apply Receipt, and
+accepted dossier land together. Public, composition, and worker exports remain
+separate, every package runs its own mandatory `check`, and every source file is
+classified by the Foundation dependency graph. The first slice owns narrow Tenant-admission,
+create-Project-authority, commercial-authority, and Orchestration-scope-admission
+ports. Test fakes prove application semantics only; they do not qualify a
+production persistence or transport adapter.
 
 ## Open Decisions
 
-- `PO-PLAT-003`: asynchronous acceptance, cancellation, recovery, and blocked UX.
-- Acceptance of the proposed atomic Project create Unit of Work and its
-  fail-closed recovery contract.
-- Exact Project create input; names never become identity.
-- `PO-PLAT-007`: Project name uniqueness, rename, and retired-name reuse.
+- Exact production persistence, migration, outbox-dispatch, and crash-recovery
+  qualification.
+- Exact Project create input beyond the accepted non-unique mutable display
+  name; names never become identity.
+- Transport schema for cancellation and resume beyond the accepted
+  generation-bound, idempotent successor-process semantics.
 - Orchestrator managed scope-admission service schema and compatibility window.

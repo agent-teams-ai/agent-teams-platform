@@ -7,6 +7,7 @@ classification: supporting
 package_target: context.customer-ownership
 summary: Proposed owner identity boundary for PersonalSpace and CustomerOrganization.
 related:
+  - ADR-0007
   - ADR-0002
 ---
 
@@ -26,8 +27,9 @@ The bare term `Organization` is forbidden where it could mean either
 ## Ownership
 
 This context owns customer-owner identity and owner-local lifecycle. ADR-0002
-confirms `PersonalSpace` semantics, but the complete context boundary and
-CustomerOrganization lifecycle remain proposed.
+confirms `PersonalSpace` semantics, and ADR-0007 accepts the strategic boundary
+and v1 owner-lifecycle policy. Exact tactical aggregates and process boundaries
+remain proposed.
 
 ## System of Record
 
@@ -59,9 +61,12 @@ Owner aggregates do not contain an authoritative growing collection of Tenant.
 
 ## Lifecycle
 
-Exact owner lifecycle states, tombstone policy, recovery, and owner rebinding
-remain open. Personal-to-organization conversion is `UNSUPPORTED_V1` and may
-later use an explicit migration process with new authority evidence.
+ADR-0007 accepts reversible suspension, terminal retirement, non-reuse, and no
+v1 transfer, merge, split, or resurrection. Exact state names, retirement
+process, tombstone retention, legal-hold storage, recovery, and owner rebinding
+remain tactical decisions. Personal-to-organization conversion is
+`UNSUPPORTED_V1` and may later use an explicit migration process with new
+authority evidence.
 
 ## Commands and Events
 
@@ -116,13 +121,15 @@ aggregate snapshots.
 
 ## Materialization Gate
 
-Package materialization is forbidden until an accepted decision fixes the
-CustomerOrganization lifecycle, owner tombstone/rebinding policy, first feature
-slice, and transaction boundary. ADR-0002 alone does not accept the whole
-package.
+ADR-0007 accepts the strategic boundary and v1 product semantics, but does not
+authorize this package. Materialization remains forbidden until an owning ADR
+accepts the tactical CustomerOrganization aggregate, tombstone/rebinding and
+retention policy, first feature slice, and transaction boundary.
 
 ## Open Decisions
 
-- `PO-PLAT-001`: organization-level versus Tenant-level membership semantics.
-- `PO-PLAT-005`: merge/split, PII erasure, tombstones, and IdP migration.
-- `PO-PLAT-006`: organization retirement, recovery, and owner-transfer policy.
+- `PO-PLAT-001`, `PO-PLAT-005`, and `PO-PLAT-006` are accepted by ADR-0007:
+  membership is distinct from Tenant access, v1 merge/split is unsupported, and
+  retirement is terminal with explicit bounded obligations.
+- Exact aggregate state machines, tombstone and legal-hold retention, recovery
+  protocol, schemas, and first vertical slice.

@@ -8,16 +8,17 @@ related:
   - architecture.platform-orchestrator-boundary
   - ADR-0004
   - ADR-0005
+  - ADR-0007
 ---
 
 # Cross-Repository Contract and Conformance Ownership
 
 | Status | Contract or semantic surface | Semantic and schema owner | Persistence and truth | Failure and conformance owner | Acceptance source and limit |
 | --- | --- | --- | --- | --- | --- |
-| `PROPOSED` | Platform Authority API | Platform | Platform authority aggregates and consistent revisioned snapshots; audit or evidence ledger only when capability policy requires it | Platform producer suite plus Orchestrator consumer fixtures | Platform authority aggregate and wire model remain unaccepted |
+| `PROPOSED` | Platform Authority API | Platform | Platform authority aggregates and consistent revisioned snapshots; audit or evidence ledger only when capability policy requires it | Platform producer suite plus Orchestrator consumer fixtures | Platform ADR-0007 confirms strategic authority ownership and product semantics, not aggregate or wire models |
 | `PROPOSED` | Orchestrator AuthorityProvider SPI | Orchestrator | No persistence; consumer semantics are authoritative | Orchestrator fake-provider suite; every adapter runs it | Requires an Orchestrator ADR before package reservation or publication |
 | `PROPOSED` | Managed scope admission and binding API | Orchestrator | Orchestrator operations and receipts | Same ID and fingerprint replay receipt; Platform reconciles unknown response | Orchestrator ADR-0080 confirms ownership, not service or message schemas |
-| `CONFIRMED` | Platform Project lifecycle semantics | Platform | ProductProject epoch, admission revision, retirement operation, and policy/catalog references | Platform semantic fixtures plus future Managed Lifecycle ACL consumer fixtures | Platform ADR-0004; physical private contract remains proposed |
+| `CONFIRMED` | Platform Project lifecycle and managed scope-admission semantics | Platform | ProductProject epoch, admission revision, create receipt, managed admission process, retirement operation, and policy/catalog references | Platform semantic fixtures plus future Managed Lifecycle ACL consumer fixtures | Platform ADR-0004 and ADR-0007; physical private contract and Orchestrator API remain proposed |
 | `PROPOSED` | Private Platform Project lifecycle wire contract | Platform | Future versioned Platform contract artifact | Producer compatibility and Managed Lifecycle ACL consumer suite | Exact transport, schema, package, and compatibility window remain open |
 | `CONFIRMED` | AR Published Language ownership | AR | AR runtime state, feeds, and receipts | AR owns semantic conformance; Orchestrator owns consumer-port expectations | AR ADR-0003; ownership is confirmed, physical artifact is not |
 | `OPEN` | AR Published Language artifact | AR | Future AR versioned schemas and capability metadata | Future wire, generated-client, version-handshake, compatibility, and negative-variant suites | AR ADR-0003 explicitly requires a follow-up contract decision |

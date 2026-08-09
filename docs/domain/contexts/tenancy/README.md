@@ -7,6 +7,7 @@ classification: supporting-security-critical
 package_target: context.tenancy
 summary: Proposed Platform isolation, owner-binding, admission, and Tenant lifecycle boundary.
 related:
+  - ADR-0007
   - ADR-0002
   - ADR-0004
 ---
@@ -54,10 +55,12 @@ Project identities in bounded pages after closing creation authority.
 
 ## Lifecycle
 
-Exact Tenant states, transfer, merge, split, restoration, and legal-hold behavior
-remain open. Customer ownership, residency, isolation tier, and deployment
-placement are independent dimensions even when one workflow presents them
-together.
+ADR-0007 accepts reversible suspension, terminal retirement, non-reuse, and no
+v1 transfer, merge, split, or resurrection. Exact states, bounded retirement
+process, retention, legal-hold storage, recovery proof, and restore fencing
+remain tactical decisions. Customer ownership, residency, isolation tier, and
+deployment placement are independent dimensions even when one workflow presents
+them together.
 
 ## Commands and Events
 
@@ -116,13 +119,16 @@ membership, Project collections, placement, plan, or runtime scope models.
 
 ## Materialization Gate
 
-Materialization requires accepted Tenant lifecycle, owner rebinding, admission,
-retirement concurrency, restore fencing, and a first slice. The accepted closed
-TenantOwnerRef alone is insufficient.
+ADR-0007 accepts the strategic boundary and v1 product semantics, but does not
+authorize this package. Materialization still requires accepted tactical Tenant
+aggregate boundaries, owner rebinding, admission and retirement concurrency,
+restore fencing, persistence and retention policy, and a first vertical slice.
 
 ## Open Decisions
 
-- `PO-PLAT-001`: membership scopes and administrative inheritance.
-- `PO-PLAT-006`: Tenant transfer, merge/split, suspension, retirement, and
-  restoration policy.
+- `PO-PLAT-001` and `PO-PLAT-006` are accepted by ADR-0007: organization
+  membership grants no implicit Tenant access, and v1 Tenant transfer,
+  merge/split, and resurrection are unsupported.
 - Region/residency policy reference and whether it changes Tenant identity.
+- Exact aggregate state machine, retirement protocol, schemas, retention, and
+  first vertical slice.
