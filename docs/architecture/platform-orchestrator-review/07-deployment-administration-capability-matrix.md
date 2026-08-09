@@ -8,6 +8,7 @@ related:
   - ADR-0001
   - ADR-0004
   - ADR-0005
+  - ADR-0007
 ---
 
 # Deployment and Administration Capability Matrix
@@ -43,7 +44,7 @@ erase another tenant's resources.
 | --- | --- | --- | --- | --- |
 | `PROPOSED` | Platform user administration | Platform; authenticated principal | Platform SDK/API; no internal scope-admission methods | Review proposal; exact Platform API remains open |
 | `OPEN` | Standalone scope administration | Standalone Authority; local/server administrator | Orchestrator SDK capability or separate client requires a decision | Orchestrator administration surface has no accepted ADR |
-| `PROPOSED` | Internal managed scope admission and binding | Platform process manager and service identity | Privileged Orchestrator operation API, receipts, idempotency, reconciliation | Orchestrator ADR-0080 fixes ownership, not the API or Platform process boundary |
+| `PROPOSED` | Internal managed scope admission and binding | Platform Project Management process and service identity | Privileged Orchestrator operation API, receipts, idempotency, reconciliation | Platform ADR-0007 confirms the Platform process boundary and fail-closed semantics; Orchestrator ADR-0080 fixes provider ownership, but the API remains proposed |
 | `PROPOSED` | Break-glass operations | Dedicated operator authority with dual control | Separate audit; cannot bypass aggregates, fences, or use direct SQL as authority | Platform ADR-0004 and ADR-0005 constrain authority but do not accept this surface |
 | `CONFIRMED` | Managed BYOC customer installation administration semantics | Customer Installation Control Plane; exact caller kinds remain proposed | Customer-local operations accept signed plans, apply local policy, control writer lease, and never expose product authority | Platform ADR-0005; exact API, caller vocabulary, and implementation remain unqualified |
 | `CONFIRMED` | Managed BYOC Platform deployment administration semantics | Platform Deployment Management; exact service/operator callers remain proposed | Platform publishes immutable desired plans and may consume redacted conditions; no customer-cloud credential or secret-decryption surface | Platform ADR-0005; exact read API and caller vocabulary remain unqualified |

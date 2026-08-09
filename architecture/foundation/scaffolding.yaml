@@ -1,0 +1,26 @@
+schemaVersion: 1
+projectId: agent-teams-platform
+targetCatalogPath: architecture/package-catalog.yaml
+compositions:
+  - id: platform-private-context
+    scaffoldProfile:
+      ref:
+        id: foundation.node-typescript-pnpm-esm
+        contractVersion: 1
+      parameters:
+        tsconfigBase: tsconfig.json
+    recipe:
+      ref:
+        id: foundation.node-typescript-library-boundary
+        contractVersion: 1
+    targetRoles:
+      - bounded-context
+    authorityVerifiers:
+      - id: foundation.markdown-yaml-owner
+        contractVersion: 1
+        parameters:
+          allowedStatuses:
+            - accepted
+          documentRoots:
+            - docs/domain/contexts
+    policies: []

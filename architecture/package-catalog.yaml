@@ -1,0 +1,37 @@
+version: 1
+packages:
+  - id: context.customer-ownership
+    role: bounded-context
+    path: packages/contexts/customer-ownership
+    package_name: "@agent-teams/platform-customer-ownership"
+    owner_document: domain.contexts.customer-ownership
+  - id: context.tenancy
+    role: bounded-context
+    path: packages/contexts/tenancy
+    package_name: "@agent-teams/platform-tenancy"
+    owner_document: domain.contexts.tenancy
+  - id: context.identity
+    role: bounded-context
+    path: packages/contexts/identity
+    package_name: "@agent-teams/platform-identity"
+    owner_document: domain.contexts.identity
+  - id: context.access-authority
+    role: bounded-context
+    path: packages/contexts/access-authority
+    package_name: "@agent-teams/platform-access-authority"
+    owner_document: domain.contexts.access-authority
+  - id: context.project-management
+    role: bounded-context
+    path: packages/contexts/project-management
+    package_name: "@agent-teams/platform-project-management"
+    owner_document: domain.contexts.project-management
+  - id: context.commercial-access
+    role: bounded-context
+    path: packages/contexts/commercial-access
+    package_name: "@agent-teams/platform-commercial-access"
+    owner_document: domain.contexts.commercial-access
+  - id: context.deployment-management
+    role: bounded-context
+    path: packages/contexts/deployment-management
+    package_name: "@agent-teams/platform-deployment-management"
+    owner_document: domain.contexts.deployment-management

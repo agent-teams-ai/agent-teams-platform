@@ -8,9 +8,10 @@ related:
   - architecture.platform-orchestrator-boundary
   - ADR-0004
   - ADR-0005
+  - ADR-0007
 ---
 
-# Project Provisioning, Authority, and Retirement
+# Project Scope Admission, Authority, and Retirement
 
 Provisioning readiness, ProductProject identity, access authority, retirement
 commitment, participant disposition, and evidence are deliberately separate.
@@ -36,53 +37,55 @@ state or receipt from one lifecycle cannot serve as authority for another.
 ```mermaid
 stateDiagram-v2
     [*] --> ProjectRecorded
-    ProjectRecorded --> PlacementResolving
-    PlacementResolving --> OrchestrationScopeProvisioning
-    OrchestrationScopeProvisioning --> AuthorityBinding
-    AuthorityBinding --> Verifying
-    Verifying --> ScopeAdmissionOpening
-    ScopeAdmissionOpening --> Ready
+    ProjectRecorded --> ScopeAdmissionRequested
+    ScopeAdmissionRequested --> OutcomeResolving
+    OutcomeResolving --> ScopeAdmitted
+    ScopeAdmitted --> ObservationVerifying
+    ObservationVerifying --> ScopeAdmissionReady
     ProjectRecorded --> ReconcileRequired
-    PlacementResolving --> ReconcileRequired
-    OrchestrationScopeProvisioning --> ReconcileRequired
-    AuthorityBinding --> ReconcileRequired
-    Verifying --> ReconcileRequired
-    ScopeAdmissionOpening --> ReconcileRequired
-    ReconcileRequired --> PlacementResolving
-    ReconcileRequired --> OrchestrationScopeProvisioning
-    ReconcileRequired --> AuthorityBinding
+    ScopeAdmissionRequested --> ReconcileRequired
+    OutcomeResolving --> ReconcileRequired
+    ScopeAdmitted --> ReconcileRequired
+    ObservationVerifying --> ReconcileRequired
+    ReconcileRequired --> OutcomeResolving
+    ReconcileRequired --> ScopeAdmissionRequested
     ReconcileRequired --> Blocked
 ```
 
-`ManagedProjectProvisioningProcess` owns these steps. ProductProject exists with
-an `OPEN` identity before readiness, but admission remains closed until the
-required Platform and Orchestrator authority gates allow it. Runtime provider
-capacity is a separate readiness input. A read model may display
-`PROVISIONING`, `READY`, or `BLOCKED`; those labels never mutate ProductProject.
+`ManagedProjectScopeAdmissionProcess` owns these steps. ProductProject exists
+with an `OPEN` identity before scope readiness, but Platform admission remains
+closed until required Platform and Orchestrator authority gates allow it. A read
+model may display `SCOPE_ADMISSION_PENDING`, `SCOPE_ADMISSION_READY`, or
+`SCOPE_ADMISSION_BLOCKED`; those labels never mutate ProductProject.
 
-The process name and state labels remain `PROPOSED`. Binding existence and scope
-admission are separate facts. `ScopeAdmissionOpening` is an explicit
-Orchestrator-owned CAS after binding verification; neither a binding receipt nor
-a process-alive observation can open admission. A transition out of
-`ReconcileRequired` first queries or replays the original step command and then
-re-evaluates current preconditions. It is never a blind retry edge.
+`ScopeAdmissionReadiness`, overall product readiness, and runtime readiness are
+different projections. Runtime placement, provider capacity, AR scope activation,
+and runtime dispatch are not inputs to this first state machine.
+
+Platform ADR-0007 confirms the process ownership and product behavior; exact
+process state names remain tactical. Scope identity, authority
+binding, and local Orchestrator admission are separate provider facts. Neither a
+binding receipt nor a process-alive observation proves admission. A transition
+out of `ReconcileRequired` first queries or replays the original step command and
+then re-evaluates current preconditions. It is never a blind retry edge.
 
 ### Creation safety requirements
 
-The proposed safety requirement is narrow: either ProductProject creation does
-not commit, or the committed ProductProject is fail closed and has durable
-owner-local recovery intent. Each owning context may atomically commit only its
-own state, receipt, and outbox. Whether the Platform Project record, customer
-command receipt, and managed scope-admission process share one bounded context
-and transaction remains `OPEN`; implementation must not choose that aggregate
-split silently.
+The accepted first-slice linearization point is one Project Management
+transaction. It commits ProductProject, initial denied ProjectAdmissionAuthority,
+customer command receipt, managed scope-admission process intent, and outbox, or
+none of them. Missing ProjectAdmissionAuthority means denied. Each owning context
+may commit only its own state; downstream calls happen post-commit. Later
+ProductProject identity and admission-authority mutations retain separate
+consistency boundaries.
 
 `READY` is only a Platform read projection over current Platform-owned state and
 the latest exact owner receipts. Its commit cannot compare-and-swap current
 Orchestrator state and never grants admission. Every later operation still checks
-the current Platform gate and obtains current Orchestration Scope authority from
-that owner. A remote suspension may make the projection stale until observation
-or reconciliation arrives without creating an authorization window.
+the current Platform gate. The receiving Orchestrator use case independently
+checks current Orchestration Scope lifecycle and local admission authority. A
+remote suspension may make the projection stale until observation or
+reconciliation arrives without creating an authorization window.
 
 The following identities are distinct and durable:
 
@@ -99,10 +102,10 @@ successor attempt identity after fresh precondition evaluation.
 
 | Status | Resource | Owner | Durable truth | Consistency and failure | Acceptance source and limit |
 | --- | --- | --- | --- | --- | --- |
-| `CONFIRMED` | ProductProject | Platform Project Management | `OPEN` or terminal `RETIRED`, lifecycle revision, retirement epoch | Aggregate CAS, receipt, audit, and outbox in one Platform transaction | Platform ADR-0004 |
+| `CONFIRMED` | ProductProject | Platform Project Management | `OPEN` or terminal `RETIRED`, lifecycle revision, retirement epoch | The accepted first-slice create UoW atomically initializes identity, denied admission, receipt, process intent, and outbox | Platform ADR-0004 confirms retirement atomicity; Platform ADR-0007 confirms creation atomicity |
 | `CONFIRMED` | ProjectRestriction | Owning Platform authority capability through Project Management | Exact restriction identity, source, scope, revision, and status | One source clears only its exact restriction; stale or conflicting source revision fails closed | Platform ADR-0004 |
 | `CONFIRMED` | ProjectAdmissionAuthority | Platform Project Management | Effective gate, admission revision, lifecycle epoch | Restriction mutation and gate revision commit atomically | Platform ADR-0004 |
-| `PROPOSED` | Managed scope-admission process | Platform process owner remains to be accepted | Process identity, immutable request digest, and bounded step obligations with command and receipt refs | Eventual convergence; unknown steps queried by original stable identity | Review proposal; exact bounded context, aggregate, cancellation, and blocked semantics remain open |
+| `CONFIRMED` | Managed scope-admission process semantics | Platform Project Management | Process identity, immutable request digest, generation, and bounded step obligations with command and receipt refs | Eventual convergence; unknown steps queried by original stable identity; cancellation stops new claims but does not roll back identity or inferred remote effects | Platform ADR-0007; exact state names and Orchestrator contract remain proposed |
 | `CONFIRMED` | ProductProjectRetirementProcess | Platform Project Management | Commitment, policy and catalog revisions, participant obligations, opaque receipt refs | Cancel and commit race by ProductProject CAS; participant outcomes converge independently | Platform ADR-0004 |
 | `CONFIRMED` | OrchestrationProject | Orchestration Scope | Stable identity, local admission authority, lifecycle and deletion epochs | Ownership and terminal lifecycle accepted; tactical aggregate split remains open | Orchestrator ADR-0080 and OD-006 |
 | `CONFIRMED` | OrchestrationProjectDispositionProcess | Orchestration Scope | Versioned participant plan, owner obligations, exact receipt refs | Coordinates but never mutates another context's data | Orchestrator ADR-0080 |

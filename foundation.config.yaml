@@ -2,6 +2,8 @@ schemaVersion: 1
 project:
   id: agent-teams-platform
 capabilities:
+  architecture.source-dependencies:
+    configPath: architecture/foundation/source-dependencies.yaml
   documentation.local-references:
     configPath: architecture/foundation/documentation-local-references.yaml
   governance.architecture-decisions:

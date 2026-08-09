@@ -8,6 +8,7 @@ related:
   - architecture.platform-orchestrator-boundary
   - ADR-0004
   - ADR-0005
+  - ADR-0007
 ---
 
 # Platform-Orchestrator Design Review
@@ -19,10 +20,14 @@ split-control, plan-acceptance, customer-fencing, custody, and lifecycle rows.
 Orchestrator ADR-0058, ADR-0062, ADR-0071, ADR-0079, and ADR-0080 accept the
 narrow realtime, workspace/security, operation-identity, runtime-binding, and
 Orchestration Scope semantics cited below. AR ADR-0003 and ADR-0004 accept
-cutoff, disposition, and
-pre-materialization prevention semantics while deliberately leaving their wire
-contract and implementation qualification open. All remaining proposed rows
-stay review material, not permission to materialize bounded contexts.
+cutoff, disposition, and pre-materialization prevention semantics while
+deliberately leaving their wire contract and implementation qualification open.
+AR ADR-0005 accepts private runtime package identities only; it is not a wire or
+cross-repository contract. Platform ADR-0007 accepts the seven Platform
+strategic boundaries and PO-PLAT-001 through PO-PLAT-007, while authorizing only
+the first Project Management package slice. All remaining proposed rows stay
+review material, not permission to materialize another bounded context or freeze
+a cross-repository contract.
 
 1. [Authority ownership matrix](01-authority-ownership-matrix.md)
 2. [Resource identity and binding matrix](02-resource-identity-binding-matrix.md)
@@ -41,9 +46,9 @@ Supporting concurrency evidence:
 
 | Repository | Accepted semantic sources | Still open or unqualified |
 | --- | --- | --- |
-| Platform | ADR-0001 through ADR-0005 | Exact Platform bounded-context split, authority wire schemas, and production packages |
+| Platform | ADR-0001 through ADR-0007 | Tactical models for six not-yet-materialized contexts, authority wire schemas, and production qualification |
 | Orchestrator | ADR-0058, ADR-0062, ADR-0071, ADR-0079, and ADR-0080 | OD-006 tactical aggregates, OD-012 principal/provider topology, OD-019 public identity representation, and OD-032 generic last-mile safety |
-| Agent Runtime | ADR-0001 through ADR-0004 | Exact Published Language identities, services, messages, fields, retention windows, implementation, and production qualification |
+| Agent Runtime | ADR-0001 through ADR-0005 | Exact Published Language identities, services, messages, fields, retention windows, implementation, and production qualification |
 
 The matrices cite these accepted sources at the narrowest applicable semantic
 boundary. A source accepted in another repository confirms only the stated
@@ -72,5 +77,8 @@ Taken together, the matrices and linked traces cover ownership, consistency,
 failure, idempotency, retention, stale-event, and conformance dimensions. Each
 row states its applicable dimensions and links to the owning matrix or trace for
 the rest; it does not repeat fields that do not apply to that surface. A later
-accepted ADR may reference these drafts, but it must state exactly which rows it
-accepts or changes and close the complete claim record for each accepted row.
+accepted integration ADR may reference these drafts, but it must state exactly
+which cross-repository rows it accepts or changes and close the complete claim
+record for each accepted row. ADR-0007 confirms only the cited Platform
+strategic and product semantics; it does not accept these drafts as wire
+contracts.

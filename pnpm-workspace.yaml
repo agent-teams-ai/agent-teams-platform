@@ -10,8 +10,13 @@ catalog:
   "@types/node": 24.13.3
   ajv: 8.20.0
   markdownlint-cli2: 0.23.2
+  mdast-util-to-string: 4.0.0
   oxlint: 1.77.0
+  remark-frontmatter: 5.0.0
+  remark-parse: 11.0.0
   typescript: 7.0.2
+  unified: 11.0.5
+  unist-util-visit: 5.1.0
   yaml: 2.9.0
 
 minimumReleaseAge: 1440

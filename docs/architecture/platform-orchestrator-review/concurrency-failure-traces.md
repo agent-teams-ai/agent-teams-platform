@@ -11,6 +11,7 @@ related:
   - architecture.platform-orchestrator-review.project-provisioning
   - architecture.platform-orchestrator-review.contract-conformance
   - ADR-0004
+  - ADR-0007
 ---
 
 # Platform-Orchestrator-AR Concurrency and Failure Traces
@@ -138,9 +139,11 @@ The same rule applies separately to the customer ProductProject create command
 and every downstream scope-admission step. For an exact create-command replay,
 either no ProductProject commit exists or one fail-closed ProductProject exists
 with durable owner-local recovery intent. Each bounded context atomically commits
-only its own state, receipt, and outbox. Exact Platform aggregate placement and
-whether the customer receipt and managed process share that transaction remain
-`OPEN`.
+only its own state, receipt, and outbox. Exact aggregate placement remains
+tactical. The accepted first-slice linearization point places ProductProject,
+initial denied admission authority, customer receipt, managed-process intent,
+and outbox in one Project Management transaction. Platform ADR-0007 accepts
+this owner-local transaction without accepting a downstream wire contract.
 
 Different command identities with the same business payload are not implicitly
 equivalent. Whether a separate business fingerprint deduplicates distinct create
@@ -305,8 +308,11 @@ reference. A single global error scalar is not canonical truth.
 
 `RECONCILE_REQUIRED` is non-terminal. `BLOCKED` means automatic progress is not
 currently possible; it is not ProductProject retirement or proof of cleanup.
-Exact cancellation, abandonment, and customer-visible terminal semantics remain
-`OPEN`.
+The accepted Platform v1 semantics make cancellation generation-scoped: it stops new step
+claims, reconciles ambiguous outcomes, preserves the `OPEN` fail-closed Project,
+and yields `BLOCKED(reason=USER_CANCELLED)`. Resume creates a successor process
+generation after fresh precondition evaluation. Platform ADR-0007 accepts these
+product semantics; exact state names and external commands remain proposed.
 
 ### CF-05 conformance evidence
 
@@ -449,9 +455,9 @@ validity deadline
 
 ## Remaining open decisions
 
-- exact Platform bounded context and aggregate owning the managed scope-admission
-  process;
-- exact fail-closed Project creation transaction and restriction representation;
+- exact Project Management aggregate split after the proposed atomic
+  fail-closed initialization;
+- exact Project restriction representation after initial denied authority;
 - managed Orchestrator command, query, receipt, and authoritative-negative
   schemas;
 - terminal customer semantics for cancellation, abandonment, and `BLOCKED`;

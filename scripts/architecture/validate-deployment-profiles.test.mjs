@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -13,6 +15,7 @@ import {
   validateQualificationRecordSemantics,
 } from "./validate-deployment-profiles.mjs";
 import { validateQualificationHistoryEntries } from "./validate-qualification-record-history.mjs";
+import { walk } from "./deployment-profile-source.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "../..");
@@ -327,6 +330,23 @@ test("rejects deployment profile branching in application code", () => {
   assert.match(errors, /DEPLOY-CORE-002/u);
 });
 
+test("source discovery ignores generated dependency and report directories", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "platform-source-walk-"));
+  try {
+    for (const directory of ["src", "dist", "node_modules", "coverage", ".cache", ".nx"]) {
+      await mkdir(path.join(root, directory), { recursive: true });
+      await writeFile(path.join(root, directory, "source.ts"), "export const value = true;\n");
+    }
+
+    assert.deepEqual(
+      (await walk(root)).map((filePath) => path.relative(root, filePath)),
+      [path.join("src", "source.ts")],
+    );
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
+});
+
 test("rejects profile branching through member expressions and aliases", async () => {
   const result = await validateDeploymentProfiles(repositoryRoot);
   const vocabulary = buildForbiddenProfileVocabulary(result.catalog);
@@ -434,7 +454,11 @@ test("allows only additions in qualification record history", () => {
   const errors = validateQualificationHistoryEntries([
     "M\tarchitecture/deployment-profiles/qualification-records/qualification-v1.yaml",
     "D\tarchitecture/deployment-profiles/qualification-records/qualification-v0.yaml",
+    "M\tarchitecture/scaffolding/plans/context.project-management.json",
+    "D\tarchitecture/scaffolding/receipts/context.project-management.json",
   ]).join("\n");
   assert.match(errors, /Git status M/u);
   assert.match(errors, /Git status D/u);
+  assert.match(errors, /scaffolding\/plans/u);
+  assert.match(errors, /scaffolding\/receipts/u);
 });

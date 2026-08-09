@@ -17,11 +17,23 @@ summary: Navigation for current and proposed Platform architecture.
   exact-version automation, active capabilities, and parity gates before local
   tooling can be replaced.
 - [Platform-Orchestrator boundary direction](platform-orchestrator-boundary.md)
-  records the proposed cross-system model that must be proven by matrices and
-  failure traces before a superseding ADR.
+  records the proposed exact cross-system contracts. ADR-0007 accepts the
+  Platform-side strategic ownership, but not those external compatibility
+  surfaces.
 - [Platform-Orchestrator design review](platform-orchestrator-review/README.md)
   contains the eight proposed matrices, models, and state machines required by
   that review gate.
+- [Platform strategic context map](../domain/context-map.md) defines the seven
+  strategic boundaries, relationships, and explicit exclusions accepted by
+  ADR-0007.
+- [Bounded-context dossiers](../domain/contexts/README.md) hold tactical design
+  and materialization gates. Only Project Management and its first
+  `managed-project-scope-admission` slice are currently authorized; the other
+  six dossiers and package targets remain proposed.
 
-Production bounded-context dossiers are added with their first accepted domain
-slice. Empty context documentation is not used as a substitute for modeling.
+Strategic acceptance does not automatically accept a tactical aggregate model
+or authorize a package. Substantial proposed dossiers may precede code when they
+make language, ownership, invariants, lifecycle, and open decisions reviewable.
+Empty dossiers and empty production packages remain forbidden. Materialization
+requires an accepted owner document and the first accepted domain slice in the
+same change.

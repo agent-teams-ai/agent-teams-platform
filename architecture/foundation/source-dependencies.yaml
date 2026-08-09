@@ -1,0 +1,120 @@
+schemaVersion: 1
+workspace:
+  kind: pnpm
+  manifest: pnpm-workspace.yaml
+governedRoots:
+  - packages/contexts/project-management/src
+boundaries:
+  - id: context.project-management.public-surface
+    roots:
+      - packages/contexts/project-management/src/index.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/public.ts
+    entrypoints:
+      - packages/contexts/project-management/src/index.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/public.ts
+    allow:
+      boundaries:
+        - context.project-management.application
+        - context.project-management.domain
+      packages: []
+      builtins: []
+      runtimeReferences: []
+  - id: context.project-management.composition-surface
+    roots:
+      - packages/contexts/project-management/src/composition.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/composition.ts
+    entrypoints:
+      - packages/contexts/project-management/src/composition.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/composition.ts
+    allow:
+      boundaries:
+        - context.project-management.application
+        - context.project-management.domain
+      packages: []
+      builtins: []
+      runtimeReferences: []
+  - id: context.project-management.worker-surface
+    roots:
+      - packages/contexts/project-management/src/worker.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/worker.ts
+    entrypoints:
+      - packages/contexts/project-management/src/worker.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/worker.ts
+    allow:
+      boundaries:
+        - context.project-management.application
+      packages: []
+      builtins: []
+      runtimeReferences: []
+  - id: context.project-management.domain
+    roots:
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/domain
+    entrypoints:
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/domain/creation-authority-basis.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/domain/managed-scope-admission-process.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/domain/product-project.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/domain/project-admission-authority.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/domain/scope-admission-readiness.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/domain/value-objects.ts
+    allow:
+      boundaries: []
+      packages: []
+      builtins: []
+      runtimeReferences: []
+  - id: context.project-management.application
+    roots:
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application
+    entrypoints:
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/contracts.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/canonical-command-digests.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/apply-scope-admission-receipt.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/cancel-project-preparation.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/create-product-project.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/dispatch-scope-admission.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/evaluate-creation-authority.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/get-scope-admission-readiness.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/public-inputs.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/ports/creation-authorities.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/ports/orchestration-scope-admission.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/ports/project-management-store.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/reconcile-scope-admission.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/recheck-scope-admission-authority.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/resume-project-preparation.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/application/safe-retry-policy.ts
+    allow:
+      boundaries:
+        - context.project-management.domain
+      packages: []
+      builtins: []
+      runtimeReferences: []
+  - id: context.project-management.in-memory-adapter
+    roots:
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/adapters/in-memory
+    entrypoints:
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/adapters/in-memory/in-memory-project-management-store.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/adapters/in-memory/in-memory-project-management-state.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/adapters/in-memory/in-memory-authority-rechecks.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/adapters/in-memory/in-memory-dispatch-leases.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/adapters/in-memory/in-memory-reconciliation.ts
+    allow:
+      boundaries:
+        - context.project-management.application
+        - context.project-management.domain
+      packages: []
+      builtins: []
+      runtimeReferences: []
+  - id: context.project-management.tests
+    roots:
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/__tests__
+    entrypoints: []
+    allow:
+      boundaries:
+        - context.project-management.in-memory-adapter
+        - context.project-management.public-surface
+        - context.project-management.composition-surface
+        - context.project-management.worker-surface
+      packages: []
+      builtins:
+        - node:assert/strict
+        - node:test
+      runtimeReferences: []

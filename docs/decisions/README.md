@@ -19,6 +19,7 @@ summary: Index of immutable Platform architecture decisions.
 - [ADR-0003: Subject-Bound Run Revocation Policy](0003-subject-bound-run-revocation-policy.md)
 - [ADR-0004: Project Retirement Authority and Disposition](0004-project-retirement-authority-and-disposition.md)
 - [ADR-0005: Managed Customer Installation Control](0005-managed-customer-installation-control.md)
+- [ADR-0007: Platform Strategic Context Map and First Project Management Slice](0007-platform-strategic-context-map-and-first-project-management-slice.md)
 
 ## Superseded Decisions
 

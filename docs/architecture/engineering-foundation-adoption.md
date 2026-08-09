@@ -37,9 +37,9 @@ versions.
 | `workspace.dependency-declarations` | Yes | Yes | Root pnpm workspace, exact catalog, and dev-only dependency policy |
 | `repository.agent-workflow` | Yes | Yes | Canonical instructions and changed, fast, and full checks are declared |
 | `documentation.local-references` | Yes | Yes | `docs` is checked with GitHub-compatible anchors and containment |
-| `governance.architecture-decisions` | Yes | Yes | Five accepted ADRs have a committed immutable baseline |
+| `governance.architecture-decisions` | Yes | Yes | Six accepted ADRs have a committed immutable baseline |
 | `quality.suppression-governance` | Yes | Yes | Architecture tooling is governed; no waiver currently exists |
-| `architecture.source-dependencies` | Later | No | No production package topology exists. Current scripts are development tooling whose runtime imports are intentionally dev-only |
+| `architecture.source-dependencies` | Yes | Yes | ADR-0007 authorizes the first Project Management package; source boundaries become blocking in the same materializing change |
 | `contract.json-schema-releases` | Later | No | Current schemas are repository-internal architecture policy; no published release contract, release baseline, or consumer fixture set exists |
 | `package.public-api-compatibility` | No | No | Platform publishes no versioned TypeScript API or SDK |
 | `repository.security-baseline` | No | No | The repository currently publishes no package |
@@ -62,13 +62,53 @@ is not an exception mechanism.
 
 ## Scaffolding admission
 
-Foundation scaffolding becomes active only when an accepted first vertical
-slice provides a real target ID, role, package path, package name, and owner
-document. The same change creates the Platform target catalog and composition,
-saves and reviews the deterministic Plan, applies it, and proves the resulting
-package with the normal checks.
+The target catalog reserves reviewed package identities without creating package
+directories. ADR-0007 accepts only the Project Management owner dossier, target,
+and first `managed-project-scope-admission` slice for materialization. The other
+six tactical dossiers and package targets remain `proposed`. Planning, applying,
+and recovering any proposed target fail closed until its owning decision and
+first real feature slice are accepted together.
 
-No target catalog or empty package is created in advance. Current Platform ADRs
-define domain ownership but do not yet reserve concrete package identities, and
-the repository hard rule forbids using scaffolding to guess them. This gate is
-an intentional application of scaffolding authority, not a missing placeholder.
+Foundation owns the generic private Node TypeScript package envelope and the
+deterministic Plan, Apply, and Recover protocol. Platform owns target identities,
+roles, paths, names, owner documents, and future feature composition. Foundation
+does not know Platform bounded-context names or domain layers.
+
+The materializing change must:
+
+1. accept the owner document through an immutable accepted ADR whose
+   `accepts_package_targets` explicitly names the catalog target;
+2. record that ADR as `owner_decision` and the first real feature as
+   `first_feature` in the dossier;
+3. include implementation and focused tests for that feature rather than an
+   empty DDD tree;
+4. commit the content-addressed Plan at
+   `architecture/scaffolding/plans/<target-id>.json`;
+5. retain its canonical intent at
+   `architecture/scaffolding/intents/<target-id>.yaml` as append-only evidence;
+6. apply that exact Plan and commit its validated Receipt at
+   `architecture/scaffolding/receipts/<target-id>.json`;
+7. retain the Plan read set as immutable historical evidence, revalidate current
+   owner and catalog semantics independently, and prove package, repository,
+   exact pre-overlay re-run, and Foundation crash-recovery checks.
+
+Committed Plans, Receipts and qualification records are append-only evidence.
+Pull-request and push CI compare them with the base revision: an existing record
+cannot be edited, renamed or removed; a successor is added under a new identity.
+Every accepted package exposes separate public, composition and worker surfaces,
+declares a non-empty `check` script, and is covered by the fail-closed source
+dependency graph.
+
+The package catalog is a plan, not architectural acceptance. Strategic Context
+Map acceptance is also not package acceptance. Changing a proposed tactical
+boundary updates the catalog before materialization. Generated envelopes may be
+extended by project-owned source in the same change. The exact Plan is rerun
+before those overlays; later source evolution is checked as project-owned code,
+not misrepresented as unchanged Plan output. Generated files are not hand-edited
+before Plan application. Context package directories and evidence
+must be regular repository paths, never symlinks. The validator rejects both
+uncatalogued context packages and accepted targets without complete evidence.
+Foundation governance remains the sole owner of ADR canonicalization and
+immutable-digest verification. The Platform materialization gate consumes the
+Foundation-owned accepted baseline instead of reimplementing its digest
+algorithm.
