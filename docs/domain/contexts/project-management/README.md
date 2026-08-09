@@ -96,6 +96,9 @@ external evidence referenced opaquely.
   N+1 only when a new downstream dispatch is required; an admitted receipt is
   re-authorized in generation N. Delayed predecessor evidence cannot mutate a
   successor generation.
+- Same-generation reauthorization consumes the process's bounded resumption
+  budget. Exhaustion is explicit and non-resumable, so retained receipts and
+  recovery work cannot grow without limit.
 - Scope-admission authority is checked at dispatch CAS and receipt
   linearization. Deferred receipt authority is rechecked durably with bounded
   retries; retry exhaustion remains blocked and explicit.

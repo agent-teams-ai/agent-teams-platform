@@ -369,8 +369,7 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
       }
       if (
         snapshot.process.state !== "reconcile-required" &&
-        snapshot.process.state !== "cancel-reconcile-required" &&
-        snapshot.process.state !== "receipt-observed"
+        snapshot.process.state !== "cancel-reconcile-required"
       ) {
         return null;
       }

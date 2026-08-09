@@ -275,7 +275,10 @@ export function resumePreparationInMemory(
   if (current.process.generation !== input.expected.process.generation) {
     return { kind: "stale" };
   }
-  if (input.successor.generation > input.maxGenerations) {
+  if (
+    input.successor.generation > input.maxGenerations ||
+    input.successor.resumptionCount > input.maxGenerations
+  ) {
     return { kind: "generation-limit" };
   }
   if (
@@ -289,6 +292,7 @@ export function resumePreparationInMemory(
     ![current.process.generation, current.process.generation + 1].includes(
       input.successor.generation,
     ) ||
+    input.successor.resumptionCount !== current.process.resumptionCount + 1 ||
     (input.outbox !== null && state.outboxes.has(input.outbox.id))
   ) {
     return { kind: "stale" };

@@ -208,6 +208,8 @@ async function validatePackageManifest(repositoryRoot, target, errors) {
     manifest.name !== target.package_name ||
     manifest.private !== true ||
     manifest.type !== "module" ||
+    manifest.scripts?.test !==
+      "node --test --test-concurrency=1 'dist/**/*.test.js'" ||
     manifest.scripts?.check !==
       "pnpm run clean && pnpm run typecheck && pnpm run build && pnpm run test" ||
     !isDeepStrictEqual(manifest.agentTeamsArchitecture, expectedArchitecture) ||
@@ -277,11 +279,18 @@ async function validateFeaturePublicSurface(
   const root = parse(Lang.TypeScript, source).root();
   const forbidden = [];
   const actualExports = [];
+  let hasDirectExportDeclaration = false;
   const pending = [...root.children()];
   while (pending.length > 0) {
     const node = pending.pop();
     if (["export_statement", "import_statement"].includes(node.kind())) {
       const specifier = moduleSpecifier(node);
+      if (
+        node.kind() === "export_statement" &&
+        !node.children().some((child) => child.kind() === "export_clause")
+      ) {
+        hasDirectExportDeclaration = true;
+      }
       if (
         specifier !== null &&
         /(?:^|\/)(?:adapters|ports)(?:\/|$)|\/(?:composition|worker)(?:\.js)?$/u
@@ -302,6 +311,7 @@ async function validateFeaturePublicSurface(
   }
   if (
     !Array.isArray(expectedExports) ||
+    hasDirectExportDeclaration ||
     expectedExports.length === 0 ||
     new Set(expectedExports).size !== expectedExports.length ||
     !isDeepStrictEqual(actualExports.toSorted(), expectedExports.toSorted())

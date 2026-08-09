@@ -455,3 +455,59 @@ test("resume rechecks an admitted receipt without creating a successor command",
     { kind: "ready" },
   );
 });
+
+test("bounds repeated admitted-receipt reauthorization receipts", async () => {
+  const subject = fixture({ maxPreparationGenerations: 3 });
+  const created = await acceptedProject(subject);
+  subject.orchestration.submission = (intent) => {
+    subject.tenantAuthority.decision = {
+      kind: "denied",
+      reason: "TENANT_ACCESS_REVOKED",
+    };
+    return {
+      kind: "receipt",
+      receipt: {
+        kind: "admitted",
+        receiptRef: ids.orchestratorReceipt("bounded-reauthorization"),
+        receiptDigest: intent.commandDigest,
+      },
+    };
+  };
+  assert.deepEqual(await subject.worker.dispatchManagedScopeAdmission(), {
+    kind: "receipt-recorded",
+  });
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    subject.tenantAuthority.decision = {
+      kind: "allowed",
+      evidenceRef: ids.authorityEvidence(`reauthorize-${attempt}`),
+      revision: ids.authorityRevision(`reauthorize-${attempt}`),
+      validUntil: NOW + 60_000,
+    };
+    assert.equal(
+      (await subject.application.resumeProjectPreparation(
+        resumeCommand(created.operationRef, 1, `reauthorize-${attempt}`),
+      )).kind,
+      "accepted",
+    );
+    subject.tenantAuthority.decision = {
+      kind: "denied",
+      reason: "TENANT_ACCESS_REVOKED",
+    };
+    assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), {
+      kind: "blocked",
+    });
+  }
+  subject.tenantAuthority.decision = {
+    kind: "allowed",
+    evidenceRef: ids.authorityEvidence("reauthorize-exhausted"),
+    revision: ids.authorityRevision("reauthorize-exhausted"),
+    validUntil: NOW + 60_000,
+  };
+  assert.deepEqual(
+    await subject.application.resumeProjectPreparation(
+      resumeCommand(created.operationRef, 1, "reauthorize-exhausted"),
+    ),
+    { kind: "not-resumable" },
+  );
+  assert.equal(subject.store.inspectPreparationCommandReceiptCount(), 3);
+});

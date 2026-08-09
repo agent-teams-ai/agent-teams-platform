@@ -722,6 +722,10 @@ test("blocks authority recheck after the bounded retry horizon", async () => {
   assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), {
     kind: "retry",
   });
+  assert.deepEqual(
+    await subject.worker.reconcileManagedScopeAdmission(created.operationRef),
+    { kind: "not-found" },
+  );
   subject.setNow(NOW + 61_000);
   assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), {
     kind: "blocked",

@@ -42,6 +42,7 @@ function isResumable(
     process.process.blockReason !== "DATA_INTEGRITY_CONFLICT" &&
     process.process.blockReason !== "DOWNSTREAM_CONFLICT" &&
     process.process.generation === command.expectedGeneration &&
+    process.process.resumptionCount < maxGenerations &&
     (canReuseAdmittedReceipt || process.process.generation < maxGenerations);
 }
 

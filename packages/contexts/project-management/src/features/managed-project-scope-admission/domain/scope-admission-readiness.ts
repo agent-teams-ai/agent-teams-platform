@@ -42,8 +42,9 @@ export function scopeAdmissionReadiness(input: {
   if (input.process.state === "blocked") {
     const requiresSuccessorGeneration = input.process.receipt?.kind !== "admitted";
     const generationExhausted =
-      requiresSuccessorGeneration &&
-      input.process.generation >= input.maxPreparationGenerations;
+      input.process.resumptionCount >= input.maxPreparationGenerations ||
+      (requiresSuccessorGeneration &&
+        input.process.generation >= input.maxPreparationGenerations);
     const recoverable = !generationExhausted && ![
       "DATA_INTEGRITY_CONFLICT",
       "DOWNSTREAM_CONFLICT",

@@ -52,6 +52,7 @@ export type ManagedScopeAdmissionProcess = Readonly<{
   stepCommandId: ScopeAdmissionStepCommandId;
   stepDigest: CanonicalCommandDigest;
   attemptCount: number;
+  resumptionCount: number;
   receipt: ScopeAdmissionReceipt | null;
   blockReason: ScopeAdmissionBlockReason | null;
   creationAuthorityBasis: CreationAuthorityBasisSnapshot;
@@ -75,6 +76,7 @@ export function requestManagedScopeAdmission(input: {
     revision: 1,
     state: "requested",
     attemptCount: 0,
+    resumptionCount: 0,
     receipt: null,
     blockReason: null,
     dispatchAuthorityBasis: null,
@@ -364,6 +366,7 @@ export function resumeManagedScopeAdmission(
     stepCommandId,
     stepDigest,
     attemptCount: 0,
+    resumptionCount: process.resumptionCount + 1,
     receipt: retainsPredecessorReceipt ? process.receipt : null,
     blockReason: null,
     requesterRef: input.requesterRef,

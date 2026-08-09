@@ -196,6 +196,8 @@ async function materializeProjectManagement(root) {
     types: "./dist/worker.d.ts",
     import: "./dist/worker.js",
   };
+  manifest.scripts.test =
+    "node --test --test-concurrency=1 'dist/**/*.test.js'";
   await writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
   for (const [surface, featureSurface] of [
     ["index", "public"],
@@ -374,6 +376,18 @@ test("rejects a package check script that is only a successful no-op", async () 
   });
 });
 
+test("rejects a package test script that disables test execution", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    const manifestFile = path.join(root, packagePath, "package.json");
+    const manifest = JSON.parse(await readFile(manifestFile, "utf8"));
+    manifest.scripts.test = "true";
+    await writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
+    assert.match(await validationText(root), /DOMAIN-PACKAGE-002/u);
+  });
+});
+
 test("rejects a package root that leaks composition through the public surface", async () => {
   await withFixture(async (root) => {
     await acceptProjectManagement(root);
@@ -399,6 +413,23 @@ test("rejects a feature public surface that exports internal application ports",
       'export type { ProjectManagementStore } from "./application/ports/project-management-store.js";\n',
     );
     assert.match(await validationText(root), /DOMAIN-PACKAGE-008/u);
+  });
+});
+
+test("rejects direct public declarations that bypass the export allowlist", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    const publicFile = path.join(
+      root,
+      packagePath,
+      "src/features/managed-project-scope-admission/public.ts",
+    );
+    await writeFile(
+      publicFile,
+      `${await readFile(publicFile, "utf8")}\nexport type InternalStore = import("./application/ports/project-management-store.js").ProjectManagementStore;\n`,
+    );
+    assert.match(await validationText(root), /DOMAIN-PACKAGE-009/u);
   });
 });
 
