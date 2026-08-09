@@ -112,6 +112,7 @@ boundaries:
         - context.project-management.in-memory-adapter
         - context.project-management.public-surface
         - context.project-management.composition-surface
+        - context.project-management.domain
         - context.project-management.worker-surface
       packages: []
       builtins:

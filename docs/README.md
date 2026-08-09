@@ -18,6 +18,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 - [Deployment profiles](architecture/deployment-profiles.md)
 - [Managed installation control](architecture/managed-installation-control.md)
 - [Engineering Foundation adoption](architecture/engineering-foundation-adoption.md)
+- [Managed scope-admission executable model](architecture/managed-scope-admission-executable-model.md)
 - [Platform-Orchestrator boundary direction](architecture/platform-orchestrator-boundary.md)
 - [Platform-Orchestrator design review](architecture/platform-orchestrator-review/README.md)
 
@@ -41,6 +42,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 | Exact manifest shape | `architecture/deployment-profiles/deployment-profiles.schema.json` |
 | Managed BYOC installation invariants | `architecture/managed-installation/managed-installation-policy.yaml` |
 | Shared engineering-tool adoption | `architecture/engineering-foundation-adoption.md` |
+| Internal managed scope-admission executable specification | `architecture/project-management/managed-scope-admission-process.json` |
 | Accepted Platform strategic topology | `docs/domain/context-map.md` and ADR-0007 |
 | Tactical context design and materialization status | Bounded-context dossiers and their owning ADRs |
 | Reserved package identities | `architecture/package-catalog.yaml` |

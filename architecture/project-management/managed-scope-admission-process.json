@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "id": "platform.project-management.managed-scope-admission",
+  "authority": {
+    "canonicalStorage": "persisted-domain-aggregate",
+    "xstateSnapshot": "test-model-only",
+    "externalWireContract": false
+  },
+  "limits": {
+    "attempts": 2,
+    "generations": 2
+  },
+  "axes": {
+    "lifecycle": {
+      "initial": "requested",
+      "states": [
+        "requested",
+        "claimed",
+        "dispatch-committed",
+        "retry-wait",
+        "reconcile-required",
+        "cancel-reconcile-required",
+        "receipt-observed",
+        "ready",
+        "blocked"
+      ]
+    },
+    "authority": {
+      "initial": "creation-authorized",
+      "states": [
+        "creation-authorized",
+        "dispatch-recheck-pending",
+        "dispatch-authorized",
+        "admission-recheck-pending",
+        "admission-authorized",
+        "denied",
+        "commercially-restricted",
+        "closed"
+      ]
+    },
+    "reconciliation": {
+      "initial": "clear",
+      "states": ["clear", "outcome-unknown", "cancellation-unknown"]
+    },
+    "generation": {
+      "initial": "current",
+      "states": ["current", "stale-command-ignored", "successor-required"]
+    }
+  },
+  "events": [
+    { "type": "CLAIM", "from": ["requested", "retry-wait"], "to": "claimed", "operation": "claim", "guard": "attempt-available" },
+    { "type": "AUTHORIZE_DISPATCH", "from": ["claimed"], "to": "dispatch-committed", "operation": "authorize-dispatch" },
+    { "type": "DENY_DISPATCH", "from": ["claimed"], "to": "blocked", "operation": "deny-dispatch" },
+    { "type": "RELEASE_RETRY", "from": ["claimed", "dispatch-committed"], "to": "retry-wait", "operation": "release-retry", "guard": "attempt-available" },
+    { "type": "RELEASE_EXHAUSTED", "from": ["claimed", "dispatch-committed"], "to": "blocked", "operation": "release-exhausted", "guard": "attempt-exhausted" },
+    { "type": "LOSE_ACKNOWLEDGEMENT", "from": ["dispatch-committed"], "to": "reconcile-required", "operation": "lose-acknowledgement" },
+    { "type": "RECONCILE_NOT_ACCEPTED", "from": ["reconcile-required"], "to": "retry-wait", "operation": "reconcile-not-accepted", "variant": "retry", "guard": "attempt-available" },
+    { "type": "RECONCILE_NOT_ACCEPTED_EXHAUSTED", "from": ["reconcile-required"], "to": "blocked", "operation": "reconcile-not-accepted", "variant": "exhausted", "guard": "attempt-exhausted" },
+    { "type": "OBSERVE_ADMITTED", "from": ["dispatch-committed", "reconcile-required"], "to": "receipt-observed", "operation": "observe-admitted" },
+    { "type": "OBSERVE_REJECTED", "from": ["dispatch-committed", "reconcile-required"], "to": "blocked", "operation": "observe-rejected" },
+    { "type": "OBSERVE_STALE", "from": ["dispatch-committed", "reconcile-required"], "to": "blocked", "operation": "observe-stale" },
+    { "type": "OBSERVE_CONFLICT", "from": ["dispatch-committed", "reconcile-required"], "to": "blocked", "operation": "observe-conflict" },
+    { "type": "FINALIZE_READY", "from": ["receipt-observed"], "to": "ready", "operation": "finalize-ready" },
+    { "type": "DENY_AFTER_RECEIPT", "from": ["receipt-observed"], "to": "blocked", "operation": "deny-after-receipt", "variant": "authority" },
+    { "type": "RESTRICT_AFTER_RECEIPT", "from": ["receipt-observed"], "to": "blocked", "operation": "deny-after-receipt", "variant": "commercial" },
+    { "type": "CANCEL_SAFE", "from": ["requested", "claimed", "retry-wait", "receipt-observed"], "to": "blocked", "operation": "cancel" },
+    { "type": "CANCEL_UNCERTAIN", "from": ["dispatch-committed", "reconcile-required"], "to": "cancel-reconcile-required", "operation": "cancel" },
+    { "type": "CANCEL_RECONCILED", "from": ["cancel-reconcile-required"], "to": "blocked", "operation": "complete-cancellation" },
+    { "type": "RESUME_NEW_GENERATION", "from": ["blocked"], "to": "requested", "operation": "resume", "variant": "successor", "guard": "successor-generation-available" },
+    { "type": "RESUME_ADMITTED", "from": ["blocked"], "to": "receipt-observed", "operation": "resume", "variant": "retained", "guard": "retained-admitted-receipt" },
+    { "type": "STALE_GENERATION", "from": ["requested", "claimed", "dispatch-committed", "retry-wait", "reconcile-required", "cancel-reconcile-required", "receipt-observed", "ready", "blocked"], "to": "$same", "operation": "ignore-stale-generation" },
+    { "type": "STALE_REVISION", "from": ["requested", "claimed", "dispatch-committed", "retry-wait", "reconcile-required", "cancel-reconcile-required", "receipt-observed", "ready", "blocked"], "to": "$same", "operation": "ignore-stale-revision" }
+  ]
+}

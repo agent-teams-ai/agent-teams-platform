@@ -12,9 +12,15 @@ catalogs:
     '@types/node':
       specifier: 24.13.3
       version: 24.13.3
+    '@xstate/graph':
+      specifier: 3.0.4
+      version: 3.0.4
     ajv:
       specifier: 8.20.0
       version: 8.20.0
+    fast-check:
+      specifier: 4.9.0
+      version: 4.9.0
     markdownlint-cli2:
       specifier: 0.23.2
       version: 0.23.2
@@ -39,6 +45,9 @@ catalogs:
     unist-util-visit:
       specifier: 5.1.0
       version: 5.1.0
+    xstate:
+      specifier: 5.32.5
+      version: 5.32.5
     yaml:
       specifier: 2.9.0
       version: 2.9.0
@@ -56,9 +65,15 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      '@xstate/graph':
+        specifier: 'catalog:'
+        version: 3.0.4(xstate@5.32.5)
       ajv:
         specifier: 'catalog:'
         version: 8.20.0
+      fast-check:
+        specifier: 'catalog:'
+        version: 4.9.0
       markdownlint-cli2:
         specifier: 'catalog:'
         version: 0.23.2(supports-color@8.1.1)
@@ -83,6 +98,9 @@ importers:
       unist-util-visit:
         specifier: 'catalog:'
         version: 5.1.0
+      xstate:
+        specifier: 'catalog:'
+        version: 5.32.5
       yaml:
         specifier: 'catalog:'
         version: 2.9.0
@@ -632,6 +650,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@xstate/graph@3.0.4':
+    resolution: {integrity: sha512-b12RA7E//+7FJVrD09Td+BhHRJbeKZnK+98xXBd+JmccG360xVP1lyzVhUZPgBgwPdmIGBJqhKzmWYJQ9c8ojQ==}
+    peerDependencies:
+      xstate: ^5.19.4
+
   ajv-draft-04@1.0.0:
     resolution: {integrity: sha512-mv00Te6nmYbRp5DCwclxtt7yV/joXJPGS7nM+97GdxvuttCOfgI3K4U25zboyeX0O+myI8ERluxQe5wljMmVIw==}
     peerDependencies:
@@ -732,6 +755,10 @@ packages:
 
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
+
+  fast-check@4.9.0:
+    resolution: {integrity: sha512-7ms6T7SybUev/PQITciI0yLM2pOSFy5zpG8Ty7tQofcVaQUvrMXp6CBwqF6fThLCLOrfBtuHAtwq6Yu4XPCllg==}
+    engines: {node: '>=12.17.0'}
 
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
@@ -1066,6 +1093,9 @@ packages:
     resolution: {integrity: sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA==}
     engines: {node: '>=6'}
 
+  pure-rand@8.4.2:
+    resolution: {integrity: sha512-vvuOGgcuPJAirlHvuQw1TrOiw7ptaIXXmIbNuiNOY6lNGJJH49PQ1Kj4nd783nPdQhQdicgOjVI2yI/9BD6/Ng==}
+
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
@@ -1198,6 +1228,9 @@ packages:
 
   vfile@6.0.3:
     resolution: {integrity: sha512-KzIbH/9tXat2u30jf+smMwFCsno4wHVdNmzFyL+T/L3UGqqk6JKfVqOFOZEpZSHADH1k40ab6NUIXZq422ov3Q==}
+
+  xstate@5.32.5:
+    resolution: {integrity: sha512-ULazi1oe6wGrXl0Frb6otSlkm5HLifbbVTkMk5kkSKqz4TkxJaVpnl6jOJwKeid3ORPxYyZQgNLUSYX9q65SIA==}
 
   yaml@2.9.0:
     resolution: {integrity: sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==}
@@ -1589,6 +1622,10 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
+  '@xstate/graph@3.0.4(xstate@5.32.5)':
+    dependencies:
+      xstate: 5.32.5
+
   ajv-draft-04@1.0.0(ajv@8.20.0):
     optionalDependencies:
       ajv: 8.20.0
@@ -1666,6 +1703,10 @@ snapshots:
   escape-string-regexp@5.0.0: {}
 
   extend@3.0.2: {}
+
+  fast-check@4.9.0:
+    dependencies:
+      pure-rand: 8.4.2
 
   fast-deep-equal@3.1.3: {}
 
@@ -2243,6 +2284,8 @@ snapshots:
 
   punycode.js@2.3.1: {}
 
+  pure-rand@8.4.2: {}
+
   queue-microtask@1.2.3: {}
 
   remark-frontmatter@5.0.0(supports-color@8.1.1):
@@ -2406,6 +2449,8 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
+
+  xstate@5.32.5: {}
 
   yaml@2.9.0: {}
 

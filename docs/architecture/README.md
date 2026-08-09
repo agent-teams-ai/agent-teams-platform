@@ -16,6 +16,9 @@ summary: Navigation for current and proposed Platform architecture.
 - [Engineering Foundation adoption](engineering-foundation-adoption.md) records
   exact-version automation, active capabilities, and parity gates before local
   tooling can be replaced.
+- [Managed scope-admission executable model](managed-scope-admission-executable-model.md)
+  defines its internal test authority, modeled axes, and explicit evidence
+  limits.
 - [Platform-Orchestrator boundary direction](platform-orchestrator-boundary.md)
   records the proposed exact cross-system contracts. ADR-0007 accepts the
   Platform-side strategic ownership, but not those external compatibility

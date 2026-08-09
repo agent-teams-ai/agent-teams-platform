@@ -11,7 +11,7 @@
     "pnpm": ">=11.18.0 <12"
   },
   "scripts": {
-    "architecture:check": "node scripts/architecture/validate-deployment-profiles.mjs && node scripts/architecture/validate-managed-installation-policy.mjs && pnpm architecture:review",
+    "architecture:check": "node scripts/architecture/validate-deployment-profiles.mjs && node scripts/architecture/validate-managed-installation-policy.mjs && node scripts/architecture/validate-managed-scope-admission-spec.mjs && pnpm architecture:review",
     "architecture:domain": "node scripts/architecture/validate-platform-domain.mjs",
     "architecture:immutability": "node scripts/architecture/validate-qualification-record-history.mjs",
     "architecture:review": "node scripts/architecture/validate-deployment-profiles.mjs --references-only && node scripts/architecture/validate-platform-orchestrator-review.mjs && pnpm architecture:domain",
@@ -28,7 +28,7 @@
     "foundation:status": "agent-teams-foundation status",
     "lint": "oxlint --config .oxlintrc.json --deny-warnings --disable-nested-config .",
     "lint:files": "oxlint --config .oxlintrc.json --deny-warnings --disable-nested-config --format agent --no-error-on-unmatched-pattern",
-    "packages:check": "pnpm --filter './packages/**' run check",
+    "packages:check": "pnpm --filter './packages/**' run check && node --test --test-concurrency=1 'scripts/project-management/*.test.mjs'",
     "scaffold:apply": "agent-teams-foundation scaffold-apply",
     "scaffold:plan": "agent-teams-foundation scaffold-plan",
     "scaffold:recover": "agent-teams-foundation scaffold-recover",
@@ -38,7 +38,9 @@
     "@agent-teams/engineering-foundation": "0.9.0",
     "@ast-grep/napi": "catalog:",
     "@types/node": "catalog:",
+    "@xstate/graph": "catalog:",
     "ajv": "catalog:",
+    "fast-check": "catalog:",
     "markdownlint-cli2": "catalog:",
     "mdast-util-to-string": "catalog:",
     "oxlint": "catalog:",
@@ -47,6 +49,7 @@
     "typescript": "catalog:",
     "unified": "catalog:",
     "unist-util-visit": "catalog:",
+    "xstate": "catalog:",
     "yaml": "catalog:"
   }
 }
