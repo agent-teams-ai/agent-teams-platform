@@ -56,6 +56,15 @@ async function fixture() {
     path.join(root, "docs/decisions"),
     { recursive: true },
   );
+  const projectDossierFile = path.join(root, projectDossierPath);
+  const projectDossier = await readFile(projectDossierFile, "utf8");
+  await writeFile(
+    projectDossierFile,
+    projectDossier
+      .replace("status: accepted", "status: proposed")
+      .replace("owner_decision: ADR-0007\n", "")
+      .replace("first_feature: managed-project-scope-admission\n", ""),
+  );
   return root;
 }
 
@@ -76,7 +85,9 @@ async function editYaml(root, relativePath, mutate) {
 }
 
 async function writeProjectManagementIntent(root) {
-  const relativePath = "architecture/foundation/project-management.intent.yaml";
+  const relativePath =
+    "architecture/scaffolding/intents/context.project-management.yaml";
+  await mkdir(path.join(root, path.dirname(relativePath)), { recursive: true });
   await writeFile(
     path.join(root, relativePath),
     YAML.stringify({
@@ -167,8 +178,48 @@ async function materializeProjectManagement(root) {
     path.join(root, receiptPath),
     `${JSON.stringify(JSON.parse(receiptOutput), null, 2)}\n`,
   );
+  const { stdout: replayOutput } = await execFileAsync(
+    process.execPath,
+    [foundationCli, "scaffold-apply", planPath, "--consumer", root, "--json"],
+    { cwd: root },
+  );
+  assert.equal(JSON.parse(replayOutput).outcome, "already-applied");
   const featurePath = `${packagePath}/src/features/managed-project-scope-admission`;
   await mkdir(path.join(root, featurePath), { recursive: true });
+  const manifestFile = path.join(root, packagePath, "package.json");
+  const manifest = JSON.parse(await readFile(manifestFile, "utf8"));
+  manifest.exports["./composition"] = {
+    types: "./dist/composition.d.ts",
+    import: "./dist/composition.js",
+  };
+  manifest.exports["./worker"] = {
+    types: "./dist/worker.d.ts",
+    import: "./dist/worker.js",
+  };
+  await writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
+  for (const [surface, featureSurface] of [
+    ["index", "public"],
+    ["composition", "composition"],
+    ["worker", "worker"],
+  ]) {
+    await writeFile(
+      path.join(root, packagePath, `src/${surface}.ts`),
+      `export * from "./features/managed-project-scope-admission/${featureSurface}.js";\n`,
+    );
+    await writeFile(
+      path.join(root, featurePath, `${featureSurface}.ts`),
+      featureSurface === "public"
+        ? await readFile(
+            path.join(
+              repositoryRoot,
+              packagePath,
+              "src/features/managed-project-scope-admission/public.ts",
+            ),
+            "utf8",
+          )
+        : "export {};\n",
+    );
+  }
   await writeFile(
     path.join(root, featurePath, "admit-project-scope.ts"),
     "export const admitProjectScope = () => 'accepted';\n",
@@ -184,7 +235,7 @@ async function validationText(root) {
   return (await validatePlatformDomain(root)).join("\n");
 }
 
-test("accepts the canonical proposed Platform domain plan", async () => {
+test("accepts the canonical Platform domain plan", async () => {
   assert.deepEqual(await validatePlatformDomain(repositoryRoot), []);
 });
 
@@ -192,6 +243,52 @@ test("Foundation rejects planning for a proposed owner", async () => {
   await withFixture(async (root) => {
     const intent = await writeProjectManagementIntent(root);
     await assert.rejects(planFixture(root, intent), /Owner document status is not admitted/u);
+  });
+});
+
+test("Foundation recovers a partially published Platform package transaction", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    const intent = await writeProjectManagementIntent(root);
+    const { stdout } = await planFixture(root, intent);
+    const plan = JSON.parse(stdout);
+    const stateRoot = path.join(root, ".agent-teams-local");
+    const journalFile = path.join(stateRoot, "scaffolding-transaction.json");
+    await mkdir(stateRoot, { recursive: true });
+    const publishedOperation = plan.operations[0];
+    await mkdir(path.dirname(path.join(root, publishedOperation.path)), {
+      recursive: true,
+    });
+    await writeFile(
+      path.join(root, publishedOperation.path),
+      Buffer.from(publishedOperation.after.contentBase64, "base64"),
+    );
+    await writeFile(
+      journalFile,
+      `${JSON.stringify({
+        schemaVersion: 1,
+        state: "PREPARED",
+        plan,
+        operations: plan.operations.map((operation, index) => ({
+          operationId: operation.id,
+          path: operation.path,
+          state: index === 0 ? "published" : "pending",
+        })),
+      }, null, 2)}\n`,
+    );
+    const { stdout: recoveryOutput } = await execFileAsync(
+      process.execPath,
+      [foundationCli, "scaffold-recover", "--consumer", root, "--json"],
+      { cwd: root },
+    );
+    const receipt = JSON.parse(recoveryOutput);
+    assert.equal(receipt.commit.state, "recovered");
+    assert.equal(
+      await readFile(path.join(root, packagePath, "package.json"), "utf8")
+        .then((source) => JSON.parse(source).name),
+      "@agent-teams/platform-project-management",
+    );
+    await assert.rejects(readFile(journalFile, "utf8"), /ENOENT/u);
   });
 });
 
@@ -221,13 +318,13 @@ test("rejects an accepted but empty package directory", async () => {
   });
 });
 
-test("rejects stale authority inputs after Plan application", async () => {
+test("keeps Plan evidence historical while live owner validation evolves", async () => {
   await withFixture(async (root) => {
     await acceptProjectManagement(root);
     await materializeProjectManagement(root);
     const dossierFile = path.join(root, projectDossierPath);
     await writeFile(dossierFile, `${await readFile(dossierFile, "utf8")}\n`);
-    assert.match(await validationText(root), /DOMAIN-PLAN-001/u);
+    assert.deepEqual(await validatePlatformDomain(root), []);
   });
 });
 
@@ -250,6 +347,104 @@ test("rejects empty implementation and test files in the first feature", async (
     await writeFile(path.join(root, featurePath, "admit-project-scope.ts"), "");
     await writeFile(path.join(root, featurePath, "admit-project-scope.test.ts"), "");
     assert.match(await validationText(root), /DOMAIN-PACKAGE-006/u);
+  });
+});
+
+test("requires every accepted package to expose and run its check script", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    const manifestFile = path.join(root, packagePath, "package.json");
+    const manifest = JSON.parse(await readFile(manifestFile, "utf8"));
+    delete manifest.scripts.check;
+    await writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
+    assert.match(await validationText(root), /DOMAIN-PACKAGE-002/u);
+  });
+});
+
+test("rejects a package check script that is only a successful no-op", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    const manifestFile = path.join(root, packagePath, "package.json");
+    const manifest = JSON.parse(await readFile(manifestFile, "utf8"));
+    manifest.scripts.check = "true";
+    await writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
+    assert.match(await validationText(root), /DOMAIN-PACKAGE-002/u);
+  });
+});
+
+test("rejects a package root that leaks composition through the public surface", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    await writeFile(
+      path.join(root, packagePath, "src/index.ts"),
+      "export * from './composition.js';\n",
+    );
+    assert.match(await validationText(root), /DOMAIN-PACKAGE-007/u);
+  });
+});
+
+test("rejects a feature public surface that exports internal application ports", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    await writeFile(
+      path.join(
+        root,
+        packagePath,
+        "src/features/managed-project-scope-admission/public.ts",
+      ),
+      'export type { ProjectManagementStore } from "./application/ports/project-management-store.js";\n',
+    );
+    assert.match(await validationText(root), /DOMAIN-PACKAGE-008/u);
+  });
+});
+
+test("rejects orphan scaffold evidence before it becomes immutable history", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    await writeFile(
+      path.join(root, "architecture/scaffolding/plans/orphan.json"),
+      "{}\n",
+    );
+    assert.match(await validationText(root), /DOMAIN-PLAN-007/u);
+  });
+});
+
+test("reproduces committed scaffold operations from the canonical intent", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    await writeFile(
+      path.join(
+        root,
+        "architecture/scaffolding/intents/context.project-management.yaml",
+      ),
+      YAML.stringify({
+        schemaVersion: 1,
+        compositionId: "missing-composition",
+        targetRef: "context.project-management",
+      }),
+    );
+    assert.match(await validationText(root), /DOMAIN-PLAN-006/u);
+  });
+});
+
+test("requires every accepted context package to be dependency-governed", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    await editYaml(
+      root,
+      "architecture/foundation/source-dependencies.yaml",
+      (config) => {
+        config.governedRoots = [];
+      },
+    );
+    assert.match(await validationText(root), /DOMAIN-BOUNDARY-001/u);
   });
 });
 
@@ -376,18 +571,45 @@ test("does not accept mandatory headings nested inside a blockquote", async () =
   });
 });
 
-test("rejects silent product-decision acceptance", async () => {
+test("rejects regression of an accepted product decision", async () => {
   await withFixture(async (root) => {
     const packetFile = path.join(root, productDecisionPacketPath);
     const packet = await readFile(packetFile, "utf8");
     await writeFile(
       packetFile,
       packet.replace(
-        "  PO-PLAT-003: awaiting-product-owner",
         "  PO-PLAT-003: accepted",
+        "  PO-PLAT-003: awaiting-product-owner",
       ),
     );
     assert.match(await validationText(root), /DOMAIN-PO-003 PO-PLAT-003/u);
+  });
+});
+
+test("rejects a product packet bound to a different decision", async () => {
+  await withFixture(async (root) => {
+    const packetFile = path.join(root, productDecisionPacketPath);
+    const packet = await readFile(packetFile, "utf8");
+    await writeFile(
+      packetFile,
+      packet.replace("owner_decision: ADR-0007", "owner_decision: ADR-9999"),
+    );
+    assert.match(await validationText(root), /DOMAIN-PO-001/u);
+  });
+});
+
+test("rejects an incomplete product-decision resolution", async () => {
+  await withFixture(async (root) => {
+    const resolutionFile = path.join(
+      root,
+      "docs/decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md",
+    );
+    const resolution = await readFile(resolutionFile, "utf8");
+    await writeFile(
+      resolutionFile,
+      resolution.replace("  - PO-PLAT-007\n", ""),
+    );
+    assert.match(await validationText(root), /DOMAIN-PO-006/u);
   });
 });
 

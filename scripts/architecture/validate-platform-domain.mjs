@@ -17,9 +17,12 @@ const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRepositoryRoot = path.resolve(scriptDirectory, "../..");
 const catalogPath = "architecture/package-catalog.yaml";
 const scaffoldingPath = "architecture/foundation/scaffolding.yaml";
+const sourceDependenciesPath = "architecture/foundation/source-dependencies.yaml";
 const contextMapPath = "docs/domain/context-map.md";
 const dossierIndexPath = `${DOSSIER_ROOT}/README.md`;
 const productDecisionPacketPath = "docs/domain/product-decision-packet.md";
+const productDecisionResolutionPath =
+  "docs/decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md";
 const productDecisionIds = [
   "PO-PLAT-001",
   "PO-PLAT-002",
@@ -232,6 +235,30 @@ function validateScaffoldingPolicy(config, errors) {
   }
 }
 
+function validateSourceDependencyCoverage(config, catalog, dossiers, errors) {
+  const governedRoots = new Set(config?.governedRoots ?? []);
+  const dossierById = new Map(
+    dossiers.map((dossier) => [dossier.metadata?.id, dossier]),
+  );
+  const acceptedRoots = new Set(
+    (catalog?.packages ?? [])
+      .filter(
+        (target) => dossierById.get(target.owner_document)?.metadata?.status === "accepted",
+      )
+      .map((target) => `${target.path}/src`),
+  );
+  for (const root of acceptedRoots) {
+    if (!governedRoots.has(root)) {
+      errors.push(`DOMAIN-BOUNDARY-001 accepted package is not governed: ${root}`);
+    }
+  }
+  for (const root of governedRoots) {
+    if (root.startsWith("packages/contexts/") && !acceptedRoots.has(root)) {
+      errors.push(`DOMAIN-BOUNDARY-002 unaccepted context root is governed: ${root}`);
+    }
+  }
+}
+
 function validateNavigation(contextMap, index, dossiers, errors) {
   for (const dossier of dossiers) {
     const contextLink = `contexts/${dossier.slug}/README.md`;
@@ -268,18 +295,53 @@ function decisionSubheadings(packet, decisionId) {
   );
 }
 
-function validateProductDecisionPacket(packet, errors) {
-  const metadata = packet?.metadata;
+function validateContextMap(contextMap, errors) {
+  const metadata = contextMap?.metadata;
   if (
-    metadata?.id !== "domain.product-decision-packet" ||
-    metadata?.type !== "product-decision-packet" ||
-    metadata?.status !== "proposed" ||
-    metadata?.owner !== "product-owner"
+    metadata?.id !== "domain.context-map" ||
+    metadata?.type !== "architecture" ||
+    metadata?.status !== "accepted" ||
+    !Array.isArray(metadata?.related) ||
+    !metadata.related.includes("ADR-0007")
   ) {
-    errors.push("DOMAIN-PO-001 product decision packet metadata is invalid");
+    errors.push("DOMAIN-MAP-001 accepted context map must be bound to ADR-0007");
+  }
+}
+
+function validProductDecisionPacketMetadata(metadata) {
+  return (
+    metadata?.id === "domain.product-decision-packet" &&
+    metadata?.type === "product-decision-packet" &&
+    metadata?.status === "accepted" &&
+    metadata?.owner === "product-owner" &&
+    metadata?.owner_decision === "ADR-0007"
+  );
+}
+
+function validateProductDecisionResolution(resolution, errors) {
+  const metadata = resolution?.metadata;
+  const acceptedDocuments = metadata?.accepts_architecture_documents;
+  const acceptedDecisions = metadata?.accepts_product_decisions;
+  if (
+    metadata?.id === "ADR-0007" &&
+    metadata?.type === "adr" &&
+    metadata?.status === "accepted" &&
+    metadata?.approved_by === "product-owner" &&
+    Array.isArray(acceptedDocuments) &&
+    acceptedDocuments.includes("domain.product-decision-packet") &&
+    acceptedDocuments.includes("domain.context-map") &&
+    Array.isArray(acceptedDecisions) &&
+    isDeepStrictEqual(
+      [...acceptedDecisions].toSorted(),
+      [...productDecisionIds].toSorted(),
+    )
+  ) {
     return;
   }
-  const decisions = metadata.decisions;
+  errors.push("DOMAIN-PO-006 ADR-0007 does not resolve the complete product packet");
+}
+
+function validateProductDecisionIds(packet, decisions, errors) {
   const actualIds =
     typeof decisions === "object" && decisions !== null
       ? Object.keys(decisions).toSorted()
@@ -297,9 +359,12 @@ function validateProductDecisionPacket(packet, errors) {
       "DOMAIN-PO-004 product decision packet must define each PO-PLAT-001...007 exactly once",
     );
   }
+}
+
+function validateProductDecisionSections(packet, decisions, errors) {
   for (const decisionId of productDecisionIds) {
-    if (decisions?.[decisionId] !== "awaiting-product-owner") {
-      errors.push(`DOMAIN-PO-003 ${decisionId} must remain awaiting-product-owner`);
+    if (decisions?.[decisionId] !== "accepted") {
+      errors.push(`DOMAIN-PO-003 ${decisionId} must be accepted by ADR-0007`);
     }
     const subheadings = decisionSubheadings(packet, decisionId);
     if (subheadings === null) {
@@ -313,10 +378,30 @@ function validateProductDecisionPacket(packet, errors) {
   }
 }
 
+function validateProductDecisionPacket(packet, resolution, errors) {
+  const metadata = packet?.metadata;
+  if (!validProductDecisionPacketMetadata(metadata)) {
+    errors.push("DOMAIN-PO-001 product decision packet metadata is invalid");
+    return;
+  }
+  validateProductDecisionResolution(resolution, errors);
+  validateProductDecisionIds(packet, metadata.decisions, errors);
+  validateProductDecisionSections(packet, metadata.decisions, errors);
+}
+
 export async function validatePlatformDomain(repositoryRoot) {
   const errors = [];
   const [catalogValidator, scaffoldingValidator] = await validatorsPromise;
-  const [catalog, scaffolding, dossiers, contextMap, index, productDecisions] =
+  const [
+    catalog,
+    scaffolding,
+    dossiers,
+    contextMap,
+    index,
+    productDecisions,
+    productDecisionResolution,
+    sourceDependencies,
+  ] =
     await Promise.all([
       loadYaml(repositoryRoot, catalogPath, errors),
       loadYaml(repositoryRoot, scaffoldingPath, errors),
@@ -324,6 +409,8 @@ export async function validatePlatformDomain(repositoryRoot) {
       loadMarkdown(repositoryRoot, contextMapPath, errors),
       loadMarkdown(repositoryRoot, dossierIndexPath, errors),
       loadMarkdown(repositoryRoot, productDecisionPacketPath, errors),
+      loadMarkdown(repositoryRoot, productDecisionResolutionPath, errors),
+      loadYaml(repositoryRoot, sourceDependenciesPath, errors),
     ]);
   validateSchema(catalog, catalogValidator, catalogPath, errors);
   validateSchema(scaffolding, scaffoldingValidator, scaffoldingPath, errors);
@@ -333,9 +420,20 @@ export async function validatePlatformDomain(repositoryRoot) {
   validateDossierIdentities(dossiers, errors);
   validateCatalogBindings(catalog, dossiers, errors);
   validateScaffoldingPolicy(scaffolding, errors);
+  validateSourceDependencyCoverage(
+    sourceDependencies,
+    catalog,
+    dossiers,
+    errors,
+  );
   await validateMaterialization(repositoryRoot, catalog, dossiers, errors);
   validateNavigation(contextMap, index, dossiers, errors);
-  validateProductDecisionPacket(productDecisions, errors);
+  validateContextMap(contextMap, errors);
+  validateProductDecisionPacket(
+    productDecisions,
+    productDecisionResolution,
+    errors,
+  );
   return errors;
 }
 

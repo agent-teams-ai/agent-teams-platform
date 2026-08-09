@@ -13,6 +13,13 @@ const sourceExtensions = new Set([
   ".ts",
   ".tsx",
 ]);
+const ignoredGeneratedDirectories = new Set([
+  ".cache",
+  ".nx",
+  "coverage",
+  "dist",
+  "node_modules",
+]);
 const forbiddenCoreIdentifiers = new Set([
   "DeploymentProfile",
   "DeploymentMode",
@@ -169,6 +176,9 @@ export async function walk(directory) {
   for (const entry of entries) {
     const entryPath = path.join(directory, entry.name);
     if (entry.isDirectory()) {
+      if (ignoredGeneratedDirectories.has(entry.name)) {
+        continue;
+      }
       paths.push(...(await walk(entryPath)));
     } else {
       paths.push(entryPath);
