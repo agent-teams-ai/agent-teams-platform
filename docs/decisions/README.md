@@ -10,7 +10,7 @@ summary: Index of immutable Platform architecture decisions.
 
 ## Proposed Decisions
 
-None.
+- [ADR-0006: Authority-Reducing Break-Glass](0006-authority-reducing-break-glass.md)
 
 ## Accepted Decisions
 
