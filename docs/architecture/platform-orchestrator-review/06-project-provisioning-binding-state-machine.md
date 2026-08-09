@@ -223,8 +223,11 @@ uncertainty, and unknown provider residue do not become verified deletion.
 - Private customer content is not cross-tenant deduplicated in v1.
 - `crypto_erase` requires exclusive key scope and complete encrypted-copy
   coverage.
-- Break-glass can fence, stop, quarantine, retry, and reconcile, but cannot
-  remove holds, rewrite evidence, reopen retired identity, or claim completion.
+- Break-glass can only install or strengthen owner-local restrictions, revocation,
+  fences, stops, or quarantine. Receipt query, exact replay, reconciliation,
+  containment retry, restoration, and successor attempts remain separately
+  authorized normal owner-local use cases. Proposed ADR-0006 defines the
+  refinement without changing ADR-0004 until acceptance.
 
 ## Required failure evidence
 
