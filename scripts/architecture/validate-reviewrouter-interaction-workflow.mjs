@@ -8,7 +8,7 @@ import YAML from "yaml";
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRepositoryRoot = path.resolve(scriptDirectory, "../..");
 const workflowPath = ".github/workflows/reviewrouter-interaction.yml";
-const runtimeRef = "5da51b7b71b1db9ce531f946ec2bb90411a31300";
+const runtimeRef = "6b35091c824b1d4d5ee6bf8316121ed08d3e4861";
 const reusableWorkflow =
   `777genius/review-router/.github/workflows/reviewrouter-interaction-reusable.yml@${runtimeRef}`;
 
