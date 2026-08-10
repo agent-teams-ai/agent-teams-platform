@@ -90,6 +90,12 @@ test("matches dispatch-committed retry authority release", () => {
   );
 });
 
+test("matches rejected and stale receipt successor resets", () => {
+  for (const traceName of ["rejectedReceiptResume", "staleReceiptResume"]) {
+    assertProcessParity(runTrace(traces[traceName]), domainTraces[traceName]());
+  }
+});
+
 test("matches direct and retained-receipt ready authority", () => {
   const direct = runTrace(traces.directReady);
   assertReadyParity(direct, domainTraces.ready());
@@ -260,4 +266,10 @@ test("covers retry, cancellation, stale and illegal-event paths", () => {
     assert.equal(unchanged.value, specification.axes.lifecycle.initial);
     assert.deepEqual(unchanged.context, specification.initialContext);
   }
+});
+
+test("production stale generation command is an exact no-op", async () => {
+  const evidence = await domainTraces.productionStaleGenerationEvidence();
+  assert.equal(evidence.resultKind, "stale");
+  assert.deepEqual(evidence.after, evidence.before);
 });

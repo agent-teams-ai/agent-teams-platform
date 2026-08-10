@@ -1,4 +1,3 @@
-import type { CreationAuthorityBasisSnapshot } from "../domain/creation-authority-basis.js";
 import {
   authorizeDispatch,
   blockDispatchForAuthority,
@@ -8,7 +7,6 @@ import {
   completeScopeAdmissionCancellation,
   finalizeScopeAdmission,
   observeScopeAdmissionReceipt,
-  requestManagedScopeAdmission,
   requestScopeAdmissionCancellation,
   releaseUnsubmittedDispatch,
   releaseReconciledNonAcceptance,
@@ -22,44 +20,11 @@ import { applyScopeAdmissionReceipt } from "../application/apply-scope-admission
 import type { ProjectManagementDependencies } from "../application/contracts.js";
 import type { ScopeAdmissionDispatchClaim } from "../application/ports/project-management-store.js";
 import { denyProjectAdmission } from "../domain/project-admission-authority.js";
-
-const authorityBasis: CreationAuthorityBasisSnapshot = Object.freeze({
-  checkedAt: 1_800_000_000_000,
-  validUntil: 1_800_000_060_000,
-  evidence: Object.freeze([
-    Object.freeze({
-      source: "tenant-admission",
-      evidenceRef: ids.authorityEvidence("model-tenant"),
-      revision: ids.authorityRevision("model-tenant-r1"),
-      validUntil: 1_800_000_060_000,
-    }),
-    Object.freeze({
-      source: "project-creation-authority",
-      evidenceRef: ids.authorityEvidence("model-project"),
-      revision: ids.authorityRevision("model-project-r1"),
-      validUntil: 1_800_000_060_000,
-    }),
-    Object.freeze({
-      source: "commercial-project-creation",
-      evidenceRef: ids.authorityEvidence("model-commercial"),
-      revision: ids.authorityRevision("model-commercial-r1"),
-      validUntil: 1_800_000_060_000,
-    }),
-  ] as const),
-});
-
-function initialProcess() {
-  return requestManagedScopeAdmission({
-    id: ids.process("model-process"),
-    operationRef: ids.operation("model-operation"),
-    projectId: ids.project("model-project"),
-    tenantRef: ids.tenant("model-tenant"),
-    requesterRef: ids.requester("model-requester"),
-    stepCommandId: ids.scopeCommand("model-command-g1"),
-    stepDigest: ids.digest("model-digest-g1"),
-    creationAuthorityBasis: authorityBasis,
-  });
-}
+import {
+  authorityBasis,
+  blockedTrace,
+  initialProcess,
+} from "./model-conformance-base-fixture.js";
 
 export function domainLostAckCancellationResumeTrace() {
   let process = claimDispatch(initialProcess());
@@ -223,28 +188,6 @@ export function domainIntegrityConflictTrace() {
   });
 }
 
-function blockedTrace(process: ReturnType<typeof initialProcess>) {
-  const authority =
-    process.blockReason === "COMMERCIAL_RESTRICTION"
-      ? "commercially-restricted"
-      : process.blockReason === "AUTHORITY_DENIED"
-        ? "denied"
-        : "closed";
-  return Object.freeze({
-    state: process.state,
-    authority,
-    reconciliation: "clear",
-    generation: process.generation,
-    attemptCount: process.attemptCount,
-    resumptionCount: process.resumptionCount,
-    receiptKind: process.receipt?.kind ?? null,
-    revision: process.revision,
-    blockReason: process.blockReason,
-    hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
-    hasAdmissionAuthority: process.admissionAuthorityBasis !== null,
-  });
-}
-
 export function domainPrimaryIntegrityConflictTrace() {
   let process = claimDispatch(initialProcess());
   process = authorizeDispatch(process, authorityBasis);
@@ -319,43 +262,6 @@ export function domainPreDispatchAuthorityDeniedTrace() {
   return blockedTrace(process);
 }
 
-export function domainSafeCancellationTrace() {
-  return blockedTrace(requestScopeAdmissionCancellation(initialProcess()).process);
-}
-
-export function domainAdmittedReceiptSafeCancellationTrace() {
-  let process = claimDispatch(initialProcess());
-  process = authorizeDispatch(process, authorityBasis);
-  process = observeScopeAdmissionReceipt(process, {
-    kind: "admitted",
-    receiptRef: ids.orchestratorReceipt("model-cancel-retained-admitted"),
-    receiptDigest: process.stepDigest,
-  });
-  process = requestScopeAdmissionCancellation(process).process;
-  return blockedTrace(process);
-}
-
-export function domainBlockedAuthorityCancellationTrace() {
-  let process = blockDispatchForAuthority(
-    claimDispatch(initialProcess()),
-    "AUTHORITY_DENIED",
-  );
-  process = requestScopeAdmissionCancellation(process).process;
-  return blockedTrace(process);
-}
-
-export function domainBlockedRejectedCancellationTrace() {
-  let process = claimDispatch(initialProcess());
-  process = authorizeDispatch(process, authorityBasis);
-  process = observeScopeAdmissionReceipt(process, {
-    kind: "rejected",
-    receiptRef: ids.orchestratorReceipt("model-blocked-cancel-rejected"),
-    receiptDigest: process.stepDigest,
-  });
-  process = requestScopeAdmissionCancellation(process).process;
-  return blockedTrace(process);
-}
-
 function domainBlockedReceiptTrace(kind: "rejected" | "stale" | "conflict") {
   let process = claimDispatch(initialProcess());
   process = authorizeDispatch(process, authorityBasis);
@@ -403,6 +309,43 @@ export function domainReconciledStaleReceiptTrace() {
 
 export function domainReconciledConflictReceiptTrace() {
   return domainReconciledBlockedReceiptTrace("conflict");
+}
+
+function domainBlockedReceiptResumeTrace(kind: "rejected" | "stale") {
+  let process = claimDispatch(initialProcess());
+  process = authorizeDispatch(process, authorityBasis);
+  process = observeScopeAdmissionReceipt(process, {
+    kind,
+    receiptRef: ids.orchestratorReceipt(`model-resume-${kind}`),
+    receiptDigest: process.stepDigest,
+  });
+  process = resumeManagedScopeAdmission(process, {
+    creationAuthorityBasis: authorityBasis,
+    requesterRef: ids.requester(`model-resume-${kind}`),
+    stepCommandId: ids.scopeCommand(`model-resume-${kind}`),
+    stepDigest: ids.digest(`model-resume-${kind}`),
+  });
+  return Object.freeze({
+    state: process.state,
+    authority: "creation-authorized",
+    reconciliation: "clear",
+    generation: process.generation,
+    attemptCount: process.attemptCount,
+    resumptionCount: process.resumptionCount,
+    blockReason: process.blockReason,
+    receiptKind: process.receipt?.kind ?? null,
+    revision: process.revision,
+    hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
+    hasAdmissionAuthority: process.admissionAuthorityBasis !== null,
+  });
+}
+
+export function domainRejectedReceiptResumeTrace() {
+  return domainBlockedReceiptResumeTrace("rejected");
+}
+
+export function domainStaleReceiptResumeTrace() {
+  return domainBlockedReceiptResumeTrace("stale");
 }
 
 export function domainRetryExhaustedTrace() {
@@ -473,46 +416,6 @@ export function domainAfterReceiptAuthorityDeniedTrace() {
 
 export function domainAfterReceiptCommercialRestrictionTrace() {
   return domainAfterReceiptAuthorityTrace("COMMERCIAL_RESTRICTION");
-}
-
-export function domainReconciledCancellationTrace() {
-  let process = claimDispatch(initialProcess());
-  process = authorizeDispatch(process, authorityBasis);
-  process = requireReconciliation(process);
-  process = requestScopeAdmissionCancellation(process).process;
-  process = completeScopeAdmissionCancellation(process, null);
-  return blockedTrace(process);
-}
-
-function domainReconciledReceiptCancellationTrace(
-  kind: "admitted" | "rejected" | "stale" | "conflict",
-) {
-  let process = claimDispatch(initialProcess());
-  process = authorizeDispatch(process, authorityBasis);
-  process = requireReconciliation(process);
-  process = requestScopeAdmissionCancellation(process).process;
-  process = completeScopeAdmissionCancellation(process, {
-    kind,
-    receiptRef: ids.orchestratorReceipt(`model-cancel-${kind}`),
-    receiptDigest: process.stepDigest,
-  });
-  return blockedTrace(process);
-}
-
-export function domainReconciledAdmittedCancellationTrace() {
-  return domainReconciledReceiptCancellationTrace("admitted");
-}
-
-export function domainReconciledRejectedCancellationTrace() {
-  return domainReconciledReceiptCancellationTrace("rejected");
-}
-
-export function domainReconciledStaleCancellationTrace() {
-  return domainReconciledReceiptCancellationTrace("stale");
-}
-
-export function domainReconciledConflictCancellationTrace() {
-  return domainReconciledReceiptCancellationTrace("conflict");
 }
 
 async function productionCommercialRouting(
@@ -603,4 +506,16 @@ export async function productionCommercialRetryEvidence() {
 }
 
 export { domainPolicyBoundary } from "./model-conformance-policy-fixture.js";
+export {
+  domainAdmittedReceiptSafeCancellationTrace,
+  domainBlockedAuthorityCancellationTrace,
+  domainBlockedRejectedCancellationTrace,
+  domainReconciledAdmittedCancellationTrace,
+  domainReconciledCancellationTrace,
+  domainReconciledConflictCancellationTrace,
+  domainReconciledRejectedCancellationTrace,
+  domainReconciledStaleCancellationTrace,
+  domainSafeCancellationTrace,
+} from "./model-conformance-cancellation-fixture.js";
+export { productionStaleGenerationEvidence } from "./model-conformance-freshness-fixture.js";
 export { domainVocabularyEvidence } from "./model-conformance-vocabulary-fixture.js";

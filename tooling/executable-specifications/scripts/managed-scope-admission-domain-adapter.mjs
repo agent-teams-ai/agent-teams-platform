@@ -27,8 +27,10 @@ import {
   domainReconciledStaleCancellationTrace,
   domainReconciledStaleReceiptTrace,
   domainRejectedReceiptTrace,
+  domainRejectedReceiptResumeTrace,
   domainSafeCancellationTrace,
   domainStaleReceiptTrace,
+  domainStaleReceiptResumeTrace,
   domainPolicyBoundary,
   domainReadyTrace,
   domainResumedReadyTrace,
@@ -37,6 +39,7 @@ import {
   productionCommercialDenialEvidence,
   productionCommercialExhaustionEvidence,
   productionCommercialRetryEvidence,
+  productionStaleGenerationEvidence,
 } from "@agent-teams/platform-project-management/testing/model-conformance";
 
 export const domainTraces = Object.freeze({
@@ -68,8 +71,10 @@ export const domainTraces = Object.freeze({
   reconciledStaleCancellation: domainReconciledStaleCancellationTrace,
   reconciledStaleReceipt: domainReconciledStaleReceiptTrace,
   rejectedReceipt: domainRejectedReceiptTrace,
+  rejectedReceiptResume: domainRejectedReceiptResumeTrace,
   safeCancellation: domainSafeCancellationTrace,
   staleReceipt: domainStaleReceiptTrace,
+  staleReceiptResume: domainStaleReceiptResumeTrace,
   policyBoundary: domainPolicyBoundary,
   ready: domainReadyTrace,
   resumedReady: domainResumedReadyTrace,
@@ -78,4 +83,5 @@ export const domainTraces = Object.freeze({
   productionCommercialDenialEvidence,
   productionCommercialExhaustionEvidence,
   productionCommercialRetryEvidence,
+  productionStaleGenerationEvidence,
 });

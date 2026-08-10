@@ -581,6 +581,23 @@ const mutants = [
     oracle: (snapshot) =>
       assertProcessParity(snapshot, domainTraces.lostAckCancellationResume()),
   },
+  ...[
+    ["OBSERVE_REJECTED", "rejectedReceiptResume"],
+    ["OBSERVE_STALE", "staleReceiptResume"],
+  ].map(([receiptEvent, traceName]) => ({
+    name: `${receiptEvent} resume retains the predecessor receipt`,
+    model: mutateEvent("RESUME_NEW_GENERATION", (event) => {
+      delete event.effects.set.receipt;
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      receiptEvent,
+      "RESUME_NEW_GENERATION",
+    ],
+    oracle: (snapshot) =>
+      assertProcessParity(snapshot, domainTraces[traceName]()),
+  })),
 ];
 
 for (const mutant of mutants) {
@@ -639,6 +656,12 @@ test("production cancellation supplies every modeled terminal oracle", () => {
     assert.equal(evidence.receiptKind, receiptKind);
     assert.equal(evidence.blockReason, blockReason);
   }
+});
+
+test("production stale generation fence supplies a no-op oracle", async () => {
+  const evidence = await domainTraces.productionStaleGenerationEvidence();
+  assert.equal(evidence.resultKind, "stale");
+  assert.deepEqual(evidence.after, evidence.before);
 });
 
 for (const [eventType, field] of [
