@@ -33,6 +33,9 @@ export function assertCrossAxisInvariants(
     assert.equal(context.authority, "dispatch-authorized");
     assert.equal(context.reconciliation, "outcome-unknown");
   }
+  if (snapshot.value === "claimed") {
+    assert.equal(context.authority, "dispatch-recheck-pending");
+  }
   if (
     snapshot.value === "retry-wait" ||
     context.blockReason === "SAFE_RETRY_EXHAUSTED"

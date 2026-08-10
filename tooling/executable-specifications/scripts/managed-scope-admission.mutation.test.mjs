@@ -21,6 +21,14 @@ function mutateEvent(type, mutate) {
 
 const mutants = [
   {
+    name: "claimed without dispatch recheck authority",
+    model: mutateEvent("CLAIM", (event) => {
+      event.effects.set.authority = "creation-authorized";
+    }),
+    witness: ["CLAIM"],
+    oracle: (snapshot) => assertProcessParity(snapshot, domainTraces.claimed()),
+  },
+  {
     name: "ready without admission authority",
     model: mutateEvent("FINALIZE_READY", (event) => {
       event.effects.set.admissionAuthorityPresent = false;

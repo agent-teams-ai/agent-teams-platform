@@ -95,6 +95,10 @@ test("matches dispatch-committed retry authority release", () => {
   );
 });
 
+test("matches claimed dispatch recheck authority", () => {
+  assertProcessParity(runTrace(["CLAIM"]), domainTraces.claimed());
+});
+
 test("matches rejected and stale receipt successor resets", () => {
   for (const traceName of ["rejectedReceiptResume", "staleReceiptResume"]) {
     assertProcessParity(runTrace(traces[traceName]), domainTraces[traceName]());

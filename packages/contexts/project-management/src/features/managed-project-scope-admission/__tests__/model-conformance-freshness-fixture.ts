@@ -6,6 +6,8 @@ import {
   resumeCommand,
 } from "./test-fixture.js";
 import { ids } from "../domain/value-objects.js";
+import { claimDispatch } from "../domain/managed-scope-admission-process.js";
+import { initialProcess } from "./model-conformance-base-fixture.js";
 
 export function productionProcessProjection(
   process: NonNullable<
@@ -16,6 +18,8 @@ export function productionProcessProjection(
     ? "admission-authorized"
     : process.state === "receipt-observed"
       ? "admission-recheck-pending"
+      : process.state === "claimed"
+        ? "dispatch-recheck-pending"
       : process.blockReason === "COMMERCIAL_RESTRICTION"
           ? "commercially-restricted"
           : process.blockReason === "AUTHORITY_DENIED"
@@ -43,6 +47,10 @@ export function productionProcessProjection(
     hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
     hasAdmissionAuthority: process.admissionAuthorityBasis !== null,
   });
+}
+
+export function domainClaimedTrace() {
+  return productionProcessProjection(claimDispatch(initialProcess()));
 }
 
 export async function requireProductionSnapshot(

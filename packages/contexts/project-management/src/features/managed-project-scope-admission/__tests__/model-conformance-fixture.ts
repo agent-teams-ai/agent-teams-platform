@@ -518,7 +518,7 @@ export {
   domainSafeCancellationTrace,
 } from "./model-conformance-cancellation-fixture.js";
 export {
-  productionDispatchCommittedCancellationEvidence,
+  domainClaimedTrace, productionDispatchCommittedCancellationEvidence,
   productionIntegrityCancellationNoOpEvidence,
   productionNonAdmittedResumeEvidence,
   productionPendingCancellationNoOpEvidence,
