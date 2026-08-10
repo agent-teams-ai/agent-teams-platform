@@ -11,6 +11,7 @@ import {
   assertProcessParity,
   assertRecoveryPredecessor,
   assertReconciliationExhaustionEvidence,
+  assertReconciledReceiptMatrixEvidence,
   assertReadyParity,
   assertResumeEvidence,
 } from "./managed-scope-admission-invariants.mjs";
@@ -391,5 +392,11 @@ test("production commercial and safe-exhausted resumes create clean successors",
 test("production reconciliation exhausts on the exact retry boundary", async () => {
   assertReconciliationExhaustionEvidence(
     await domainTraces.productionReconciliationExhaustionEvidence(),
+  );
+});
+
+test("production reconciliation preserves every recovered receipt kind", async () => {
+  assertReconciledReceiptMatrixEvidence(
+    await domainTraces.productionReconciledReceiptMatrixEvidence(),
   );
 });

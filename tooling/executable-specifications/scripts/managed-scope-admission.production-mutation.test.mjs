@@ -5,6 +5,7 @@ import { domainTraces } from "./managed-scope-admission-domain-adapter.mjs";
 import {
   assertRecoveryPredecessor,
   assertReconciliationExhaustionEvidence,
+  assertReconciledReceiptMatrixEvidence,
   assertResumeEvidence,
 } from "./managed-scope-admission-invariants.mjs";
 
@@ -33,5 +34,11 @@ test("production blocked-reason resume mutants are killed", async () => {
 test("production reconciliation exhaustion-boundary mutants are killed", async () => {
   assertReconciliationExhaustionEvidence(
     await domainTraces.productionReconciliationExhaustionEvidence(),
+  );
+});
+
+test("production reconciliation receipt-routing mutants are killed", async () => {
+  assertReconciledReceiptMatrixEvidence(
+    await domainTraces.productionReconciledReceiptMatrixEvidence(),
   );
 });

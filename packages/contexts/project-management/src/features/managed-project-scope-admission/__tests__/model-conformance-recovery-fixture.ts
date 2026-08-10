@@ -409,3 +409,35 @@ export async function productionReconciliationExhaustionEvidence() {
     exhausted: productionProcessProjection(exhausted.process),
   });
 }
+
+export async function productionReconciledReceiptMatrixEvidence() {
+  const evidence = [];
+  for (const receiptKind of ["admitted", "rejected", "stale", "conflict"] as const) {
+    const subject = fixture();
+    const created = await acceptedProject(subject);
+    subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
+    await subject.worker.dispatchManagedScopeAdmission();
+    subject.orchestration.recovery = (intent) => ({
+      kind: "receipt",
+      receipt: {
+        kind: receiptKind,
+        receiptRef: ids.orchestratorReceipt(`model-recovered-${receiptKind}`),
+        receiptDigest: intent.commandDigest,
+      },
+    });
+    const result = await subject.worker.reconcileManagedScopeAdmission(
+      created.operationRef,
+    );
+    const snapshot = await requireProductionSnapshot(
+      subject,
+      created.operationRef,
+      `Expected recovered ${receiptKind} receipt.`,
+    );
+    evidence.push(Object.freeze({
+      receiptKind,
+      resultKind: result.kind,
+      process: productionProcessProjection(snapshot.process),
+    }));
+  }
+  return Object.freeze(evidence);
+}

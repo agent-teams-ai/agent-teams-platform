@@ -531,5 +531,6 @@ export { domainVocabularyEvidence } from "./model-conformance-vocabulary-fixture
 export {
   productionBlockedResumeEvidence,
   productionReconciliationExhaustionEvidence,
+  productionReconciledReceiptMatrixEvidence,
   productionRecoverableCancellationEvidence,
 } from "./model-conformance-recovery-fixture.js";

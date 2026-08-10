@@ -281,3 +281,47 @@ export function assertReconciliationExhaustionEvidence(evidence) {
     blockReason: "SAFE_RETRY_EXHAUSTED",
   }));
 }
+
+export function assertReconciledReceiptMatrixEvidence(evidence) {
+  const expected = {
+    admitted: {
+      state: "ready",
+      authority: "admission-authorized",
+      reconciliation: "clear",
+      generation: 1,
+      revision: 6,
+      attemptCount: 1,
+      resumptionCount: 0,
+      receiptKind: "admitted",
+      blockReason: null,
+      hasDispatchAuthority: true,
+      hasAdmissionAuthority: true,
+    },
+    rejected: recoveryPredecessor({
+      revision: 5,
+      receiptKind: "rejected",
+      blockReason: "DOWNSTREAM_REJECTED",
+      hasDispatchAuthority: true,
+    }),
+    stale: recoveryPredecessor({
+      revision: 5,
+      receiptKind: "stale",
+      blockReason: "DOWNSTREAM_STALE",
+      hasDispatchAuthority: true,
+    }),
+    conflict: recoveryPredecessor({
+      revision: 5,
+      receiptKind: "conflict",
+      blockReason: "DOWNSTREAM_CONFLICT",
+      hasDispatchAuthority: true,
+    }),
+  };
+  assert.deepEqual(
+    evidence.map(({ receiptKind }) => receiptKind),
+    ["admitted", "rejected", "stale", "conflict"],
+  );
+  for (const item of evidence) {
+    assert.equal(item.resultKind, "receipt-recorded", item.receiptKind);
+    assert.deepEqual(item.process, expected[item.receiptKind], item.receiptKind);
+  }
+}
