@@ -24,7 +24,7 @@ import {
 const traces = JSON.parse(
   await readFile(
     new URL(
-      "../../../architecture/project-management/managed-scope-admission-traces.json",
+      "../fixtures/proof-artifacts/managed-scope-admission-traces.json",
       import.meta.url,
     ),
     "utf8",

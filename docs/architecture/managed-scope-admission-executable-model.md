@@ -56,9 +56,13 @@ cross-axis invariants, including:
 - integrity conflicts are non-resumable and authority-recheck exhaustion keeps
   the admitted receipt while remaining blocked without admission authority.
 
-The checked-in Mermaid diagram is rendered deterministically from the JSON.
-The model gate compares it byte-for-byte and verifies that every authoritative
-event appears, so transition or freshness-fence drift fails the gate.
+The checked-in Mermaid diagram and deterministic trace witnesses live under
+`tooling/executable-specifications/fixtures/proof-artifacts`. They are derived
+proof artifacts, deliberately separated from the authoritative JSON, schemas,
+source, and test harness so review routing can policy-exclude them without
+reducing required full-file coverage of human-owned logic. The model gate
+compares the diagram byte-for-byte and verifies that every authoritative event
+appears, so transition or freshness-fence drift fails the gate.
 
 Foundation connects these artifacts through the consumer-owned executable
 specification catalog. The catalog is data-only (`generatedTypes: []`) and

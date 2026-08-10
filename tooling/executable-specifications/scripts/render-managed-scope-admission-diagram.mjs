@@ -6,7 +6,7 @@ const specificationUrl = new URL(
   import.meta.url,
 );
 const diagramUrl = new URL(
-  "../../../architecture/project-management/managed-scope-admission-model.mmd",
+  "../fixtures/proof-artifacts/managed-scope-admission-model.mmd",
   import.meta.url,
 );
 

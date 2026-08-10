@@ -36,8 +36,8 @@
         "axes": ["lifecycle", "authority", "reconciliation", "generation"],
         "modelPath": "tooling/executable-specifications/scripts/managed-scope-admission-model.mjs",
         "adapterPath": "tooling/executable-specifications/scripts/managed-scope-admission-domain-adapter.mjs",
-        "tracesPath": "architecture/project-management/managed-scope-admission-traces.json",
-        "diagramPath": "architecture/project-management/managed-scope-admission-model.mmd",
+        "tracesPath": "tooling/executable-specifications/fixtures/proof-artifacts/managed-scope-admission-traces.json",
+        "diagramPath": "tooling/executable-specifications/fixtures/proof-artifacts/managed-scope-admission-model.mmd",
         "gateBinding": {
           "packageName": "@agent-teams/platform-executable-specifications",
           "script": "spec:model"

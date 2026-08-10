@@ -22,7 +22,7 @@ import { renderManagedScopeAdmissionDiagram } from "./render-managed-scope-admis
 const traces = JSON.parse(
   await readFile(
     new URL(
-      "../../../architecture/project-management/managed-scope-admission-traces.json",
+      "../fixtures/proof-artifacts/managed-scope-admission-traces.json",
       import.meta.url,
     ),
     "utf8",
@@ -30,7 +30,7 @@ const traces = JSON.parse(
 ).traces;
 const committedDiagram = await readFile(
   new URL(
-    "../../../architecture/project-management/managed-scope-admission-model.mmd",
+    "../fixtures/proof-artifacts/managed-scope-admission-model.mmd",
     import.meta.url,
   ),
   "utf8",
