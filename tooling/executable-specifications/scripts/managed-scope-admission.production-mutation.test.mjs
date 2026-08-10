@@ -4,6 +4,7 @@ import test from "node:test";
 import { domainTraces } from "./managed-scope-admission-domain-adapter.mjs";
 import {
   assertRecoveryPredecessor,
+  assertReconciliationExhaustionEvidence,
   assertResumeEvidence,
 } from "./managed-scope-admission-invariants.mjs";
 
@@ -27,4 +28,10 @@ test("production blocked-reason resume mutants are killed", async () => {
   for (const evidence of await domainTraces.productionBlockedResumeEvidence()) {
     assertResumeEvidence(evidence);
   }
+});
+
+test("production reconciliation exhaustion-boundary mutants are killed", async () => {
+  assertReconciliationExhaustionEvidence(
+    await domainTraces.productionReconciliationExhaustionEvidence(),
+  );
 });

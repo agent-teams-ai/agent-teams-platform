@@ -266,3 +266,18 @@ export function assertResumeEvidence(evidence) {
     evidence.reason,
   );
 }
+
+export function assertReconciliationExhaustionEvidence(evidence) {
+  assert.equal(evidence.firstResultKind, "retry");
+  assert.deepEqual(evidence.first, recoveryPredecessor({
+    state: "retry-wait",
+    authority: "creation-authorized",
+    revision: 5,
+  }));
+  assert.equal(evidence.exhaustedResultKind, "blocked");
+  assert.deepEqual(evidence.exhausted, recoveryPredecessor({
+    revision: 9,
+    attemptCount: 2,
+    blockReason: "SAFE_RETRY_EXHAUSTED",
+  }));
+}

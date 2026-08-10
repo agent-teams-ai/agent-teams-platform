@@ -375,3 +375,37 @@ export async function productionBlockedResumeEvidence() {
   }
   return Object.freeze(evidence);
 }
+
+export async function productionReconciliationExhaustionEvidence() {
+  const subject = fixture({
+    safeRetryPolicy: { defaultDelayMs: 1000, maxDelayMs: 1000, maxAttempts: 2 },
+  });
+  const created = await acceptedProject(subject);
+  subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
+  subject.orchestration.recovery = () => ({ kind: "known-not-accepted" });
+  await subject.worker.dispatchManagedScopeAdmission();
+  const firstResult = await subject.worker.reconcileManagedScopeAdmission(
+    created.operationRef,
+  );
+  const first = await requireProductionSnapshot(
+    subject,
+    created.operationRef,
+    "Expected first reconciliation retry.",
+  );
+  subject.setNow(NOW + 1000);
+  await subject.worker.dispatchManagedScopeAdmission();
+  const exhaustedResult = await subject.worker.reconcileManagedScopeAdmission(
+    created.operationRef,
+  );
+  const exhausted = await requireProductionSnapshot(
+    subject,
+    created.operationRef,
+    "Expected exhausted reconciliation result.",
+  );
+  return Object.freeze({
+    firstResultKind: firstResult.kind,
+    first: productionProcessProjection(first.process),
+    exhaustedResultKind: exhaustedResult.kind,
+    exhausted: productionProcessProjection(exhausted.process),
+  });
+}

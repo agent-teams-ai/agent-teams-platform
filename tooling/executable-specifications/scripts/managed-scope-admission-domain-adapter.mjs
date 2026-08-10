@@ -47,6 +47,7 @@ import {
   productionProtectedCancellationNoOpEvidence,
   productionRecoverableCancellationEvidence,
   productionReconciledAdmittedEvidence,
+  productionReconciliationExhaustionEvidence,
   productionStaleGenerationEvidence,
   productionStaleRevisionEvidence,
 } from "@agent-teams/platform-project-management/testing/model-conformance";
@@ -100,6 +101,7 @@ export const domainTraces = Object.freeze({
   productionProtectedCancellationNoOpEvidence,
   productionRecoverableCancellationEvidence,
   productionReconciledAdmittedEvidence,
+  productionReconciliationExhaustionEvidence,
   productionStaleGenerationEvidence,
   productionStaleRevisionEvidence,
 });

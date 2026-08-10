@@ -10,6 +10,7 @@ import {
   assertCrossAxisInvariants,
   assertProcessParity,
   assertRecoveryPredecessor,
+  assertReconciliationExhaustionEvidence,
   assertReadyParity,
   assertResumeEvidence,
 } from "./managed-scope-admission-invariants.mjs";
@@ -385,4 +386,10 @@ test("production commercial and safe-exhausted resumes create clean successors",
   for (const evidence of await domainTraces.productionBlockedResumeEvidence()) {
     assertResumeEvidence(evidence);
   }
+});
+
+test("production reconciliation exhausts on the exact retry boundary", async () => {
+  assertReconciliationExhaustionEvidence(
+    await domainTraces.productionReconciliationExhaustionEvidence(),
+  );
 });
