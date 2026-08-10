@@ -151,6 +151,36 @@ async function authorityDeniedSubject(afterReceipt: boolean) {
   return { subject, created };
 }
 
+async function reconciledAdmittedBlockedSubject(
+  reason: "AUTHORITY_DENIED" | "COMMERCIAL_RESTRICTION",
+) {
+  const subject = fixture();
+  const created = await acceptedProject(subject);
+  subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
+  await subject.worker.dispatchManagedScopeAdmission();
+  subject.orchestration.recovery = (intent) => ({
+    kind: "receipt",
+    receipt: {
+      kind: "admitted",
+      receiptRef: ids.orchestratorReceipt(`model-reconciled-${reason}`),
+      receiptDigest: intent.commandDigest,
+    },
+  });
+  if (reason === "AUTHORITY_DENIED") {
+    subject.tenantAuthority.decision = {
+      kind: "denied",
+      reason: "TENANT_ACCESS_REVOKED",
+    };
+  } else {
+    subject.commercialAuthority.decision = {
+      kind: "denied",
+      reason: "COMMERCIAL_POLICY_DENIED",
+    };
+  }
+  await subject.worker.reconcileManagedScopeAdmission(created.operationRef);
+  return { subject, created };
+}
+
 async function downstreamBlockedSubject(kind: "rejected" | "stale") {
   const subject = fixture();
   const created = await acceptedProject(subject);
@@ -255,9 +285,11 @@ export async function productionRecoverableCancellationEvidence() {
   const cases = [
     ["AUTHORITY_DENIED_PRE_DISPATCH", await authorityDeniedSubject(false)],
     ["AUTHORITY_DENIED_AFTER_RECEIPT", await authorityDeniedSubject(true)],
+    ["AUTHORITY_DENIED_RECONCILED_ADMITTED", await reconciledAdmittedBlockedSubject("AUTHORITY_DENIED")],
     ["COMMERCIAL_RESTRICTION_PRE_DISPATCH", await blockedSubject("COMMERCIAL_RESTRICTION")],
     ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT", await postReceiptCommercialBlockedSubject()],
     ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT_UNAVAILABLE", await postReceiptCommercialUnavailableSubject()],
+    ["COMMERCIAL_RESTRICTION_RECONCILED_ADMITTED", await reconciledAdmittedBlockedSubject("COMMERCIAL_RESTRICTION")],
     ["DOWNSTREAM_REJECTED", await downstreamBlockedSubject("rejected")],
     ["DOWNSTREAM_STALE", await downstreamBlockedSubject("stale")],
     ["SAFE_RETRY_EXHAUSTED", await blockedSubject("SAFE_RETRY_EXHAUSTED")],
@@ -297,9 +329,11 @@ export async function productionBlockedResumeEvidence() {
   const cases = [
     ["AUTHORITY_DENIED_PRE_DISPATCH", await authorityDeniedSubject(false)],
     ["AUTHORITY_DENIED_AFTER_RECEIPT", await authorityDeniedSubject(true)],
+    ["AUTHORITY_DENIED_RECONCILED_ADMITTED", await reconciledAdmittedBlockedSubject("AUTHORITY_DENIED")],
     ["COMMERCIAL_RESTRICTION_PRE_DISPATCH", await blockedSubject("COMMERCIAL_RESTRICTION")],
     ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT", await postReceiptCommercialBlockedSubject()],
     ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT_UNAVAILABLE", await postReceiptCommercialUnavailableSubject()],
+    ["COMMERCIAL_RESTRICTION_RECONCILED_ADMITTED", await reconciledAdmittedBlockedSubject("COMMERCIAL_RESTRICTION")],
     ["USER_CANCELLED_NO_RECEIPT", await userCancelledSubject(null)],
     ["USER_CANCELLED_ADMITTED", await userCancelledSubject("admitted")],
     ["USER_CANCELLED_REJECTED", await userCancelledSubject("rejected")],

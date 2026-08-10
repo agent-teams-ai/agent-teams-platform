@@ -144,6 +144,13 @@ const recoveryPredecessors = Object.freeze({
     blockReason: "AUTHORITY_DENIED",
     hasDispatchAuthority: true,
   }),
+  AUTHORITY_DENIED_RECONCILED_ADMITTED: recoveryPredecessor({
+    authority: "denied",
+    revision: 6,
+    receiptKind: "admitted",
+    blockReason: "AUTHORITY_DENIED",
+    hasDispatchAuthority: true,
+  }),
   COMMERCIAL_RESTRICTION_PRE_DISPATCH: recoveryPredecessor({
     authority: "commercially-restricted",
     revision: 3,
@@ -159,6 +166,13 @@ const recoveryPredecessors = Object.freeze({
   COMMERCIAL_RESTRICTION_AFTER_RECEIPT_UNAVAILABLE: recoveryPredecessor({
     authority: "commercially-restricted",
     revision: 5,
+    receiptKind: "admitted",
+    blockReason: "COMMERCIAL_RESTRICTION",
+    hasDispatchAuthority: true,
+  }),
+  COMMERCIAL_RESTRICTION_RECONCILED_ADMITTED: recoveryPredecessor({
+    authority: "commercially-restricted",
+    revision: 6,
     receiptKind: "admitted",
     blockReason: "COMMERCIAL_RESTRICTION",
     hasDispatchAuthority: true,
