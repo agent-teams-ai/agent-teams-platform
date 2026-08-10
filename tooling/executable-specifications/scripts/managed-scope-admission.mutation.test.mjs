@@ -92,6 +92,28 @@ const mutants = [
     oracle: assertCrossAxisInvariants,
   },
   {
+    name: "dispatch-committed retry retains stale dispatch authority",
+    model: mutateEvent("RELEASE_RETRY", (event) => {
+      delete event.effects.set.dispatchAuthorityPresent;
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "RELEASE_RETRY"],
+    oracle: assertCrossAxisInvariants,
+  },
+  {
+    name: "dispatch-committed exhaustion retains stale dispatch authority",
+    model: mutateEvent("RELEASE_EXHAUSTED", (event) => {
+      delete event.effects.set.dispatchAuthorityPresent;
+    }),
+    witness: [
+      "CLAIM",
+      "RELEASE_RETRY",
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "RELEASE_EXHAUSTED",
+    ],
+    oracle: assertCrossAxisInvariants,
+  },
+  {
     name: "unsubmitted dispatch exhausted before production retry policy",
     model: mutateEvent("RELEASE_EXHAUSTED", (event) => {
       event.guard.all[0].operator = "less-than-limit";

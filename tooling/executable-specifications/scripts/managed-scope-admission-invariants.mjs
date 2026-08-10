@@ -33,6 +33,12 @@ export function assertCrossAxisInvariants(
     assert.equal(context.authority, "dispatch-authorized");
     assert.equal(context.reconciliation, "outcome-unknown");
   }
+  if (
+    snapshot.value === "retry-wait" ||
+    context.blockReason === "SAFE_RETRY_EXHAUSTED"
+  ) {
+    assert.equal(context.dispatchAuthorityPresent, false);
+  }
   if (snapshot.value === "cancel-reconcile-required") {
     assert.equal(context.reconciliation, "cancellation-unknown");
   }
