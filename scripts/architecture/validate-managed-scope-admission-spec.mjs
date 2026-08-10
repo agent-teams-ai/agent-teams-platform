@@ -64,8 +64,13 @@ function validateEvents(document, errors) {
     }
     eventTypes.add(event.type);
     validateLifecycleReferences(event, lifecycleStates, errors);
-    validateEffects(event, authorityStates, reconciliationStates, errors);
-    validateGuards(event, errors);
+    validateEffects(event, {
+      authorityStates,
+      reconciliationStates,
+      receiptKinds: new Set(document.vocabulary.receiptKinds),
+      blockReasons: new Set(document.vocabulary.blockReasons),
+    }, errors);
+    validateGuards(event, document.vocabulary, errors);
   }
 }
 
@@ -84,17 +89,42 @@ function validateLifecycleReferences(event, lifecycleStates, errors) {
   }
 }
 
-function validateEffects(event, authorityStates, reconciliationStates, errors) {
+function validateEffects(
+  event,
+  vocabulary,
+  errors,
+) {
   const authority = event.effects.set.authority;
   const reconciliation = event.effects.set.reconciliation;
-  if (authority !== undefined && !authorityStates.has(authority)) {
+  if (authority !== undefined && !vocabulary.authorityStates.has(authority)) {
     errors.push(
       `SCOPE-SPEC-EFFECT-001 ${event.type} sets undeclared authority ${authority}`,
     );
   }
-  if (reconciliation !== undefined && !reconciliationStates.has(reconciliation)) {
+  if (
+    reconciliation !== undefined &&
+    !vocabulary.reconciliationStates.has(reconciliation)
+  ) {
     errors.push(
       `SCOPE-SPEC-EFFECT-002 ${event.type} sets undeclared reconciliation ${reconciliation}`,
+    );
+  }
+  if (
+    event.effects.set.receipt !== undefined &&
+    event.effects.set.receipt !== null &&
+    !vocabulary.receiptKinds.has(event.effects.set.receipt)
+  ) {
+    errors.push(
+      `SCOPE-SPEC-EFFECT-005 ${event.type} sets undeclared receipt ${event.effects.set.receipt}`,
+    );
+  }
+  if (
+    event.effects.set.blockReason !== undefined &&
+    event.effects.set.blockReason !== null &&
+    !vocabulary.blockReasons.has(event.effects.set.blockReason)
+  ) {
+    errors.push(
+      `SCOPE-SPEC-EFFECT-006 ${event.type} sets undeclared block reason ${event.effects.set.blockReason}`,
     );
   }
   if (event.to !== "$same" && !event.effects.increment.includes("revision")) {
@@ -111,13 +141,31 @@ function validateEffects(event, authorityStates, reconciliationStates, errors) {
   }
 }
 
-function validateGuards(event, errors) {
+function validateGuards(event, vocabulary, errors) {
   for (const predicate of event.guard?.all ?? []) {
     const expectedLimit =
       predicate.field === "attemptCount" ? "attempts" : "generations";
     if (predicate.limit !== undefined && predicate.limit !== expectedLimit) {
       errors.push(
         `SCOPE-SPEC-GUARD-001 ${event.type} compares ${predicate.field} with ${predicate.limit}`,
+      );
+    }
+    if (
+      predicate.field === "receipt" &&
+      !vocabulary.receiptKinds.includes(predicate.value)
+    ) {
+      errors.push(
+        `SCOPE-SPEC-GUARD-002 ${event.type} references undeclared receipt ${predicate.value}`,
+      );
+    }
+    if (
+      predicate.field === "blockReason" &&
+      predicate.values.some(
+        (value) => !vocabulary.blockReasons.includes(value),
+      )
+    ) {
+      errors.push(
+        `SCOPE-SPEC-GUARD-003 ${event.type} references an undeclared block reason`,
       );
     }
   }

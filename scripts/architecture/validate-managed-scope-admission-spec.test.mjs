@@ -67,3 +67,23 @@ test("rejects lifecycle effects that omit aggregate revision advance", () => {
     "SCOPE-SPEC-EFFECT-003 CLAIM changes lifecycle without revision",
   ]);
 });
+
+test("rejects receipt effects outside the JSON-owned vocabulary", () => {
+  const invalid = structuredClone(document);
+  invalid.events.find(({ type }) => type === "OBSERVE_REJECTED").effects.set.receipt =
+    "invented";
+  assert.deepEqual(validateManagedScopeAdmissionDocument(invalid, schema), [
+    "SCOPE-SPEC-EFFECT-005 OBSERVE_REJECTED sets undeclared receipt invented",
+  ]);
+});
+
+test("rejects block-reason guards outside the JSON-owned vocabulary", () => {
+  const invalid = structuredClone(document);
+  invalid.events
+    .find(({ type }) => type === "RESUME_NEW_GENERATION")
+    .guard.all.find(({ field }) => field === "blockReason")
+    .values.push("INVENTED_REASON");
+  assert.deepEqual(validateManagedScopeAdmissionDocument(invalid, schema), [
+    "SCOPE-SPEC-GUARD-003 RESUME_NEW_GENERATION references an undeclared block reason",
+  ]);
+});

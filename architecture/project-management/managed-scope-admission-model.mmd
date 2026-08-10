@@ -1,17 +1,69 @@
 stateDiagram-v2
+  state "requested" as requested
+  state "claimed" as claimed
+  state "dispatch-committed" as dispatch_committed
+  state "retry-wait" as retry_wait
+  state "reconcile-required" as reconcile_required
+  state "cancel-reconcile-required" as cancel_reconcile_required
+  state "receipt-observed" as receipt_observed
+  state "ready" as ready
+  state "blocked" as blocked
   [*] --> requested
   requested --> claimed: CLAIM
-  claimed --> dispatchCommitted: AUTHORIZE_DISPATCH
-  dispatchCommitted --> reconcileRequired: LOSE_ACKNOWLEDGEMENT
-  reconcileRequired --> retryWait: RECONCILE_NOT_ACCEPTED
-  dispatchCommitted --> receiptObserved: OBSERVE_ADMITTED
-  receiptObserved --> ready: FINALIZE_READY
-  receiptObserved --> blocked: DENY_AFTER_RECEIPT
-  blocked --> receiptObserved: RESUME_ADMITTED
-  reconcileRequired --> cancelReconcileRequired: CANCEL_UNCERTAIN
-  cancelReconcileRequired --> blocked: CANCEL_RECONCILED
+  retry_wait --> claimed: CLAIM
+  claimed --> dispatch_committed: AUTHORIZE_DISPATCH
+  claimed --> blocked: DENY_DISPATCH
+  claimed --> retry_wait: RELEASE_RETRY
+  dispatch_committed --> retry_wait: RELEASE_RETRY
+  claimed --> blocked: RELEASE_EXHAUSTED
+  dispatch_committed --> blocked: RELEASE_EXHAUSTED
+  dispatch_committed --> reconcile_required: LOSE_ACKNOWLEDGEMENT
+  reconcile_required --> retry_wait: RECONCILE_NOT_ACCEPTED
+  reconcile_required --> blocked: RECONCILE_NOT_ACCEPTED_EXHAUSTED
+  dispatch_committed --> receipt_observed: OBSERVE_ADMITTED
+  reconcile_required --> receipt_observed: OBSERVE_ADMITTED
+  dispatch_committed --> blocked: OBSERVE_REJECTED
+  reconcile_required --> blocked: OBSERVE_REJECTED
+  dispatch_committed --> blocked: OBSERVE_STALE
+  reconcile_required --> blocked: OBSERVE_STALE
+  dispatch_committed --> blocked: OBSERVE_CONFLICT
+  reconcile_required --> blocked: OBSERVE_CONFLICT
+  receipt_observed --> ready: FINALIZE_READY
+  receipt_observed --> blocked: EXHAUST_AUTHORITY_RECHECK
+  receipt_observed --> blocked: OBSERVE_INTEGRITY_CONFLICT
+  receipt_observed --> blocked: DENY_AFTER_RECEIPT
+  receipt_observed --> blocked: RESTRICT_AFTER_RECEIPT
+  requested --> blocked: CANCEL_SAFE
+  claimed --> blocked: CANCEL_SAFE
+  retry_wait --> blocked: CANCEL_SAFE
+  receipt_observed --> blocked: CANCEL_SAFE
+  dispatch_committed --> cancel_reconcile_required: CANCEL_UNCERTAIN
+  reconcile_required --> cancel_reconcile_required: CANCEL_UNCERTAIN
+  cancel_reconcile_required --> blocked: CANCEL_RECONCILED
   blocked --> requested: RESUME_NEW_GENERATION
+  blocked --> receipt_observed: RESUME_ADMITTED
+  requested --> requested: STALE_GENERATION
+  claimed --> claimed: STALE_GENERATION
+  dispatch_committed --> dispatch_committed: STALE_GENERATION
+  retry_wait --> retry_wait: STALE_GENERATION
+  reconcile_required --> reconcile_required: STALE_GENERATION
+  cancel_reconcile_required --> cancel_reconcile_required: STALE_GENERATION
+  receipt_observed --> receipt_observed: STALE_GENERATION
+  ready --> ready: STALE_GENERATION
+  blocked --> blocked: STALE_GENERATION
+  requested --> requested: STALE_REVISION
+  claimed --> claimed: STALE_REVISION
+  dispatch_committed --> dispatch_committed: STALE_REVISION
+  retry_wait --> retry_wait: STALE_REVISION
+  reconcile_required --> reconcile_required: STALE_REVISION
+  cancel_reconcile_required --> cancel_reconcile_required: STALE_REVISION
+  receipt_observed --> receipt_observed: STALE_REVISION
+  ready --> ready: STALE_REVISION
+  blocked --> blocked: STALE_REVISION
 
-  note right of ready
-    admission authority + admitted receipt + clear reconciliation
+  note right of requested
+    authority: creation-authorized | dispatch-recheck-pending | dispatch-authorized | admission-recheck-pending | admission-authorized | denied | commercially-restricted | closed
+    reconciliation: clear | outcome-unknown | cancellation-unknown
+    generation: policy-bound by maxPreparationGenerations
+    attempts: policy-bound by safeRetryPolicy.maxAttempts
   end note

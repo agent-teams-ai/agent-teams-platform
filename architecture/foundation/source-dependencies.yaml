@@ -17,6 +17,7 @@ boundaries:
       - tooling/executable-specifications/scripts/managed-scope-admission.model.test.mjs
       - tooling/executable-specifications/scripts/managed-scope-admission.mutation.test.mjs
       - tooling/executable-specifications/scripts/managed-scope-admission.property.test.mjs
+      - tooling/executable-specifications/scripts/render-managed-scope-admission-diagram.mjs
     allow:
       boundaries: []
       packages:
@@ -28,6 +29,7 @@ boundaries:
         - node:assert/strict
         - node:fs/promises
         - node:test
+        - node:url
       runtimeReferences: []
   - id: context.project-management.public-surface
     roots:
@@ -135,6 +137,7 @@ boundaries:
       - packages/contexts/project-management/src/features/managed-project-scope-admission/__tests__/model-conformance-fixture.ts
     allow:
       boundaries:
+        - context.project-management.application
         - context.project-management.in-memory-adapter
         - context.project-management.public-surface
         - context.project-management.composition-surface

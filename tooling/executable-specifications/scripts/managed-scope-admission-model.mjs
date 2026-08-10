@@ -14,12 +14,12 @@ export const specification = Object.freeze(
   ),
 );
 
-function predicateAllows(context, predicate, modelSpec) {
+function predicateAllows(context, predicate, bounds) {
   switch (predicate.operator) {
     case "less-than-limit":
-      return context[predicate.field] < modelSpec.limits[predicate.limit];
+      return context[predicate.field] < bounds[predicate.limit];
     case "at-least-limit":
-      return context[predicate.field] >= modelSpec.limits[predicate.limit];
+      return context[predicate.field] >= bounds[predicate.limit];
     case "equals":
       return context[predicate.field] === predicate.value;
     case "not-equals":
@@ -38,7 +38,25 @@ function applyTransition(context, transition) {
   return Object.freeze({ ...context, ...update });
 }
 
-export function createManagedScopeAdmissionModel(modelSpec = specification) {
+export function eventAllows(
+  context,
+  eventType,
+  modelSpec = specification,
+  bounds = modelSpec.witnessBounds,
+) {
+  const event = modelSpec.events.find(({ type }) => type === eventType);
+  if (event === undefined) {
+    throw new Error(`Unknown model event ${eventType}.`);
+  }
+  return (event.guard?.all ?? []).every((predicate) =>
+    predicateAllows(context, predicate, bounds),
+  );
+}
+
+export function createManagedScopeAdmissionModel(
+  modelSpec = specification,
+  bounds = modelSpec.witnessBounds,
+) {
   const states = Object.fromEntries(
     modelSpec.axes.lifecycle.states.map((state) => [
       state,
@@ -51,9 +69,7 @@ export function createManagedScopeAdmissionModel(modelSpec = specification) {
               {
                 target: event.to === "$same" ? state : event.to,
                 guard: ({ context }) =>
-                  (event.guard?.all ?? []).every((predicate) =>
-                    predicateAllows(context, predicate, modelSpec),
-                  ),
+                  eventAllows(context, event.type, modelSpec, bounds),
                 actions: assign(({ context }) =>
                   applyTransition(context, event),
                 ),
@@ -72,8 +88,14 @@ export function createManagedScopeAdmissionModel(modelSpec = specification) {
   });
 }
 
-export function runTrace(events, modelSpec = specification) {
-  const actor = createActor(createManagedScopeAdmissionModel(modelSpec)).start();
+export function runTrace(
+  events,
+  modelSpec = specification,
+  bounds = modelSpec.witnessBounds,
+) {
+  const actor = createActor(
+    createManagedScopeAdmissionModel(modelSpec, bounds),
+  ).start();
   for (const type of events) {
     actor.send({ type });
   }

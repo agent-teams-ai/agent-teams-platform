@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { domainTraces } from "./managed-scope-admission-domain-adapter.mjs";
 import {
+  assertBlockedParity,
   assertCrossAxisInvariants,
   assertReadyParity,
 } from "./managed-scope-admission-invariants.mjs";
@@ -29,7 +30,7 @@ const mutants = [
   {
     name: "retry beyond the canonical attempt limit",
     model: mutateEvent("CLAIM", (_event, mutant) => {
-      mutant.limits.attempts += 1;
+      mutant.witnessBounds.attempts += 1;
     }),
     witness: [
       "CLAIM",
@@ -41,6 +42,34 @@ const mutants = [
       "CLAIM",
     ],
     oracle: assertCrossAxisInvariants,
+  },
+  {
+    name: "authority-recheck exhaustion misclassified as a generic denial",
+    model: mutateEvent("EXHAUST_AUTHORITY_RECHECK", (event) => {
+      event.effects.set.blockReason = "AUTHORITY_DENIED";
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "OBSERVE_ADMITTED",
+      "EXHAUST_AUTHORITY_RECHECK",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.authorityRecheckExhausted()),
+  },
+  {
+    name: "integrity conflict misclassified as a downstream conflict",
+    model: mutateEvent("OBSERVE_INTEGRITY_CONFLICT", (event) => {
+      event.effects.set.blockReason = "DOWNSTREAM_CONFLICT";
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "OBSERVE_ADMITTED",
+      "OBSERVE_INTEGRITY_CONFLICT",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.integrityConflict()),
   },
   {
     name: "premature reconciliation clear after lost acknowledgement",
@@ -73,3 +102,37 @@ for (const mutant of mutants) {
     assert.throws(() => mutant.oracle(snapshot), { name: "AssertionError" });
   });
 }
+
+for (const [eventType, field] of [
+  ["STALE_GENERATION", "generation"],
+  ["STALE_REVISION", "revision"],
+]) {
+  test(`kills ${eventType} freshness-fence mutation`, () => {
+    const mutant = mutateEvent(eventType, (event) => {
+      event.effects.increment = [field];
+    });
+    assert.throws(
+      () =>
+        assert.deepEqual(
+          runTrace([eventType], mutant).context,
+          runTrace([eventType]).context,
+        ),
+      { name: "AssertionError" },
+    );
+  });
+}
+
+test("kills JSON vocabulary drift against executable domain evidence", () => {
+  const mutant = structuredClone(specification);
+  mutant.vocabulary.blockReasons = mutant.vocabulary.blockReasons.filter(
+    (reason) => reason !== "DATA_INTEGRITY_CONFLICT",
+  );
+  assert.throws(
+    () =>
+      assert.deepEqual(
+        domainTraces.vocabularyEvidence().blockReasons,
+        mutant.vocabulary.blockReasons,
+      ),
+    { name: "AssertionError" },
+  );
+});

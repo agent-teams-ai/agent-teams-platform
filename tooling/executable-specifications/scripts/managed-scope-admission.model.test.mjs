@@ -6,6 +6,7 @@ import { getShortestPaths } from "@xstate/graph";
 
 import { domainTraces } from "./managed-scope-admission-domain-adapter.mjs";
 import {
+  assertBlockedParity,
   assertCrossAxisInvariants,
   assertReadyParity,
 } from "./managed-scope-admission-invariants.mjs";
@@ -15,6 +16,7 @@ import {
   serializeModelState,
   specification,
 } from "./managed-scope-admission-model.mjs";
+import { renderManagedScopeAdmissionDiagram } from "./render-managed-scope-admission-diagram.mjs";
 
 const traces = JSON.parse(
   await readFile(
@@ -25,6 +27,13 @@ const traces = JSON.parse(
     "utf8",
   ),
 ).traces;
+const committedDiagram = await readFile(
+  new URL(
+    "../../../architecture/project-management/managed-scope-admission-model.mmd",
+    import.meta.url,
+  ),
+  "utf8",
+);
 
 function pathSignatures(paths) {
   return paths
@@ -50,6 +59,17 @@ test("derives deterministic paths across every modeled axis", () => {
     ),
   );
   assert.ok(first.some(({ state }) => state.context.generation === 2));
+  assert.ok(
+    first.some(
+      ({ state }) => state.context.blockReason === "DATA_INTEGRITY_CONFLICT",
+    ),
+  );
+  assert.ok(
+    first.some(
+      ({ state }) =>
+        state.context.blockReason === "AUTHORITY_RECHECK_EXHAUSTED",
+    ),
+  );
 });
 
 test("matches aggregate lost-ack cancellation and successor fencing", () => {
@@ -72,6 +92,46 @@ test("matches direct and retained-receipt ready authority", () => {
   assert.equal(resumed.context.admissionAuthorityPresent, true);
 });
 
+test("matches integrity-conflict and authority-recheck exhaustion semantics", () => {
+  assertBlockedParity(
+    runTrace(traces.integrityConflict),
+    domainTraces.integrityConflict(),
+  );
+  assertBlockedParity(
+    runTrace(traces.authorityRecheckExhausted),
+    domainTraces.authorityRecheckExhausted(),
+  );
+});
+
+test("JSON vocabulary has exact executable domain evidence", () => {
+  const evidence = domainTraces.vocabularyEvidence();
+  assert.deepEqual(evidence.receiptKinds, specification.vocabulary.receiptKinds);
+  assert.deepEqual(evidence.blockReasons, specification.vocabulary.blockReasons);
+});
+
+test("committed Mermaid has exact deterministic parity with every JSON event", () => {
+  assert.equal(
+    committedDiagram,
+    renderManagedScopeAdmissionDiagram(specification),
+  );
+  const eventLabels = [...committedDiagram.matchAll(/: ([A-Z][A-Z0-9_]*)$/gmu)]
+    .map((match) => match[1]);
+  assert.deepEqual(
+    [...new Set(eventLabels)].toSorted(),
+    specification.events.map(({ type }) => type).toSorted(),
+  );
+});
+
+test("Mermaid parity rejects authoritative transition drift", () => {
+  const drifted = structuredClone(specification);
+  drifted.events.find(({ type }) => type === "OBSERVE_INTEGRITY_CONFLICT").to =
+    "ready";
+  assert.notEqual(
+    committedDiagram,
+    renderManagedScopeAdmissionDiagram(drifted),
+  );
+});
+
 test("covers retry, cancellation, stale and illegal-event paths", () => {
   const exhausted = runTrace([
     "CLAIM",
@@ -84,7 +144,10 @@ test("covers retry, cancellation, stale and illegal-event paths", () => {
     "RECONCILE_NOT_ACCEPTED_EXHAUSTED",
   ]);
   assert.equal(exhausted.value, "blocked");
-  assert.equal(exhausted.context.attemptCount, specification.limits.attempts);
+  assert.equal(
+    exhausted.context.attemptCount,
+    specification.witnessBounds.attempts,
+  );
 
   const cancelled = runTrace([
     "CLAIM",

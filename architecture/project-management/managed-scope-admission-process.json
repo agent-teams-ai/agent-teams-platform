@@ -6,9 +6,27 @@
     "xstateSnapshot": "test-model-only",
     "externalWireContract": false
   },
-  "limits": {
+  "policyBindings": {
+    "attempts": "safeRetryPolicy.maxAttempts",
+    "generations": "maxPreparationGenerations"
+  },
+  "witnessBounds": {
     "attempts": 2,
     "generations": 2
+  },
+  "vocabulary": {
+    "receiptKinds": ["admitted", "rejected", "stale", "conflict"],
+    "blockReasons": [
+      "AUTHORITY_DENIED",
+      "AUTHORITY_RECHECK_EXHAUSTED",
+      "COMMERCIAL_RESTRICTION",
+      "DOWNSTREAM_REJECTED",
+      "DOWNSTREAM_STALE",
+      "DOWNSTREAM_CONFLICT",
+      "SAFE_RETRY_EXHAUSTED",
+      "USER_CANCELLED",
+      "DATA_INTEGRITY_CONFLICT"
+    ]
   },
   "axes": {
     "lifecycle": {
@@ -253,6 +271,32 @@
       }
     },
     {
+      "type": "EXHAUST_AUTHORITY_RECHECK",
+      "from": ["receipt-observed"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "AUTHORITY_RECHECK_EXHAUSTED",
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "OBSERVE_INTEGRITY_CONFLICT",
+      "from": ["receipt-observed"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "DATA_INTEGRITY_CONFLICT",
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
       "type": "DENY_AFTER_RECEIPT",
       "from": ["receipt-observed"],
       "to": "blocked",
@@ -323,6 +367,7 @@
         "all": [
           { "field": "receipt", "operator": "not-equals", "value": "admitted" },
           { "field": "generation", "operator": "less-than-limit", "limit": "generations" },
+          { "field": "resumptionCount", "operator": "less-than-limit", "limit": "generations" },
           {
             "field": "blockReason",
             "operator": "not-in",
@@ -350,7 +395,12 @@
       "guard": {
         "all": [
           { "field": "receipt", "operator": "equals", "value": "admitted" },
-          { "field": "resumptionCount", "operator": "less-than-limit", "limit": "generations" }
+          { "field": "resumptionCount", "operator": "less-than-limit", "limit": "generations" },
+          {
+            "field": "blockReason",
+            "operator": "not-in",
+            "values": ["DATA_INTEGRITY_CONFLICT", "DOWNSTREAM_CONFLICT"]
+          }
         ]
       },
       "effects": {

@@ -17,9 +17,17 @@ The specification describes four separate axes: process lifecycle, authority,
 reconciliation, and generation fencing. Transitions cover lost acknowledgement,
 known non-acceptance and bounded retry, cancellation during an uncertain
 outcome, receipt kinds, authority rechecks, successor generations, and stale
-generation or revision commands. Guards, initial context, and every modeled
-cross-axis effect are data in that JSON rather than parallel XState logic. A
+generation or revision commands. Guards, initial context, vocabulary, and every
+modeled cross-axis effect are data in that JSON rather than parallel schema or
+XState logic. A
 state on one axis never implies progress on another.
+
+The JSON's `witnessBounds` are deliberately small graph-exploration values, not
+production policy. `policyBindings` maps the abstract attempt and generation
+limits to `safeRetryPolicy.maxAttempts` and `maxPreparationGenerations`.
+Property tests range across arbitrary positive bounds, including the default
+four-generation fixture policy, and compare model guards with production
+policy functions.
 
 ## Authority
 
@@ -45,14 +53,21 @@ cross-axis invariants, including:
   The original dispatch-authority basis is retained on the direct path, but a
   safe retained-receipt resume clears it and re-authorizes the admitted receipt
   without redispatch; both paths are parity-tested against the aggregate.
+- integrity conflicts are non-resumable and authority-recheck exhaustion keeps
+  the admitted receipt while remaining blocked without admission authority.
+
+The checked-in Mermaid diagram is rendered deterministically from the JSON.
+The model gate compares it byte-for-byte and verifies that every authoritative
+event appears, so transition or freshness-fence drift fails the gate.
 
 Foundation connects these artifacts through the consumer-owned executable
 specification catalog. The catalog is data-only (`generatedTypes: []`) and
 binds three independent package gates: property histories, semantic mutation
 tests, and XState graph/conformance tests. Passing one gate cannot stand in for
 another. The mutation gate proves that its oracle rejects ready-without-
-authority, retry-limit, premature reconciliation-clear, and retained-receipt
-authority regressions.
+authority, retry-limit, premature reconciliation-clear, retained-receipt
+authority, integrity-conflict, authority-exhaustion, vocabulary, and freshness
+fence regressions.
 
 The test harness lives in the development-only executable-specifications
 workspace package. Its only access to domain trace fixtures is the private

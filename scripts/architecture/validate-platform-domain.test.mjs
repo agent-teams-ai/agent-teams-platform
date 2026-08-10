@@ -19,6 +19,7 @@ import { promisify } from "node:util";
 import YAML from "yaml";
 
 import { validatePlatformDomain } from "./validate-platform-domain.mjs";
+import { validatePlatformPackageManifest } from "./platform-domain-materialization.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "../..");
@@ -196,6 +197,12 @@ async function materializeProjectManagement(root) {
     types: "./dist/worker.d.ts",
     import: "./dist/worker.js",
   };
+  manifest.exports["./testing/model-conformance"] = {
+    types:
+      "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.d.ts",
+    import:
+      "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.js",
+  };
   manifest.scripts.test =
     "node --test --test-concurrency=1 'dist/**/*.test.js'";
   await writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -239,6 +246,42 @@ async function validationText(root) {
 
 test("accepts the canonical Platform domain plan", async () => {
   assert.deepEqual(await validatePlatformDomain(repositoryRoot), []);
+});
+
+test("accepts the Project Management model-conformance testing export", async () => {
+  const target = YAML.parse(
+    await readFile(path.join(repositoryRoot, "architecture/package-catalog.yaml"), "utf8"),
+  ).packages.find(({ id }) => id === "context.project-management");
+  assert.deepEqual(
+    await validatePlatformPackageManifest(repositoryRoot, target),
+    [],
+  );
+});
+
+test("rejects a Project Management manifest without its testing export", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "platform-package-export-"));
+  try {
+    await mkdir(path.join(root, packagePath), { recursive: true });
+    const manifest = JSON.parse(
+      await readFile(path.join(repositoryRoot, packagePath, "package.json"), "utf8"),
+    );
+    delete manifest.exports["./testing/model-conformance"];
+    await writeFile(
+      path.join(root, packagePath, "package.json"),
+      `${JSON.stringify(manifest, null, 2)}\n`,
+    );
+    const target = YAML.parse(
+      await readFile(
+        path.join(repositoryRoot, "architecture/package-catalog.yaml"),
+        "utf8",
+      ),
+    ).packages.find(({ id }) => id === "context.project-management");
+    assert.deepEqual(await validatePlatformPackageManifest(root, target), [
+      `DOMAIN-PACKAGE-002 invalid package envelope: ${packagePath}/package.json`,
+    ]);
+  } finally {
+    await rm(root, { force: true, recursive: true });
+  }
 });
 
 test("Foundation rejects planning for a proposed owner", async () => {
@@ -308,7 +351,28 @@ test("accepts an ADR-bound Foundation materialization with a real feature", asyn
     await acceptProjectManagement(root);
     const plan = await materializeProjectManagement(root);
     assert.equal(plan.target.id, "context.project-management");
+    const manifest = JSON.parse(
+      await readFile(path.join(root, packagePath, "package.json"), "utf8"),
+    );
+    assert.deepEqual(manifest.exports["./testing/model-conformance"], {
+      types:
+        "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.d.ts",
+      import:
+        "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.js",
+    });
     assert.deepEqual(await validatePlatformDomain(root), []);
+  });
+});
+
+test("rejects materialization without the model-conformance testing export", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    const manifestFile = path.join(root, packagePath, "package.json");
+    const manifest = JSON.parse(await readFile(manifestFile, "utf8"));
+    delete manifest.exports["./testing/model-conformance"];
+    await writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
+    assert.match(await validationText(root), /DOMAIN-PACKAGE-002/u);
   });
 });
 

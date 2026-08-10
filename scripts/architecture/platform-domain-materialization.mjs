@@ -229,6 +229,12 @@ async function validatePackageManifest(repositoryRoot, target, errors) {
   }
 }
 
+export async function validatePlatformPackageManifest(repositoryRoot, target) {
+  const errors = [];
+  await validatePackageManifest(repositoryRoot, target, errors);
+  return errors;
+}
+
 function moduleSpecifier(statement) {
   const stringNode = statement.children().find((child) => child.kind() === "string");
   return stringNode?.children().find((child) => child.kind() === "string_fragment")

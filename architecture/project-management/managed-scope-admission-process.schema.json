@@ -7,7 +7,9 @@
     "schemaVersion",
     "id",
     "authority",
-    "limits",
+    "policyBindings",
+    "witnessBounds",
+    "vocabulary",
     "axes",
     "initialContext",
     "events"
@@ -25,13 +27,41 @@
         "externalWireContract": { "const": false }
       }
     },
-    "limits": {
+    "policyBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempts", "generations"],
+      "properties": {
+        "attempts": { "const": "safeRetryPolicy.maxAttempts" },
+        "generations": { "const": "maxPreparationGenerations" }
+      }
+    },
+    "witnessBounds": {
       "type": "object",
       "additionalProperties": false,
       "required": ["attempts", "generations"],
       "properties": {
         "attempts": { "type": "integer", "minimum": 1 },
         "generations": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "vocabulary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["receiptKinds", "blockReasons"],
+      "properties": {
+        "receiptKinds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "blockReasons": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
       }
     },
     "axes": {
@@ -77,22 +107,8 @@
         "maximumLimit": { "const": "generations" }
       }
     },
-    "receipt": {
-      "enum": ["admitted", "rejected", "stale", "conflict"]
-    },
-    "blockReason": {
-      "enum": [
-        "AUTHORITY_DENIED",
-        "AUTHORITY_RECHECK_EXHAUSTED",
-        "COMMERCIAL_RESTRICTION",
-        "DOWNSTREAM_REJECTED",
-        "DOWNSTREAM_STALE",
-        "DOWNSTREAM_CONFLICT",
-        "SAFE_RETRY_EXHAUSTED",
-        "USER_CANCELLED",
-        "DATA_INTEGRITY_CONFLICT"
-      ]
-    },
+    "receipt": { "type": "string", "minLength": 1 },
+    "blockReason": { "type": "string", "minLength": 1 },
     "context": {
       "type": "object",
       "additionalProperties": false,
