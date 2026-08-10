@@ -49,11 +49,11 @@ async function readJson(repositoryRoot, relativePath, errors) {
   }
 }
 
-function reproduciblePlanProjection(plan) {
+export function reproduciblePlanProjection(plan) {
   return {
     schemaVersion: plan.schemaVersion,
     protocolVersion: plan.protocolVersion,
-    compiler: plan.compiler,
+    compiler: { id: plan.compiler.id },
     intent: plan.intent,
     intentDigest: plan.intentDigest,
     composition: plan.composition,

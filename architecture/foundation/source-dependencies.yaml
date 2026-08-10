@@ -4,7 +4,39 @@ workspace:
   manifest: pnpm-workspace.yaml
 governedRoots:
   - packages/contexts/project-management/src
+  - tooling/executable-specifications/scripts
 boundaries:
+  - id: tooling.managed-scope-admission-executable-specification
+    dependencyMode: development
+    roots:
+      - tooling/executable-specifications/scripts
+    entrypoints:
+      - tooling/executable-specifications/scripts/managed-scope-admission-domain-adapter.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission-invariants.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission-model.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission.model.test.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission.mutation.test.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission.production-mutation.test.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission.property.test.mjs
+      - tooling/executable-specifications/scripts/render-managed-scope-admission-diagram.mjs
+      - tooling/executable-specifications/scripts/verify-clean-spec-gates.mjs
+    allow:
+      boundaries: []
+      packages:
+        - "@agent-teams/platform-project-management"
+        - "@xstate/graph"
+        - fast-check
+        - xstate
+      builtins:
+        - node:assert/strict
+        - node:child_process
+        - node:fs/promises
+        - node:os
+        - node:path
+        - node:test
+        - node:url
+        - node:util
+      runtimeReferences: []
   - id: context.project-management.public-surface
     roots:
       - packages/contexts/project-management/src/index.ts
@@ -104,14 +136,18 @@ boundaries:
       builtins: []
       runtimeReferences: []
   - id: context.project-management.tests
+    dependencyMode: development
     roots:
       - packages/contexts/project-management/src/features/managed-project-scope-admission/__tests__
-    entrypoints: []
+    entrypoints:
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/__tests__/model-conformance-fixture.ts
     allow:
       boundaries:
+        - context.project-management.application
         - context.project-management.in-memory-adapter
         - context.project-management.public-surface
         - context.project-management.composition-surface
+        - context.project-management.domain
         - context.project-management.worker-surface
       packages: []
       builtins:

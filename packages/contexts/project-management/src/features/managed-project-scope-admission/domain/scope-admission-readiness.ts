@@ -25,6 +25,19 @@ export type ScopeAdmissionReadiness =
       allowedActions: readonly ("resume" | "inspect" | "retire")[];
     }>;
 
+export function preparationGenerationExhausted(input: {
+  generation: number;
+  resumptionCount: number;
+  retainsAdmittedReceipt: boolean;
+  maxPreparationGenerations: number;
+}): boolean {
+  return (
+    input.resumptionCount >= input.maxPreparationGenerations ||
+    (!input.retainsAdmittedReceipt &&
+      input.generation >= input.maxPreparationGenerations)
+  );
+}
+
 export function scopeAdmissionReadiness(input: {
   project: ProductProject;
   admission: ProjectAdmissionAuthority;
@@ -40,11 +53,12 @@ export function scopeAdmissionReadiness(input: {
     });
   }
   if (input.process.state === "blocked") {
-    const requiresSuccessorGeneration = input.process.receipt?.kind !== "admitted";
-    const generationExhausted =
-      input.process.resumptionCount >= input.maxPreparationGenerations ||
-      (requiresSuccessorGeneration &&
-        input.process.generation >= input.maxPreparationGenerations);
+    const generationExhausted = preparationGenerationExhausted({
+      generation: input.process.generation,
+      resumptionCount: input.process.resumptionCount,
+      retainsAdmittedReceipt: input.process.receipt?.kind === "admitted",
+      maxPreparationGenerations: input.maxPreparationGenerations,
+    });
     const recoverable = !generationExhausted && ![
       "DATA_INTEGRITY_CONFLICT",
       "DOWNSTREAM_CONFLICT",

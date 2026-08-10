@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "specifications": [
+    {
+      "id": "platform.project-management.managed-scope-admission",
+      "ownerDocs": [
+        "docs/architecture/managed-scope-admission-executable-model.md",
+        "docs/domain/contexts/project-management/README.md"
+      ],
+      "adrRefs": [
+        "docs/decisions/0004-project-retirement-authority-and-disposition.md",
+        "docs/decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md"
+      ],
+      "schemaPaths": [
+        "architecture/project-management/managed-scope-admission-process.schema.json"
+      ],
+      "documents": [
+        {
+          "path": "architecture/project-management/managed-scope-admission-process.json",
+          "schemaId": "urn:agent-teams:platform:project-management:managed-scope-admission-process:v1"
+        }
+      ],
+      "generatedTypes": [],
+      "gateBindings": {
+        "property": {
+          "packageName": "@agent-teams/platform-executable-specifications",
+          "script": "spec:property"
+        },
+        "mutation": {
+          "packageName": "@agent-teams/platform-executable-specifications",
+          "script": "spec:mutation"
+        }
+      },
+      "stateModel": {
+        "kind": "xstate",
+        "axes": ["lifecycle", "authority", "reconciliation", "generation"],
+        "modelPath": "tooling/executable-specifications/scripts/managed-scope-admission-model.mjs",
+        "adapterPath": "tooling/executable-specifications/scripts/managed-scope-admission-domain-adapter.mjs",
+        "tracesPath": "tooling/executable-specifications/fixtures/proof-artifacts/managed-scope-admission-traces.json",
+        "diagramPath": "tooling/executable-specifications/fixtures/proof-artifacts/managed-scope-admission-model.mmd",
+        "gateBinding": {
+          "packageName": "@agent-teams/platform-executable-specifications",
+          "script": "spec:model"
+        }
+      }
+    }
+  ]
+}

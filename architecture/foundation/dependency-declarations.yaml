@@ -11,10 +11,13 @@ policies:
   developmentOnlyPackages:
     - "@ast-grep/napi"
     - "@types/node"
+    - "@xstate/graph"
     - ajv
+    - fast-check
     - markdownlint-cli2
     - oxlint
     - typescript
+    - xstate
     - yaml
   exactRegistryDevelopmentOnlyPackages:
     - "@agent-teams/engineering-foundation"

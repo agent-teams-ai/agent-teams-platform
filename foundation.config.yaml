@@ -10,6 +10,8 @@ capabilities:
     configPath: architecture/foundation/governance-architecture-decisions.yaml
   quality.suppression-governance:
     configPath: architecture/foundation/suppression-governance.yaml
+  quality.executable-specifications:
+    configPath: architecture/foundation/executable-specifications.yaml
   repository.agent-workflow:
     configPath: architecture/foundation/repository-agent-workflow.yaml
   workspace.dependency-declarations:

@@ -95,6 +95,10 @@ The materializing change must:
 Committed Plans, Receipts and qualification records are append-only evidence.
 Pull-request and push CI compare them with the base revision: an existing record
 cannot be edited, renamed or removed; a successor is added under a new identity.
+Reproduction binds the compiler identity and the semantic Plan projection, but
+not the compiler package version: upgrading Foundation must reproduce the same
+intent, definitions, resolution, operations, diagnostics, project, authority,
+and target without rewriting historical evidence.
 Every accepted package exposes separate public, composition and worker surfaces,
 declares a non-empty `check` script, and is covered by the fail-closed source
 dependency graph.

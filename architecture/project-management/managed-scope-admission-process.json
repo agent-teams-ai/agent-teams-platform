@@ -1,0 +1,552 @@
+{
+  "schemaVersion": 1,
+  "id": "platform.project-management.managed-scope-admission",
+  "authority": {
+    "canonicalStorage": "persisted-domain-aggregate",
+    "xstateSnapshot": "test-model-only",
+    "externalWireContract": false
+  },
+  "policyBindings": {
+    "attempts": "safeRetryPolicy.maxAttempts",
+    "generations": "maxPreparationGenerations"
+  },
+  "witnessBounds": {
+    "attempts": 2,
+    "generations": 2
+  },
+  "vocabulary": {
+    "receiptKinds": ["admitted", "rejected", "stale", "conflict"],
+    "blockReasons": [
+      "AUTHORITY_DENIED",
+      "AUTHORITY_RECHECK_EXHAUSTED",
+      "COMMERCIAL_RESTRICTION",
+      "DOWNSTREAM_REJECTED",
+      "DOWNSTREAM_STALE",
+      "DOWNSTREAM_CONFLICT",
+      "SAFE_RETRY_EXHAUSTED",
+      "USER_CANCELLED",
+      "DATA_INTEGRITY_CONFLICT"
+    ]
+  },
+  "axes": {
+    "lifecycle": {
+      "initial": "requested",
+      "states": [
+        "requested",
+        "claimed",
+        "dispatch-committed",
+        "retry-wait",
+        "reconcile-required",
+        "cancel-reconcile-required",
+        "receipt-observed",
+        "ready",
+        "blocked"
+      ]
+    },
+    "authority": {
+      "initial": "creation-authorized",
+      "states": [
+        "creation-authorized",
+        "dispatch-recheck-pending",
+        "dispatch-authorized",
+        "admission-recheck-pending",
+        "admission-authorized",
+        "denied",
+        "commercially-restricted",
+        "closed"
+      ]
+    },
+    "reconciliation": {
+      "initial": "clear",
+      "states": ["clear", "outcome-unknown", "cancellation-unknown"]
+    },
+    "generation": {
+      "initial": 1,
+      "minimum": 1,
+      "maximumLimit": "generations"
+    }
+  },
+  "initialContext": {
+    "attemptCount": 0,
+    "authority": "creation-authorized",
+    "blockReason": null,
+    "generation": 1,
+    "receipt": null,
+    "reconciliation": "clear",
+    "resumptionCount": 0,
+    "revision": 1,
+    "dispatchAuthorityPresent": false,
+    "admissionAuthorityPresent": false
+  },
+  "events": [
+    {
+      "type": "CLAIM",
+      "from": ["requested", "retry-wait"],
+      "to": "claimed",
+      "guard": {
+        "all": [
+          { "field": "attemptCount", "operator": "less-than-limit", "limit": "attempts" }
+        ]
+      },
+      "effects": {
+        "set": { "authority": "dispatch-recheck-pending" },
+        "increment": ["attemptCount", "revision"]
+      }
+    },
+    {
+      "type": "AUTHORIZE_DISPATCH",
+      "from": ["claimed"],
+      "to": "dispatch-committed",
+      "effects": {
+        "set": {
+          "authority": "dispatch-authorized",
+          "dispatchAuthorityPresent": true
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "DENY_DISPATCH",
+      "from": ["claimed"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "denied",
+          "blockReason": "AUTHORITY_DENIED",
+          "dispatchAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "RESTRICT_DISPATCH",
+      "from": ["claimed"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "commercially-restricted",
+          "blockReason": "COMMERCIAL_RESTRICTION",
+          "dispatchAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "RELEASE_RETRY",
+      "from": ["claimed", "dispatch-committed"],
+      "to": "retry-wait",
+      "guard": {
+        "all": [
+          { "field": "attemptCount", "operator": "less-than-limit", "limit": "attempts" }
+        ]
+      },
+      "effects": {
+        "set": {
+          "authority": "creation-authorized",
+          "blockReason": null,
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "RELEASE_EXHAUSTED",
+      "from": ["claimed", "dispatch-committed"],
+      "to": "blocked",
+      "guard": {
+        "all": [
+          { "field": "attemptCount", "operator": "at-least-limit", "limit": "attempts" }
+        ]
+      },
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "SAFE_RETRY_EXHAUSTED",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "RELEASE_COMMERCIAL_EXHAUSTED",
+      "from": ["claimed"],
+      "to": "blocked",
+      "guard": {
+        "all": [
+          { "field": "attemptCount", "operator": "at-least-limit", "limit": "attempts" }
+        ]
+      },
+      "effects": {
+        "set": {
+          "authority": "commercially-restricted",
+          "blockReason": "COMMERCIAL_RESTRICTION",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "LOSE_ACKNOWLEDGEMENT",
+      "from": ["dispatch-committed"],
+      "to": "reconcile-required",
+      "effects": {
+        "set": { "reconciliation": "outcome-unknown" },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "RECONCILE_NOT_ACCEPTED",
+      "from": ["reconcile-required"],
+      "to": "retry-wait",
+      "guard": {
+        "all": [
+          { "field": "attemptCount", "operator": "less-than-limit", "limit": "attempts" }
+        ]
+      },
+      "effects": {
+        "set": {
+          "authority": "creation-authorized",
+          "blockReason": null,
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "RECONCILE_NOT_ACCEPTED_EXHAUSTED",
+      "from": ["reconcile-required"],
+      "to": "blocked",
+      "guard": {
+        "all": [
+          { "field": "attemptCount", "operator": "at-least-limit", "limit": "attempts" }
+        ]
+      },
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "SAFE_RETRY_EXHAUSTED",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "OBSERVE_ADMITTED",
+      "from": ["dispatch-committed", "reconcile-required"],
+      "to": "receipt-observed",
+      "effects": {
+        "set": {
+          "authority": "admission-recheck-pending",
+          "receipt": "admitted",
+          "reconciliation": "clear"
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "OBSERVE_REJECTED",
+      "from": ["dispatch-committed", "reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "DOWNSTREAM_REJECTED",
+          "receipt": "rejected",
+          "reconciliation": "clear"
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "OBSERVE_STALE",
+      "from": ["dispatch-committed", "reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "DOWNSTREAM_STALE",
+          "receipt": "stale",
+          "reconciliation": "clear"
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "OBSERVE_CONFLICT",
+      "from": ["dispatch-committed", "reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "DOWNSTREAM_CONFLICT",
+          "receipt": "conflict",
+          "reconciliation": "clear"
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "FINALIZE_READY",
+      "from": ["receipt-observed"],
+      "to": "ready",
+      "effects": {
+        "set": {
+          "authority": "admission-authorized",
+          "admissionAuthorityPresent": true
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "EXHAUST_AUTHORITY_RECHECK",
+      "from": ["receipt-observed"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "AUTHORITY_RECHECK_EXHAUSTED",
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "OBSERVE_INTEGRITY_CONFLICT",
+      "from": ["dispatch-committed", "reconcile-required", "cancel-reconcile-required", "receipt-observed"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "DATA_INTEGRITY_CONFLICT",
+          "reconciliation": "clear",
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "DENY_AFTER_RECEIPT",
+      "from": ["receipt-observed"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "denied",
+          "blockReason": "AUTHORITY_DENIED"
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "RESTRICT_AFTER_RECEIPT",
+      "from": ["receipt-observed"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "commercially-restricted",
+          "blockReason": "COMMERCIAL_RESTRICTION"
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_SAFE",
+      "from": ["requested", "claimed", "retry-wait", "receipt-observed"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "USER_CANCELLED",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_BLOCKED_SAFE",
+      "from": ["blocked"],
+      "to": "blocked",
+      "guard": {
+        "all": [
+          {
+            "field": "blockReason",
+            "operator": "not-in",
+            "values": ["DATA_INTEGRITY_CONFLICT", "DOWNSTREAM_CONFLICT", "USER_CANCELLED"]
+          }
+        ]
+      },
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "USER_CANCELLED",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_UNCERTAIN",
+      "from": ["dispatch-committed", "reconcile-required"],
+      "to": "cancel-reconcile-required",
+      "effects": {
+        "set": { "reconciliation": "cancellation-unknown" },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_RECONCILED",
+      "from": ["cancel-reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "USER_CANCELLED",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_RECONCILED_ADMITTED",
+      "from": ["cancel-reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "USER_CANCELLED",
+          "receipt": "admitted",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_RECONCILED_REJECTED",
+      "from": ["cancel-reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "USER_CANCELLED",
+          "receipt": "rejected",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_RECONCILED_STALE",
+      "from": ["cancel-reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "USER_CANCELLED",
+          "receipt": "stale",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_RECONCILED_CONFLICT",
+      "from": ["cancel-reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "DOWNSTREAM_CONFLICT",
+          "receipt": "conflict",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "RESUME_NEW_GENERATION",
+      "from": ["blocked"],
+      "to": "requested",
+      "guard": {
+        "all": [
+          { "field": "receipt", "operator": "not-equals", "value": "admitted" },
+          { "field": "generation", "operator": "less-than-limit", "limit": "generations" },
+          { "field": "resumptionCount", "operator": "less-than-limit", "limit": "generations" },
+          {
+            "field": "blockReason",
+            "operator": "not-in",
+            "values": ["DATA_INTEGRITY_CONFLICT", "DOWNSTREAM_CONFLICT"]
+          }
+        ]
+      },
+      "effects": {
+        "set": {
+          "attemptCount": 0,
+          "authority": "creation-authorized",
+          "blockReason": null,
+          "receipt": null,
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["generation", "resumptionCount", "revision"]
+      }
+    },
+    {
+      "type": "RESUME_ADMITTED",
+      "from": ["blocked"],
+      "to": "receipt-observed",
+      "guard": {
+        "all": [
+          { "field": "receipt", "operator": "equals", "value": "admitted" },
+          { "field": "resumptionCount", "operator": "less-than-limit", "limit": "generations" },
+          {
+            "field": "blockReason",
+            "operator": "not-in",
+            "values": ["DATA_INTEGRITY_CONFLICT", "DOWNSTREAM_CONFLICT"]
+          }
+        ]
+      },
+      "effects": {
+        "set": {
+          "attemptCount": 0,
+          "authority": "admission-recheck-pending",
+          "blockReason": null,
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["resumptionCount", "revision"]
+      }
+    },
+    {
+      "type": "STALE_GENERATION",
+      "from": ["requested", "claimed", "dispatch-committed", "retry-wait", "reconcile-required", "cancel-reconcile-required", "receipt-observed", "ready", "blocked"],
+      "to": "$same",
+      "effects": { "set": {}, "increment": [] }
+    },
+    {
+      "type": "STALE_REVISION",
+      "from": ["requested", "claimed", "dispatch-committed", "retry-wait", "reconcile-required", "cancel-reconcile-required", "receipt-observed", "ready", "blocked"],
+      "to": "$same",
+      "effects": { "set": {}, "increment": [] }
+    }
+  ]
+}
