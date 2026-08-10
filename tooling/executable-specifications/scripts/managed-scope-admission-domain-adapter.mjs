@@ -1,4 +1,5 @@
 import {
+  domainAdmittedReceiptSafeCancellationTrace,
   domainAfterReceiptAuthorityDeniedTrace,
   domainAfterReceiptCommercialRestrictionTrace,
   domainLostAckCancellationResumeTrace,
@@ -28,6 +29,7 @@ import {
 } from "@agent-teams/platform-project-management/testing/model-conformance";
 
 export const domainTraces = Object.freeze({
+  admittedReceiptSafeCancellation: domainAdmittedReceiptSafeCancellationTrace,
   afterReceiptAuthorityDenied: domainAfterReceiptAuthorityDeniedTrace,
   afterReceiptCommercialRestriction: domainAfterReceiptCommercialRestrictionTrace,
   lostAckCancellationResume: domainLostAckCancellationResumeTrace,

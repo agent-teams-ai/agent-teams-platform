@@ -338,6 +338,23 @@ const mutants = [
       assertBlockedParity(snapshot, domainTraces.safeCancellation()),
   },
   {
+    name: "safe cancellation discards an admitted receipt",
+    model: mutateEvent("CANCEL_SAFE", (event) => {
+      event.effects.set.receipt = null;
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "OBSERVE_ADMITTED",
+      "CANCEL_SAFE",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(
+        snapshot,
+        domainTraces.admittedReceiptSafeCancellation(),
+      ),
+  },
+  {
     name: "retry exhaustion misclassified as authority denial",
     model: mutateEvent("RELEASE_EXHAUSTED", (event) => {
       event.effects.set.blockReason = "AUTHORITY_DENIED";

@@ -147,6 +147,7 @@ test("matches exact denial, cancellation and downstream receipt mappings", () =>
   for (const traceName of [
     "preDispatchAuthorityDenied",
     "safeCancellation",
+    "admittedReceiptSafeCancellation",
     "rejectedReceipt",
     "staleReceipt",
     "conflictReceipt",

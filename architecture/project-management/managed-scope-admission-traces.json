@@ -12,6 +12,7 @@
     "commercialRetryExhausted": ["CLAIM", "RELEASE_RETRY", "CLAIM", "RELEASE_COMMERCIAL_EXHAUSTED"],
     "preDispatchAuthorityDenied": ["CLAIM", "DENY_DISPATCH"],
     "safeCancellation": ["CANCEL_SAFE"],
+    "admittedReceiptSafeCancellation": ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "CANCEL_SAFE"],
     "rejectedReceipt": ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_REJECTED"],
     "staleReceipt": ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_STALE"],
     "conflictReceipt": ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_CONFLICT"],

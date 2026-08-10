@@ -317,6 +317,18 @@ export function domainSafeCancellationTrace() {
   return blockedTrace(requestScopeAdmissionCancellation(initialProcess()).process);
 }
 
+export function domainAdmittedReceiptSafeCancellationTrace() {
+  let process = claimDispatch(initialProcess());
+  process = authorizeDispatch(process, authorityBasis);
+  process = observeScopeAdmissionReceipt(process, {
+    kind: "admitted",
+    receiptRef: ids.orchestratorReceipt("model-cancel-retained-admitted"),
+    receiptDigest: process.stepDigest,
+  });
+  process = requestScopeAdmissionCancellation(process).process;
+  return blockedTrace(process);
+}
+
 function domainBlockedReceiptTrace(kind: "rejected" | "stale" | "conflict") {
   let process = claimDispatch(initialProcess());
   process = authorizeDispatch(process, authorityBasis);
