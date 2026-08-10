@@ -11,7 +11,7 @@
     "pnpm": ">=11.18.0 <12"
   },
   "scripts": {
-    "architecture:check": "node scripts/architecture/validate-deployment-profiles.mjs && node scripts/architecture/validate-managed-installation-policy.mjs && node scripts/architecture/validate-managed-scope-admission-spec.mjs && pnpm architecture:review",
+    "architecture:check": "node scripts/architecture/validate-deployment-profiles.mjs && node scripts/architecture/validate-managed-installation-policy.mjs && node scripts/architecture/validate-managed-scope-admission-spec.mjs && node scripts/architecture/validate-reviewrouter-interaction-workflow.mjs && pnpm architecture:review",
     "architecture:domain": "node scripts/architecture/validate-platform-domain.mjs",
     "architecture:immutability": "node scripts/architecture/validate-qualification-record-history.mjs",
     "architecture:review": "node scripts/architecture/validate-deployment-profiles.mjs --references-only && node scripts/architecture/validate-platform-orchestrator-review.mjs && pnpm architecture:domain",
