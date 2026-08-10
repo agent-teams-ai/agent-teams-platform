@@ -12,6 +12,8 @@ import {
   domainReadyTrace,
   domainResumedReadyTrace,
   domainVocabularyEvidence,
+  productionCommercialDenialReason,
+  productionCommercialExhaustionReason,
 } from "@agent-teams/platform-project-management/testing/model-conformance";
 
 export const domainTraces = Object.freeze({
@@ -28,4 +30,6 @@ export const domainTraces = Object.freeze({
   ready: domainReadyTrace,
   resumedReady: domainResumedReadyTrace,
   vocabularyEvidence: domainVocabularyEvidence,
+  productionCommercialDenialReason,
+  productionCommercialExhaustionReason,
 });

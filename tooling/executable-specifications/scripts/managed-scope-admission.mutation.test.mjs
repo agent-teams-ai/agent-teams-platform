@@ -119,6 +119,23 @@ const mutants = [
       assertBlockedParity(snapshot, domainTraces.cancellationIntegrityConflict()),
   },
   {
+    name: "reconciliation wrong-digest receipt ignored",
+    model: mutateEvent("OBSERVE_INTEGRITY_CONFLICT", (event) => {
+      event.from = event.from.filter((state) => state !== "reconcile-required");
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      "OBSERVE_INTEGRITY_CONFLICT",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(
+        snapshot,
+        domainTraces.reconciliationIntegrityConflict(),
+      ),
+  },
+  {
     name: "commercial denial misclassified as generic authority denial",
     model: mutateEvent("RESTRICT_DISPATCH", (event) => {
       event.effects.set.blockReason = "AUTHORITY_DENIED";
@@ -143,6 +160,35 @@ const mutants = [
     ],
     oracle: (snapshot) =>
       assertBlockedParity(snapshot, domainTraces.commercialRetryExhausted()),
+  },
+  {
+    name: "commercial denial loses its authority axis",
+    model: mutateEvent("RESTRICT_DISPATCH", (event) => {
+      event.effects.set.authority = "denied";
+    }),
+    witness: ["CLAIM", "RESTRICT_DISPATCH"],
+    oracle: (snapshot) =>
+      assertBlockedParity(
+        snapshot,
+        domainTraces.preDispatchCommercialRestriction(),
+      ),
+  },
+  {
+    name: "integrity conflict leaves reconciliation unresolved",
+    model: mutateEvent("OBSERVE_INTEGRITY_CONFLICT", (event) => {
+      event.effects.set.reconciliation = "outcome-unknown";
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      "OBSERVE_INTEGRITY_CONFLICT",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(
+        snapshot,
+        domainTraces.reconciliationIntegrityConflict(),
+      ),
   },
   {
     name: "authority-recheck exhaustion made non-recoverable",

@@ -28,13 +28,14 @@
     "foundation:status": "agent-teams-foundation status",
     "lint": "oxlint --config .oxlintrc.json --deny-warnings --disable-nested-config .",
     "lint:files": "oxlint --config .oxlintrc.json --deny-warnings --disable-nested-config --format agent --no-error-on-unmatched-pattern",
-    "packages:check": "pnpm --filter './packages/**' run check && pnpm spec:property && pnpm spec:mutation && pnpm spec:model",
+    "packages:check": "pnpm --filter './packages/**' run check && pnpm spec:property && pnpm spec:mutation && pnpm spec:model && pnpm spec:clean-checkout",
     "scaffold:apply": "agent-teams-foundation scaffold-apply",
     "scaffold:plan": "agent-teams-foundation scaffold-plan",
     "scaffold:recover": "agent-teams-foundation scaffold-recover",
     "spec:model": "pnpm --filter @agent-teams/platform-executable-specifications spec:model",
     "spec:mutation": "pnpm --filter @agent-teams/platform-executable-specifications spec:mutation",
     "spec:property": "pnpm --filter @agent-teams/platform-executable-specifications spec:property",
+    "spec:clean-checkout": "node tooling/executable-specifications/scripts/verify-clean-spec-gates.mjs",
     "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"
   },
   "devDependencies": {

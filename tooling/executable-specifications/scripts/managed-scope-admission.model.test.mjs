@@ -111,7 +111,15 @@ test("matches every integrity-conflict entry and authority-recheck exhaustion", 
   );
 });
 
-test("matches pre-dispatch commercial denial and retry exhaustion", () => {
+test("matches production pre-dispatch commercial denial and retry exhaustion", async () => {
+  assert.equal(
+    (await domainTraces.productionCommercialDenialReason()),
+    "COMMERCIAL_RESTRICTION",
+  );
+  assert.equal(
+    (await domainTraces.productionCommercialExhaustionReason()),
+    "COMMERCIAL_RESTRICTION",
+  );
   assertBlockedParity(
     runTrace(traces.preDispatchCommercialRestriction),
     domainTraces.preDispatchCommercialRestriction(),

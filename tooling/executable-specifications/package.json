@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prespec:model": "pnpm --filter @agent-teams/platform-project-management run build",
+    "prespec:mutation": "pnpm --filter @agent-teams/platform-project-management run build",
+    "prespec:property": "pnpm --filter @agent-teams/platform-project-management run build",
     "spec:model": "node --test --test-concurrency=1 scripts/managed-scope-admission.model.test.mjs",
     "spec:mutation": "node --test --test-concurrency=1 scripts/managed-scope-admission.mutation.test.mjs",
     "spec:property": "node --test --test-concurrency=1 scripts/managed-scope-admission.property.test.mjs"

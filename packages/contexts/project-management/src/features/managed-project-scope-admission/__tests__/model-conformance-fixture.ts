@@ -20,6 +20,9 @@ import {
 import { preparationGenerationExhausted } from "../domain/scope-admission-readiness.js";
 import { ids } from "../domain/value-objects.js";
 import { safeRetryExhausted } from "../application/safe-retry-policy.js";
+import { dispatchManagedScopeAdmissionUseCase } from "../application/dispatch-scope-admission.js";
+import type { ProjectManagementDependencies } from "../application/contracts.js";
+import type { ScopeAdmissionDispatchClaim } from "../application/ports/project-management-store.js";
 
 const authorityBasis: CreationAuthorityBasisSnapshot = Object.freeze({
   checkedAt: 1_800_000_000_000,
@@ -154,6 +157,8 @@ export function domainAuthorityRecheckExhaustedTrace() {
   const process = authorityRecheckExhaustedProcess();
   return Object.freeze({
     state: process.state,
+    authority: "closed",
+    reconciliation: "clear",
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
     blockReason: process.blockReason,
@@ -194,6 +199,8 @@ export function domainIntegrityConflictTrace() {
   });
   return Object.freeze({
     state: process.state,
+    authority: "closed",
+    reconciliation: "clear",
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
     blockReason: process.blockReason,
@@ -203,8 +210,16 @@ export function domainIntegrityConflictTrace() {
 }
 
 function blockedTrace(process: ReturnType<typeof initialProcess>) {
+  const authority =
+    process.blockReason === "COMMERCIAL_RESTRICTION"
+      ? "commercially-restricted"
+      : process.blockReason === "AUTHORITY_DENIED"
+        ? "denied"
+        : "closed";
   return Object.freeze({
     state: process.state,
+    authority,
+    reconciliation: "clear",
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
     blockReason: process.blockReason,
@@ -259,6 +274,76 @@ export function domainCommercialRetryExhaustedTrace() {
     "COMMERCIAL_RESTRICTION",
   );
   return blockedTrace(process);
+}
+
+async function productionCommercialRouting(
+  decision: "denied" | "unavailable",
+): Promise<ScopeAdmissionBlockReason> {
+  let process = claimDispatch(initialProcess());
+  if (decision === "unavailable") {
+    process = claimDispatch(releaseUnsubmittedDispatch(process, false));
+  }
+  const claim = Object.freeze({ process }) as unknown as ScopeAdmissionDispatchClaim;
+  let observedReason: ScopeAdmissionBlockReason | null = null;
+  const allowed = Object.freeze({
+    kind: "allowed" as const,
+    evidenceRef: ids.authorityEvidence("model-routing-allowed"),
+    revision: ids.authorityRevision("model-routing-allowed"),
+    validUntil: authorityBasis.validUntil,
+  });
+  const dependencies = {
+    authorities: {
+      tenantAdmission: { decide: async () => allowed },
+      projectCreation: { decide: async () => allowed },
+      commercialCreation: {
+        decide: async () =>
+          decision === "denied"
+            ? { kind: "denied" as const, reason: "MODEL_COMMERCIAL_DENIED" }
+            : {
+                kind: "unavailable" as const,
+                reason: "MODEL_COMMERCIAL_UNAVAILABLE",
+              },
+      },
+    },
+    clock: { now: () => authorityBasis.checkedAt },
+    dispatchLeaseDurationMs: 1_000,
+    ids: { nextLeaseId: () => ids.lease("model-routing") },
+    safeRetryPolicy: {
+      defaultDelayMs: 1_000,
+      maxDelayMs: 1_000,
+      maxAttempts: 2,
+    },
+    store: {
+      claimPending: async () => claim,
+      recordPreDispatchAuthorityDenied: async (
+        _claim: ScopeAdmissionDispatchClaim,
+        blockReason: ScopeAdmissionBlockReason,
+      ) => {
+        observedReason = blockReason;
+        return { kind: "applied" as const };
+      },
+      releaseNotSubmitted: async (
+        _claim: ScopeAdmissionDispatchClaim,
+        input: { exhaustedReason?: ScopeAdmissionBlockReason },
+      ) => {
+        observedReason = input.exhaustedReason ?? "SAFE_RETRY_EXHAUSTED";
+        return { kind: "applied" as const };
+      },
+    },
+  } as unknown as ProjectManagementDependencies;
+  const result = await dispatchManagedScopeAdmissionUseCase(dependencies)();
+  if (result.kind !== "blocked" || observedReason === null) {
+    throw new Error("Production commercial routing did not block with a reason.");
+  }
+  return observedReason;
+}
+
+export async function productionCommercialDenialReason() {
+  return productionCommercialRouting("denied");
+}
+
+export async function productionCommercialExhaustionReason() {
+  return productionCommercialRouting("unavailable");
 }
 
 export function domainPolicyBoundary(input: {
