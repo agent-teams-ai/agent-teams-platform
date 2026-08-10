@@ -11,7 +11,7 @@
     "pnpm": ">=11.18.0 <12"
   },
   "scripts": {
-    "architecture:check": "node scripts/architecture/validate-deployment-profiles.mjs && node scripts/architecture/validate-managed-installation-policy.mjs && node scripts/architecture/validate-managed-scope-admission-spec.mjs && pnpm architecture:review",
+    "architecture:check": "node scripts/architecture/validate-deployment-profiles.mjs && node scripts/architecture/validate-managed-installation-policy.mjs && node scripts/architecture/validate-managed-scope-admission-spec.mjs && node scripts/architecture/validate-reviewrouter-interaction-workflow.mjs && pnpm architecture:review",
     "architecture:domain": "node scripts/architecture/validate-platform-domain.mjs",
     "architecture:immutability": "node scripts/architecture/validate-qualification-record-history.mjs",
     "architecture:review": "node scripts/architecture/validate-deployment-profiles.mjs --references-only && node scripts/architecture/validate-platform-orchestrator-review.mjs && pnpm architecture:domain",
@@ -28,12 +28,13 @@
     "foundation:status": "agent-teams-foundation status",
     "lint": "oxlint --config .oxlintrc.json --deny-warnings --disable-nested-config .",
     "lint:files": "oxlint --config .oxlintrc.json --deny-warnings --disable-nested-config --format agent --no-error-on-unmatched-pattern",
-    "packages:check": "pnpm --filter './packages/**' run check && pnpm spec:property && pnpm spec:mutation && pnpm spec:model && pnpm spec:clean-checkout",
+    "packages:check": "pnpm --filter './packages/**' run check && pnpm spec:property && pnpm spec:mutation && pnpm spec:model && pnpm spec:production-conformance && pnpm spec:clean-checkout",
     "scaffold:apply": "agent-teams-foundation scaffold-apply",
     "scaffold:plan": "agent-teams-foundation scaffold-plan",
     "scaffold:recover": "agent-teams-foundation scaffold-recover",
     "spec:model": "pnpm --filter @agent-teams/platform-executable-specifications spec:model",
     "spec:mutation": "pnpm --filter @agent-teams/platform-executable-specifications spec:mutation",
+    "spec:production-conformance": "pnpm --filter @agent-teams/platform-executable-specifications spec:production-conformance",
     "spec:property": "pnpm --filter @agent-teams/platform-executable-specifications spec:property",
     "spec:clean-checkout": "node tooling/executable-specifications/scripts/verify-clean-spec-gates.mjs",
     "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"

@@ -10,7 +10,12 @@ const archive = path.join(root, "repository.tar");
 
 try {
   await execute("git", ["archive", "--format=tar", `--output=${archive}`, "HEAD"]);
-  for (const gate of ["spec:property", "spec:mutation", "spec:model"]) {
+  for (const gate of [
+    "spec:property",
+    "spec:mutation",
+    "spec:model",
+    "spec:production-conformance",
+  ]) {
     const checkout = path.join(root, gate.replace(":", "-"));
     await execute("mkdir", [checkout]);
     await execute("tar", ["-xf", archive, "-C", checkout]);

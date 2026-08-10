@@ -6,9 +6,11 @@
   "scripts": {
     "prespec:model": "pnpm --filter @agent-teams/platform-project-management run build",
     "prespec:mutation": "pnpm --filter @agent-teams/platform-project-management run build",
+    "prespec:production-conformance": "pnpm --filter @agent-teams/platform-project-management run build",
     "prespec:property": "pnpm --filter @agent-teams/platform-project-management run build",
     "spec:model": "node --test --test-concurrency=1 scripts/managed-scope-admission.model.test.mjs",
-    "spec:mutation": "node --test --test-concurrency=1 scripts/managed-scope-admission.mutation.test.mjs scripts/managed-scope-admission.boundary-mutation.test.mjs scripts/managed-scope-admission.production-mutation.test.mjs",
+    "spec:mutation": "node --test --test-concurrency=1 scripts/managed-scope-admission.mutation.test.mjs scripts/managed-scope-admission.boundary-mutation.test.mjs",
+    "spec:production-conformance": "node --test --test-concurrency=1 scripts/managed-scope-admission.production-conformance.test.mjs",
     "spec:property": "node --test --test-concurrency=1 scripts/managed-scope-admission.property.test.mjs"
   },
   "devDependencies": {

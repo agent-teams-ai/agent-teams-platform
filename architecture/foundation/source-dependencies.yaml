@@ -16,7 +16,7 @@ boundaries:
       - tooling/executable-specifications/scripts/managed-scope-admission-model.mjs
       - tooling/executable-specifications/scripts/managed-scope-admission.model.test.mjs
       - tooling/executable-specifications/scripts/managed-scope-admission.mutation.test.mjs
-      - tooling/executable-specifications/scripts/managed-scope-admission.production-mutation.test.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission.production-conformance.test.mjs
       - tooling/executable-specifications/scripts/managed-scope-admission.property.test.mjs
       - tooling/executable-specifications/scripts/render-managed-scope-admission-diagram.mjs
       - tooling/executable-specifications/scripts/verify-clean-spec-gates.mjs
