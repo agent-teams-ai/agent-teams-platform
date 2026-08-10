@@ -49,6 +49,7 @@ export function assertCrossAxisInvariants(
   };
   if (context.receipt in reasonByReceipt) {
     assert.equal(context.blockReason, reasonByReceipt[context.receipt]);
+    assert.equal(context.reconciliation, "clear");
   }
   if (snapshot.value === "receipt-observed") {
     assert.equal(context.receipt, "admitted");

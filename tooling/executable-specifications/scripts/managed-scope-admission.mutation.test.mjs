@@ -341,6 +341,23 @@ const mutants = [
     oracle: (snapshot) =>
       assertBlockedParity(snapshot, domainTraces.conflictReceipt()),
   },
+  ...[
+    ["OBSERVE_REJECTED", "rejected"],
+    ["OBSERVE_STALE", "stale"],
+    ["OBSERVE_CONFLICT", "conflict"],
+  ].map(([eventType, receipt]) => ({
+    name: `${receipt} reconciliation receipt leaves outcome unresolved`,
+    model: mutateEvent(eventType, (event) => {
+      delete event.effects.set.reconciliation;
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      eventType,
+    ],
+    oracle: assertCrossAxisInvariants,
+  })),
   {
     name: "pre-dispatch denial misclassified as commercial",
     model: mutateEvent("DENY_DISPATCH", (event) => {
