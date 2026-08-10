@@ -70,6 +70,14 @@ function reachableEdgeSignatures(paths) {
     .toSorted();
 }
 
+function sortedNumbers(values) {
+  return [...values].toSorted((left, right) => left - right);
+}
+
+test("sorts double-digit generation bounds numerically", () => {
+  assert.deepEqual(sortedNumbers([10, 2, 1]), [1, 2, 10]);
+});
+
 test("derives deterministic paths that reach every declared state and edge", () => {
   const options = {
     events: specification.events.map(({ type }) => ({ type })),
@@ -94,10 +102,14 @@ test("derives deterministic paths that reach every declared state and edge", () 
     );
   }
   assert.deepEqual(
-    [...new Set(first.map(({ state }) => state.context.generation))].toSorted(),
-    Array.from(
-      { length: specification.witnessBounds.generations },
-      (_, index) => specification.axes.generation.minimum + index,
+    sortedNumbers(
+      new Set(first.map(({ state }) => state.context.generation)),
+    ),
+    sortedNumbers(
+      Array.from(
+        { length: specification.witnessBounds.generations },
+        (_, index) => specification.axes.generation.minimum + index,
+      ),
     ),
     "every bounded generation must be reachable",
   );
