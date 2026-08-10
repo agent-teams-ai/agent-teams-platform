@@ -7,7 +7,7 @@ import {
 } from "./test-fixture.js";
 import { ids } from "../domain/value-objects.js";
 
-function processProjection(
+export function productionProcessProjection(
   process: NonNullable<
     Awaited<ReturnType<ReturnType<typeof fixture>["store"]["loadByOperation"]>>
   >["process"],
@@ -45,7 +45,7 @@ function processProjection(
   });
 }
 
-async function requireSnapshot(
+export async function requireProductionSnapshot(
   subject: ReturnType<typeof fixture>,
   operationRef: Awaited<ReturnType<typeof acceptedProject>>["operationRef"],
   message: string,
@@ -79,8 +79,8 @@ export async function productionStaleGenerationEvidence() {
   }
   return Object.freeze({
     resultKind: result.kind,
-    before: processProjection(before.process),
-    after: processProjection(after.process),
+    before: productionProcessProjection(before.process),
+    after: productionProcessProjection(after.process),
   });
 }
 
@@ -96,7 +96,7 @@ export async function productionStaleRevisionEvidence() {
   await subject.application.cancelProjectPreparation(
     cancelCommand(created.operationRef),
   );
-  const before = await requireSnapshot(
+  const before = await requireProductionSnapshot(
     subject,
     created.operationRef,
     "Expected cancellation reconciliation before stale revision mutation.",
@@ -105,15 +105,15 @@ export async function productionStaleRevisionEvidence() {
     retryAt: NOW + 1000,
     exhausted: false,
   });
-  const after = await requireSnapshot(
+  const after = await requireProductionSnapshot(
     subject,
     created.operationRef,
     "Expected cancellation reconciliation after stale revision mutation.",
   );
   return Object.freeze({
     resultKind: result.kind,
-    before: processProjection(before.process),
-    after: processProjection(after.process),
+    before: productionProcessProjection(before.process),
+    after: productionProcessProjection(after.process),
   });
 }
 
@@ -133,14 +133,14 @@ export async function productionReconciledAdmittedEvidence() {
   const result = await subject.worker.reconcileManagedScopeAdmission(
     created.operationRef,
   );
-  const snapshot = await requireSnapshot(
+  const snapshot = await requireProductionSnapshot(
     subject,
     created.operationRef,
     "Expected reconciled admitted process.",
   );
   return Object.freeze({
     resultKind: result.kind,
-    process: processProjection(snapshot.process),
+    process: productionProcessProjection(snapshot.process),
   });
 }
 
@@ -165,14 +165,14 @@ export async function productionDispatchCommittedCancellationEvidence() {
   const result = await subject.application.cancelProjectPreparation(
     cancelCommand(created.operationRef),
   );
-  const snapshot = await requireSnapshot(
+  const snapshot = await requireProductionSnapshot(
     subject,
     created.operationRef,
     "Expected dispatch-committed cancellation process.",
   );
   return Object.freeze({
     resultKind: result.kind,
-    process: processProjection(snapshot.process),
+    process: productionProcessProjection(snapshot.process),
   });
 }
 
@@ -188,7 +188,7 @@ export async function productionIntegrityCancellationNoOpEvidence() {
     },
   });
   await subject.worker.dispatchManagedScopeAdmission();
-  const before = await requireSnapshot(
+  const before = await requireProductionSnapshot(
     subject,
     created.operationRef,
     "Expected integrity block before cancellation.",
@@ -196,15 +196,15 @@ export async function productionIntegrityCancellationNoOpEvidence() {
   const result = await subject.application.cancelProjectPreparation(
     cancelCommand(created.operationRef),
   );
-  const after = await requireSnapshot(
+  const after = await requireProductionSnapshot(
     subject,
     created.operationRef,
     "Expected integrity block after cancellation.",
   );
   return Object.freeze({
     resultKind: result.kind,
-    before: processProjection(before.process),
-    after: processProjection(after.process),
+    before: productionProcessProjection(before.process),
+    after: productionProcessProjection(after.process),
   });
 }
 
@@ -213,7 +213,7 @@ async function cancellationNoOpEvidence(
   operationRef: Awaited<ReturnType<typeof acceptedProject>>["operationRef"],
   commandId = "model-terminal-no-op",
 ) {
-  const before = await requireSnapshot(
+  const before = await requireProductionSnapshot(
     subject,
     operationRef,
     "Expected terminal process before cancellation no-op.",
@@ -221,15 +221,15 @@ async function cancellationNoOpEvidence(
   const result = await subject.application.cancelProjectPreparation(
     cancelCommand(operationRef, 1, commandId),
   );
-  const after = await requireSnapshot(
+  const after = await requireProductionSnapshot(
     subject,
     operationRef,
     "Expected terminal process after cancellation no-op.",
   );
   return Object.freeze({
     resultKind: result.kind,
-    before: processProjection(before.process),
-    after: processProjection(after.process),
+    before: productionProcessProjection(before.process),
+    after: productionProcessProjection(after.process),
   });
 }
 
@@ -277,7 +277,7 @@ export async function productionPendingCancellationNoOpEvidence() {
   await subject.application.cancelProjectPreparation(
     cancelCommand(created.operationRef, 1, "model-first-uncertain-cancel"),
   );
-  const before = await requireSnapshot(
+  const before = await requireProductionSnapshot(
     subject,
     created.operationRef,
     "Expected pending cancellation reconciliation before repeat command.",
@@ -285,15 +285,15 @@ export async function productionPendingCancellationNoOpEvidence() {
   const result = await subject.application.cancelProjectPreparation(
     cancelCommand(created.operationRef, 1, "model-repeat-uncertain-cancel"),
   );
-  const after = await requireSnapshot(
+  const after = await requireProductionSnapshot(
     subject,
     created.operationRef,
     "Expected pending cancellation reconciliation after repeat command.",
   );
   return Object.freeze({
     resultKind: result.kind,
-    before: processProjection(before.process),
-    after: processProjection(after.process),
+    before: productionProcessProjection(before.process),
+    after: productionProcessProjection(after.process),
   });
 }
 
@@ -311,7 +311,7 @@ export async function productionNonAdmittedResumeEvidence() {
       },
     });
     await subject.worker.dispatchManagedScopeAdmission();
-    const predecessor = await requireSnapshot(
+    const predecessor = await requireProductionSnapshot(
       subject,
       created.operationRef,
       `Expected ${receiptKind} predecessor before resume.`,
@@ -319,7 +319,7 @@ export async function productionNonAdmittedResumeEvidence() {
     const command = resumeCommand(created.operationRef);
     const first = await subject.application.resumeProjectPreparation(command);
     const replay = await subject.application.resumeProjectPreparation(command);
-    const successor = await requireSnapshot(
+    const successor = await requireProductionSnapshot(
       subject,
       created.operationRef,
       `Expected successor after ${receiptKind} resume.`,

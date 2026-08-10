@@ -528,3 +528,7 @@ export {
   productionStaleRevisionEvidence,
 } from "./model-conformance-freshness-fixture.js";
 export { domainVocabularyEvidence } from "./model-conformance-vocabulary-fixture.js";
+export {
+  productionBlockedResumeEvidence,
+  productionRecoverableCancellationEvidence,
+} from "./model-conformance-recovery-fixture.js";

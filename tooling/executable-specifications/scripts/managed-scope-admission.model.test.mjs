@@ -362,3 +362,54 @@ test("production non-admitted resumes report and replay a clean successor", asyn
     );
   }
 });
+
+test("production retry and every recoverable block cancel exactly", async () => {
+  for (const evidence of await domainTraces.productionRecoverableCancellationEvidence()) {
+    assert.equal(evidence.resultKind, "cancelled", evidence.reason);
+    assert.deepEqual(evidence.after, {
+      ...evidence.before,
+      state: "blocked",
+      authority: "closed",
+      reconciliation: "clear",
+      revision: evidence.before.revision + 1,
+      blockReason: "USER_CANCELLED",
+      hasDispatchAuthority: false,
+    }, evidence.reason);
+  }
+});
+
+test("production commercial and safe-exhausted resumes create clean successors", async () => {
+  for (const evidence of await domainTraces.productionBlockedResumeEvidence()) {
+    const retained = evidence.predecessor.receiptKind === "admitted";
+    assert.deepEqual(evidence.first, {
+      kind: "accepted",
+      generation: evidence.predecessor.generation + (retained ? 0 : 1),
+      predecessorReceiptRetained: retained,
+      replayed: false,
+    }, evidence.reason);
+    assert.deepEqual(evidence.replay, {
+      ...evidence.first,
+      replayed: true,
+    }, evidence.reason);
+    assert.equal(
+      evidence.successor.resumptionCount,
+      evidence.predecessor.resumptionCount + 1,
+      evidence.reason,
+    );
+    assert.equal(
+      evidence.successor.receiptKind,
+      retained ? "admitted" : null,
+      evidence.reason,
+    );
+    assert.equal(
+      evidence.successorCommandId === evidence.predecessorCommandId,
+      retained,
+      evidence.reason,
+    );
+    assert.equal(
+      evidence.outboxesAfter,
+      evidence.outboxesBefore + (retained ? 0 : 1),
+      evidence.reason,
+    );
+  }
+});

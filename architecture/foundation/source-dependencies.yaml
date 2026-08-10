@@ -16,8 +16,10 @@ boundaries:
       - tooling/executable-specifications/scripts/managed-scope-admission-model.mjs
       - tooling/executable-specifications/scripts/managed-scope-admission.model.test.mjs
       - tooling/executable-specifications/scripts/managed-scope-admission.mutation.test.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission.production-mutation.test.mjs
       - tooling/executable-specifications/scripts/managed-scope-admission.property.test.mjs
       - tooling/executable-specifications/scripts/render-managed-scope-admission-diagram.mjs
+      - tooling/executable-specifications/scripts/verify-clean-spec-gates.mjs
     allow:
       boundaries: []
       packages:
@@ -27,9 +29,13 @@ boundaries:
         - xstate
       builtins:
         - node:assert/strict
+        - node:child_process
         - node:fs/promises
+        - node:os
+        - node:path
         - node:test
         - node:url
+        - node:util
       runtimeReferences: []
   - id: context.project-management.public-surface
     roots:
