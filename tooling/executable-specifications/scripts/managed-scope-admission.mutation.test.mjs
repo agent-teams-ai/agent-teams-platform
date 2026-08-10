@@ -60,6 +60,14 @@ const mutants = [
     oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.ready()),
   },
   {
+    name: "ready consumes a preparation resumption",
+    model: mutateEvent("FINALIZE_READY", (event) => {
+      event.effects.increment.push("resumptionCount");
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "FINALIZE_READY"],
+    oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.ready()),
+  },
+  {
     name: "retry beyond the canonical attempt limit",
     model: mutateEvent("CLAIM", (_event, mutant) => {
       mutant.witnessBounds.attempts += 1;
@@ -221,6 +229,18 @@ const mutants = [
     name: "commercial denial resets the dispatch attempt count",
     model: mutateEvent("RESTRICT_DISPATCH", (event) => {
       event.effects.set.attemptCount = 0;
+    }),
+    witness: ["CLAIM", "RESTRICT_DISPATCH"],
+    oracle: (snapshot) =>
+      assertBlockedParity(
+        snapshot,
+        domainTraces.preDispatchCommercialRestriction(),
+      ),
+  },
+  {
+    name: "commercial denial consumes a preparation resumption",
+    model: mutateEvent("RESTRICT_DISPATCH", (event) => {
+      event.effects.increment.push("resumptionCount");
     }),
     witness: ["CLAIM", "RESTRICT_DISPATCH"],
     oracle: (snapshot) =>

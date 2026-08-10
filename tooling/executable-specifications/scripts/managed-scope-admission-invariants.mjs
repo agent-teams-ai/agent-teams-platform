@@ -15,6 +15,7 @@ export function assertCrossAxisInvariants(
   assert.ok(context.generation >= specification.axes.generation.minimum);
   assert.ok(context.generation <= bounds.generations);
   assert.ok(context.attemptCount <= bounds.attempts);
+  assert.ok(context.resumptionCount <= bounds.generations);
 
   if (snapshot.value === "ready") {
     assert.equal(context.receipt, "admitted");
