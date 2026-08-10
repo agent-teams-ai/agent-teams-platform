@@ -68,6 +68,14 @@ const mutants = [
     oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.ready()),
   },
   {
+    name: "ready retains a blocked reason",
+    model: mutateEvent("FINALIZE_READY", (event) => {
+      event.effects.set.blockReason = "AUTHORITY_DENIED";
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "FINALIZE_READY"],
+    oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.ready()),
+  },
+  {
     name: "retry beyond the canonical attempt limit",
     model: mutateEvent("CLAIM", (_event, mutant) => {
       mutant.witnessBounds.attempts += 1;
@@ -293,6 +301,14 @@ const mutants = [
     oracle: assertCrossAxisInvariants,
   },
   {
+    name: "blocked cancellation without a block reason",
+    model: mutateEvent("CANCEL_SAFE", (event) => {
+      event.effects.set.blockReason = null;
+    }),
+    witness: ["CANCEL_SAFE"],
+    oracle: assertCrossAxisInvariants,
+  },
+  {
     name: "retained receipt restores obsolete dispatch authority",
     model: mutateEvent("RESUME_ADMITTED", (event) => {
       event.effects.set.dispatchAuthorityPresent = true;
@@ -315,6 +331,17 @@ for (const mutant of mutants) {
     assert.throws(() => mutant.oracle(snapshot), { name: "AssertionError" });
   });
 }
+
+test("production wrong-digest detector supplies the integrity oracle", () => {
+  for (const evidence of [
+    domainTraces.primaryIntegrityConflict(),
+    domainTraces.reconciliationIntegrityConflict(),
+  ]) {
+    assert.equal(evidence.state, "blocked");
+    assert.equal(evidence.blockReason, "DATA_INTEGRITY_CONFLICT");
+    assert.equal(evidence.receiptKind, null);
+  }
+});
 
 for (const [eventType, field] of [
   ["STALE_GENERATION", "generation"],

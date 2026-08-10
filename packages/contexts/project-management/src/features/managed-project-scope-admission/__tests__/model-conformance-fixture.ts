@@ -21,8 +21,10 @@ import { preparationGenerationExhausted } from "../domain/scope-admission-readin
 import { ids } from "../domain/value-objects.js";
 import { safeRetryExhausted } from "../application/safe-retry-policy.js";
 import { dispatchManagedScopeAdmissionUseCase } from "../application/dispatch-scope-admission.js";
+import { applyScopeAdmissionReceipt } from "../application/apply-scope-admission-receipt.js";
 import type { ProjectManagementDependencies } from "../application/contracts.js";
 import type { ScopeAdmissionDispatchClaim } from "../application/ports/project-management-store.js";
+import { denyProjectAdmission } from "../domain/project-admission-authority.js";
 
 const authorityBasis: CreationAuthorityBasisSnapshot = Object.freeze({
   checkedAt: 1_800_000_000_000,
@@ -112,6 +114,7 @@ export function domainReadyTrace() {
     generation: process.generation,
     attemptCount: process.attemptCount,
     resumptionCount: process.resumptionCount,
+    blockReason: process.blockReason,
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
     hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
@@ -140,6 +143,7 @@ export function domainResumedReadyTrace() {
     generation: process.generation,
     attemptCount: process.attemptCount,
     resumptionCount: process.resumptionCount,
+    blockReason: process.blockReason,
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
     hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
@@ -171,9 +175,9 @@ export function domainAuthorityRecheckExhaustedTrace() {
     generation: process.generation,
     attemptCount: process.attemptCount,
     resumptionCount: process.resumptionCount,
+    blockReason: process.blockReason,
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
-    blockReason: process.blockReason,
     hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
     hasAdmissionAuthority: process.admissionAuthorityBasis !== null,
   });
@@ -193,6 +197,7 @@ export function domainAuthorityRecheckRecoveryTrace() {
     generation: process.generation,
     attemptCount: process.attemptCount,
     resumptionCount: process.resumptionCount,
+    blockReason: process.blockReason,
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
     hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
@@ -253,16 +258,34 @@ function blockedTrace(process: ReturnType<typeof initialProcess>) {
 export function domainPrimaryIntegrityConflictTrace() {
   let process = claimDispatch(initialProcess());
   process = authorizeDispatch(process, authorityBasis);
-  process = blockScopeAdmissionForIntegrity(process);
-  return blockedTrace(process);
+  const transition = applyScopeAdmissionReceipt({
+    process,
+    admission: denyProjectAdmission(process.projectId),
+    receipt: {
+      kind: "admitted",
+      receiptRef: ids.orchestratorReceipt("model-primary-wrong-digest"),
+      receiptDigest: ids.digest("model-primary-wrong-digest"),
+    },
+    authority: { kind: "allow", basis: authorityBasis },
+  });
+  return blockedTrace(transition.process);
 }
 
 export function domainReconciliationIntegrityConflictTrace() {
   let process = claimDispatch(initialProcess());
   process = authorizeDispatch(process, authorityBasis);
   process = requireReconciliation(process);
-  process = blockScopeAdmissionForIntegrity(process);
-  return blockedTrace(process);
+  const transition = applyScopeAdmissionReceipt({
+    process,
+    admission: denyProjectAdmission(process.projectId),
+    receipt: {
+      kind: "admitted",
+      receiptRef: ids.orchestratorReceipt("model-reconcile-wrong-digest"),
+      receiptDigest: ids.digest("model-reconcile-wrong-digest"),
+    },
+    authority: { kind: "allow", basis: authorityBasis },
+  });
+  return blockedTrace(transition.process);
 }
 
 export function domainCancellationIntegrityConflictTrace() {

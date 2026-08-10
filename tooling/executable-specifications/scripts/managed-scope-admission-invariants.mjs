@@ -17,6 +17,12 @@ export function assertCrossAxisInvariants(
   assert.ok(context.attemptCount <= bounds.attempts);
   assert.ok(context.resumptionCount <= bounds.generations);
 
+  if (snapshot.value === "blocked") {
+    assert.ok(specification.vocabulary.blockReasons.includes(context.blockReason));
+  } else {
+    assert.equal(context.blockReason, null);
+  }
+
   if (snapshot.value === "ready") {
     assert.equal(context.receipt, "admitted");
     assert.equal(context.authority, "admission-authorized");
@@ -47,6 +53,7 @@ export function assertReadyParity(model, domain) {
   assert.equal(model.context.generation, domain.generation);
   assert.equal(model.context.attemptCount, domain.attemptCount);
   assert.equal(model.context.resumptionCount, domain.resumptionCount);
+  assert.equal(model.context.blockReason, domain.blockReason);
   assert.equal(model.context.receipt, domain.receiptKind);
   assert.equal(model.context.revision, domain.revision);
   assert.equal(
