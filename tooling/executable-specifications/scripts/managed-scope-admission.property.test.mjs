@@ -31,6 +31,13 @@ const traces = JSON.parse(
   ),
 ).traces;
 
+function safeBoundary(limit, delta, minimum) {
+  return Math.min(
+    Number.MAX_SAFE_INTEGER,
+    Math.max(minimum, limit + delta),
+  );
+}
+
 test("arbitrary histories preserve revision, fencing and cross-axis invariants", () => {
   const eventArbitrary = constantFrom(
     ...specification.events.map(({ type }) => Object.freeze({ type })),
@@ -45,6 +52,22 @@ test("arbitrary histories preserve revision, fencing and cross-axis invariants",
         const current = actor.getSnapshot();
         assert.ok(current.context.revision >= previous.context.revision);
         assert.ok(current.context.generation >= previous.context.generation);
+        if (current.context.generation !== previous.context.generation) {
+          assert.equal(event.type, "RESUME_NEW_GENERATION");
+        }
+        if (current.context.resumptionCount !== previous.context.resumptionCount) {
+          assert.ok(
+            event.type === "RESUME_NEW_GENERATION" ||
+              event.type === "RESUME_ADMITTED",
+          );
+        }
+        if (current.context.attemptCount !== previous.context.attemptCount) {
+          assert.ok(
+            event.type === "CLAIM" ||
+              event.type === "RESUME_NEW_GENERATION" ||
+              event.type === "RESUME_ADMITTED",
+          );
+        }
         assertCrossAxisInvariants(current);
         if (event.type === "STALE_GENERATION" || event.type === "STALE_REVISION") {
           assert.deepEqual(current.context, previous.context);
@@ -60,20 +83,31 @@ test("arbitrary histories preserve revision, fencing and cross-axis invariants",
 test("arbitrary production policy bounds match model guard boundaries", () => {
   assertProperty(
     property(
-      integer({ min: 1, max: 8 }),
-      integer({ min: 0, max: 9 }),
-      integer({ min: 1, max: 8 }),
-      integer({ min: 1, max: 9 }),
-      integer({ min: 0, max: 9 }),
+      integer({ min: 1, max: Number.MAX_SAFE_INTEGER }),
+      integer({ min: -1, max: 1 }),
+      integer({ min: 1, max: Number.MAX_SAFE_INTEGER }),
+      integer({ min: -1, max: 1 }),
+      integer({ min: -1, max: 1 }),
       boolean(),
       (
         maxAttempts,
-        attemptCount,
+        attemptDelta,
         maxPreparationGenerations,
-        generation,
-        resumptionCount,
+        generationDelta,
+        resumptionDelta,
         retainsAdmittedReceipt,
       ) => {
+        const attemptCount = safeBoundary(maxAttempts, attemptDelta, 0);
+        const generation = safeBoundary(
+          maxPreparationGenerations,
+          generationDelta,
+          1,
+        );
+        const resumptionCount = safeBoundary(
+          maxPreparationGenerations,
+          resumptionDelta,
+          0,
+        );
         const bounds = {
           attempts: maxAttempts,
           generations: maxPreparationGenerations,

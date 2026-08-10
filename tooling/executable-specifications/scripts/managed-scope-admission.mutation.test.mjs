@@ -44,6 +44,22 @@ const mutants = [
     oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.ready()),
   },
   {
+    name: "ready advances the process generation",
+    model: mutateEvent("FINALIZE_READY", (event) => {
+      event.effects.increment.push("generation");
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "FINALIZE_READY"],
+    oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.ready()),
+  },
+  {
+    name: "ready resets the dispatch attempt count",
+    model: mutateEvent("FINALIZE_READY", (event) => {
+      event.effects.set.attemptCount = 0;
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "FINALIZE_READY"],
+    oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.ready()),
+  },
+  {
     name: "retry beyond the canonical attempt limit",
     model: mutateEvent("CLAIM", (_event, mutant) => {
       mutant.witnessBounds.attempts += 1;
@@ -181,6 +197,30 @@ const mutants = [
     name: "commercial denial loses its authority axis",
     model: mutateEvent("RESTRICT_DISPATCH", (event) => {
       event.effects.set.authority = "denied";
+    }),
+    witness: ["CLAIM", "RESTRICT_DISPATCH"],
+    oracle: (snapshot) =>
+      assertBlockedParity(
+        snapshot,
+        domainTraces.preDispatchCommercialRestriction(),
+      ),
+  },
+  {
+    name: "commercial denial advances the process generation",
+    model: mutateEvent("RESTRICT_DISPATCH", (event) => {
+      event.effects.increment.push("generation");
+    }),
+    witness: ["CLAIM", "RESTRICT_DISPATCH"],
+    oracle: (snapshot) =>
+      assertBlockedParity(
+        snapshot,
+        domainTraces.preDispatchCommercialRestriction(),
+      ),
+  },
+  {
+    name: "commercial denial resets the dispatch attempt count",
+    model: mutateEvent("RESTRICT_DISPATCH", (event) => {
+      event.effects.set.attemptCount = 0;
     }),
     witness: ["CLAIM", "RESTRICT_DISPATCH"],
     oracle: (snapshot) =>

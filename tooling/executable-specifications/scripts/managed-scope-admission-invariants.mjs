@@ -43,6 +43,9 @@ export function assertReadyParity(model, domain) {
   assert.equal(model.value, domain.state);
   assert.equal(model.context.authority, domain.authority);
   assert.equal(model.context.reconciliation, domain.reconciliation);
+  assert.equal(model.context.generation, domain.generation);
+  assert.equal(model.context.attemptCount, domain.attemptCount);
+  assert.equal(model.context.resumptionCount, domain.resumptionCount);
   assert.equal(model.context.receipt, domain.receiptKind);
   assert.equal(model.context.revision, domain.revision);
   assert.equal(
@@ -59,6 +62,9 @@ export function assertBlockedParity(model, domain) {
   assert.equal(model.value, domain.state);
   assert.equal(model.context.authority, domain.authority);
   assert.equal(model.context.reconciliation, domain.reconciliation);
+  assert.equal(model.context.generation, domain.generation);
+  assert.equal(model.context.attemptCount, domain.attemptCount);
+  assert.equal(model.context.resumptionCount, domain.resumptionCount);
   assert.equal(model.context.receipt, domain.receiptKind);
   assert.equal(model.context.revision, domain.revision);
   assert.equal(model.context.blockReason, domain.blockReason);
