@@ -1,6 +1,7 @@
 import type { CreationAuthorityBasisSnapshot } from "../domain/creation-authority-basis.js";
 import {
   authorizeDispatch,
+  blockScopeAdmissionForAuthority,
   claimDispatch,
   completeScopeAdmissionCancellation,
   finalizeScopeAdmission,
@@ -84,6 +85,30 @@ export function domainReadyTrace() {
     state: process.state,
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
+    hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
+    hasAdmissionAuthority: process.admissionAuthorityBasis !== null,
+  });
+}
+
+export function domainResumedReadyTrace() {
+  let process = claimDispatch(initialProcess());
+  process = authorizeDispatch(process, authorityBasis);
+  process = observeScopeAdmissionReceipt(process, {
+    kind: "admitted",
+    receiptRef: ids.orchestratorReceipt("model-admitted-g1"),
+    receiptDigest: process.stepDigest,
+  });
+  process = blockScopeAdmissionForAuthority(process, "AUTHORITY_DENIED");
+  process = resumeManagedScopeAdmission(process, {
+    creationAuthorityBasis: authorityBasis,
+    requesterRef: ids.requester("model-requester-r1"),
+  });
+  process = finalizeScopeAdmission(process, authorityBasis);
+  return Object.freeze({
+    state: process.state,
+    receiptKind: process.receipt?.kind ?? null,
+    revision: process.revision,
+    generation: process.generation,
     hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
     hasAdmissionAuthority: process.admissionAuthorityBasis !== null,
   });

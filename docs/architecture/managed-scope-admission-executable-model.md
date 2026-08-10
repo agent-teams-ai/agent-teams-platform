@@ -17,8 +17,9 @@ The specification describes four separate axes: process lifecycle, authority,
 reconciliation, and generation fencing. Transitions cover lost acknowledgement,
 known non-acceptance and bounded retry, cancellation during an uncertain
 outcome, receipt kinds, authority rechecks, successor generations, and stale
-generation or revision commands. A state on one axis never implies progress on
-another.
+generation or revision commands. Guards, initial context, and every modeled
+cross-axis effect are data in that JSON rather than parallel XState logic. A
+state on one axis never implies progress on another.
 
 ## Authority
 
@@ -40,8 +41,10 @@ cross-axis invariants, including:
 - cancellation of an ambiguous dispatch reconciles before completion;
 - a successor generation cannot be mutated by stale generation or revision
   commands;
-- ready requires an admitted receipt plus dispatch and admission authority
-  evidence.
+- ready requires an admitted receipt and current admission-authority evidence.
+  The original dispatch-authority basis is retained on the direct path, but a
+  safe retained-receipt resume clears it and re-authorizes the admitted receipt
+  without redispatch; both paths are parity-tested against the aggregate.
 
 ## Evidence Limits
 

@@ -9,6 +9,7 @@
     "authority",
     "limits",
     "axes",
+    "initialContext",
     "events"
   ],
   "properties": {
@@ -41,9 +42,10 @@
         "lifecycle": { "$ref": "#/$defs/axis" },
         "authority": { "$ref": "#/$defs/axis" },
         "reconciliation": { "$ref": "#/$defs/axis" },
-        "generation": { "$ref": "#/$defs/axis" }
+        "generation": { "$ref": "#/$defs/generationAxis" }
       }
     },
+    "initialContext": { "$ref": "#/$defs/context" },
     "events": {
       "type": "array",
       "minItems": 1,
@@ -65,10 +67,64 @@
         }
       }
     },
+    "generationAxis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initial", "minimum", "maximumLimit"],
+      "properties": {
+        "initial": { "const": 1 },
+        "minimum": { "const": 1 },
+        "maximumLimit": { "const": "generations" }
+      }
+    },
+    "receipt": {
+      "enum": ["admitted", "rejected", "stale", "conflict"]
+    },
+    "blockReason": {
+      "enum": [
+        "AUTHORITY_DENIED",
+        "AUTHORITY_RECHECK_EXHAUSTED",
+        "COMMERCIAL_RESTRICTION",
+        "DOWNSTREAM_REJECTED",
+        "DOWNSTREAM_STALE",
+        "DOWNSTREAM_CONFLICT",
+        "SAFE_RETRY_EXHAUSTED",
+        "USER_CANCELLED",
+        "DATA_INTEGRITY_CONFLICT"
+      ]
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attemptCount",
+        "authority",
+        "blockReason",
+        "generation",
+        "receipt",
+        "reconciliation",
+        "resumptionCount",
+        "revision",
+        "dispatchAuthorityPresent",
+        "admissionAuthorityPresent"
+      ],
+      "properties": {
+        "attemptCount": { "const": 0 },
+        "authority": { "type": "string", "minLength": 1 },
+        "blockReason": { "type": "null" },
+        "generation": { "const": 1 },
+        "receipt": { "type": "null" },
+        "reconciliation": { "type": "string", "minLength": 1 },
+        "resumptionCount": { "const": 0 },
+        "revision": { "const": 1 },
+        "dispatchAuthorityPresent": { "const": false },
+        "admissionAuthorityPresent": { "const": false }
+      }
+    },
     "event": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["type", "from", "to", "operation"],
+      "required": ["type", "from", "to", "effects"],
       "properties": {
         "type": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
         "from": {
@@ -78,36 +134,91 @@
           "items": { "type": "string", "minLength": 1 }
         },
         "to": { "type": "string", "minLength": 1 },
-        "operation": {
-          "enum": [
-            "claim",
-            "authorize-dispatch",
-            "deny-dispatch",
-            "release-retry",
-            "release-exhausted",
-            "lose-acknowledgement",
-            "reconcile-not-accepted",
-            "observe-admitted",
-            "observe-rejected",
-            "observe-stale",
-            "observe-conflict",
-            "finalize-ready",
-            "deny-after-receipt",
-            "cancel",
-            "complete-cancellation",
-            "resume",
-            "ignore-stale-generation",
-            "ignore-stale-revision"
-          ]
+        "guard": { "$ref": "#/$defs/guard" },
+        "effects": { "$ref": "#/$defs/effects" }
+      }
+    },
+    "guard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["all"],
+      "properties": {
+        "all": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/predicate" }
+        }
+      }
+    },
+    "predicate": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["field", "operator", "limit"],
+          "properties": {
+            "field": {
+              "enum": ["attemptCount", "generation", "resumptionCount"]
+            },
+            "operator": { "enum": ["less-than-limit", "at-least-limit"] },
+            "limit": { "enum": ["attempts", "generations"] }
+          }
         },
-        "variant": { "type": "string", "minLength": 1 },
-        "guard": {
-          "enum": [
-            "attempt-available",
-            "attempt-exhausted",
-            "successor-generation-available",
-            "retained-admitted-receipt"
-          ]
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["field", "operator", "value"],
+          "properties": {
+            "field": { "const": "receipt" },
+            "operator": { "enum": ["equals", "not-equals"] },
+            "value": { "$ref": "#/$defs/receipt" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["field", "operator", "values"],
+          "properties": {
+            "field": { "const": "blockReason" },
+            "operator": { "const": "not-in" },
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": { "$ref": "#/$defs/blockReason" }
+            }
+          }
+        }
+      ]
+    },
+    "effects": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["set", "increment"],
+      "properties": {
+        "set": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "attemptCount": { "const": 0 },
+            "authority": { "type": "string", "minLength": 1 },
+            "blockReason": {
+              "oneOf": [{ "$ref": "#/$defs/blockReason" }, { "type": "null" }]
+            },
+            "receipt": {
+              "oneOf": [{ "$ref": "#/$defs/receipt" }, { "type": "null" }]
+            },
+            "reconciliation": { "type": "string", "minLength": 1 },
+            "dispatchAuthorityPresent": { "type": "boolean" },
+            "admissionAuthorityPresent": { "type": "boolean" }
+          }
+        },
+        "increment": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["attemptCount", "generation", "resumptionCount", "revision"]
+          }
         }
       }
     }

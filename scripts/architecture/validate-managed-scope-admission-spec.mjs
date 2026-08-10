@@ -25,35 +25,102 @@ export function validateManagedScopeAdmissionDocument(document, schema) {
     return formatAjvErrors(validator.errors);
   }
 
-  for (const [axisName, axis] of Object.entries(document.axes)) {
+  validateAxes(document, errors);
+  validateInitialContext(document, errors);
+  validateEvents(document, errors);
+  return errors;
+}
+
+function validateAxes(document, errors) {
+  for (const axisName of ["lifecycle", "authority", "reconciliation"]) {
+    const axis = document.axes[axisName];
     if (!axis.states.includes(axis.initial)) {
       errors.push(
         `SCOPE-SPEC-AXIS-001 ${axisName} initial state ${axis.initial} is undeclared`,
       );
     }
   }
+}
 
+function validateInitialContext(document, errors) {
+  if (
+    document.initialContext.authority !== document.axes.authority.initial ||
+    document.initialContext.reconciliation !==
+      document.axes.reconciliation.initial ||
+    document.initialContext.generation !== document.axes.generation.initial
+  ) {
+    errors.push("SCOPE-SPEC-CONTEXT-001 initial context disagrees with its axes");
+  }
+}
+
+function validateEvents(document, errors) {
   const lifecycleStates = new Set(document.axes.lifecycle.states);
+  const authorityStates = new Set(document.axes.authority.states);
+  const reconciliationStates = new Set(document.axes.reconciliation.states);
   const eventTypes = new Set();
   for (const event of document.events) {
     if (eventTypes.has(event.type)) {
       errors.push(`SCOPE-SPEC-EVENT-001 duplicate event ${event.type}`);
     }
     eventTypes.add(event.type);
-    for (const source of event.from) {
-      if (!lifecycleStates.has(source)) {
-        errors.push(
-          `SCOPE-SPEC-EVENT-002 ${event.type} has undeclared source ${source}`,
-        );
-      }
-    }
-    if (event.to !== "$same" && !lifecycleStates.has(event.to)) {
+    validateLifecycleReferences(event, lifecycleStates, errors);
+    validateEffects(event, authorityStates, reconciliationStates, errors);
+    validateGuards(event, errors);
+  }
+}
+
+function validateLifecycleReferences(event, lifecycleStates, errors) {
+  for (const source of event.from) {
+    if (!lifecycleStates.has(source)) {
       errors.push(
-        `SCOPE-SPEC-EVENT-003 ${event.type} has undeclared target ${event.to}`,
+        `SCOPE-SPEC-EVENT-002 ${event.type} has undeclared source ${source}`,
       );
     }
   }
-  return errors;
+  if (event.to !== "$same" && !lifecycleStates.has(event.to)) {
+    errors.push(
+      `SCOPE-SPEC-EVENT-003 ${event.type} has undeclared target ${event.to}`,
+    );
+  }
+}
+
+function validateEffects(event, authorityStates, reconciliationStates, errors) {
+  const authority = event.effects.set.authority;
+  const reconciliation = event.effects.set.reconciliation;
+  if (authority !== undefined && !authorityStates.has(authority)) {
+    errors.push(
+      `SCOPE-SPEC-EFFECT-001 ${event.type} sets undeclared authority ${authority}`,
+    );
+  }
+  if (reconciliation !== undefined && !reconciliationStates.has(reconciliation)) {
+    errors.push(
+      `SCOPE-SPEC-EFFECT-002 ${event.type} sets undeclared reconciliation ${reconciliation}`,
+    );
+  }
+  if (event.to !== "$same" && !event.effects.increment.includes("revision")) {
+    errors.push(
+      `SCOPE-SPEC-EFFECT-003 ${event.type} changes lifecycle without revision`,
+    );
+  }
+  for (const field of event.effects.increment) {
+    if (event.effects.set[field] !== undefined) {
+      errors.push(
+        `SCOPE-SPEC-EFFECT-004 ${event.type} both sets and increments ${field}`,
+      );
+    }
+  }
+}
+
+function validateGuards(event, errors) {
+  for (const predicate of event.guard?.all ?? []) {
+    const expectedLimit =
+      predicate.field === "attemptCount" ? "attempts" : "generations";
+    if (predicate.limit !== undefined && predicate.limit !== expectedLimit) {
+      errors.push(
+        `SCOPE-SPEC-GUARD-001 ${event.type} compares ${predicate.field} with ${predicate.limit}`,
+      );
+    }
+  }
 }
 
 export async function validateManagedScopeAdmissionSpec(

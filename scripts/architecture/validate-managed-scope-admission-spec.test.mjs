@@ -43,3 +43,27 @@ test("rejects an XState snapshot promoted to canonical storage", () => {
     /canonicalStorage/u,
   );
 });
+
+test("rejects a cross-axis effect outside the declared authority axis", () => {
+  const invalid = structuredClone(document);
+  invalid.events[1].effects.set.authority = "invented-authority";
+  assert.deepEqual(validateManagedScopeAdmissionDocument(invalid, schema), [
+    "SCOPE-SPEC-EFFECT-001 AUTHORIZE_DISPATCH sets undeclared authority invented-authority",
+  ]);
+});
+
+test("rejects a guard that compares against the wrong bounded axis", () => {
+  const invalid = structuredClone(document);
+  invalid.events[0].guard.all[0].limit = "generations";
+  assert.deepEqual(validateManagedScopeAdmissionDocument(invalid, schema), [
+    "SCOPE-SPEC-GUARD-001 CLAIM compares attemptCount with generations",
+  ]);
+});
+
+test("rejects lifecycle effects that omit aggregate revision advance", () => {
+  const invalid = structuredClone(document);
+  invalid.events[0].effects.increment = ["attemptCount"];
+  assert.deepEqual(validateManagedScopeAdmissionDocument(invalid, schema), [
+    "SCOPE-SPEC-EFFECT-003 CLAIM changes lifecycle without revision",
+  ]);
+});
