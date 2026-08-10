@@ -10,7 +10,7 @@ import {
   assertResumeEvidence,
 } from "./managed-scope-admission-invariants.mjs";
 
-test("production retry and blocked-reason cancellation mutants are killed", async () => {
+test("production retry and blocked-reason cancellation remain conformant", async () => {
   for (const evidence of await domainTraces.productionRecoverableCancellationEvidence()) {
     assertRecoveryPredecessor(evidence);
     assert.equal(evidence.resultKind, "cancelled", evidence.reason);
@@ -26,25 +26,25 @@ test("production retry and blocked-reason cancellation mutants are killed", asyn
   }
 });
 
-test("production blocked-reason resume mutants are killed", async () => {
+test("production blocked-reason resume remains conformant", async () => {
   for (const evidence of await domainTraces.productionBlockedResumeEvidence()) {
     assertResumeEvidence(evidence);
   }
 });
 
-test("production reconciliation exhaustion-boundary mutants are killed", async () => {
+test("production reconciliation exhaustion boundary remains conformant", async () => {
   assertReconciliationExhaustionEvidence(
     await domainTraces.productionReconciliationExhaustionEvidence(),
   );
 });
 
-test("production reconciliation receipt-routing mutants are killed", async () => {
+test("production reconciliation receipt routing remains conformant", async () => {
   assertReconciledReceiptMatrixEvidence(
     await domainTraces.productionReconciledReceiptMatrixEvidence(),
   );
 });
 
-test("production cancellation-recovery receipt mutants are killed", async () => {
+test("production cancellation recovery receipts remain conformant", async () => {
   assertCancellationRecoveryMatrixEvidence(
     await domainTraces.productionCancellationRecoveryMatrixEvidence(),
   );

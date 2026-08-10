@@ -56,18 +56,21 @@ cross-axis invariants, including:
 - integrity conflicts are non-resumable and authority-recheck exhaustion keeps
   the admitted receipt while remaining blocked without admission authority.
 
-The checked-in Mermaid diagram and deterministic trace witnesses live under
-`tooling/executable-specifications/fixtures/proof-artifacts`. They are derived
-proof artifacts, deliberately separated from the authoritative JSON, schemas,
-source, and test harness so review routing can policy-exclude them without
-reducing required full-file coverage of human-owned logic. The model gate
-compares the diagram byte-for-byte and verifies that every authoritative event
-appears, so transition or freshness-fence drift fails the gate.
+The checked-in Mermaid diagram under
+`tooling/executable-specifications/fixtures/proof-artifacts` is a derived proof
+artifact. The deterministic traces under
+`tooling/executable-specifications/fixtures/conformance-witnesses` are curated,
+human-owned conformance inputs; they are not generated artifacts. The model
+gate compares the diagram byte-for-byte, proves every declared state and edge
+is reachable, and verifies that every authoritative event appears, so dead
+model declarations, transition drift, or freshness-fence drift fail the gate.
 
 Foundation connects these artifacts through the consumer-owned executable
 specification catalog. The catalog is data-only (`generatedTypes: []`) and
-binds three independent package gates: property histories, semantic mutation
-tests, and XState graph/conformance tests. Passing one gate cannot stand in for
+binds the three Foundation-required package gates: property histories, semantic
+JSON mutation tests, and XState graph/model tests. A separate production
+conformance suite records regression evidence against the domain aggregate.
+Each suite is independently runnable, and passing one cannot stand in for
 another. The mutation gate proves that its oracle rejects ready-without-
 authority, retry-limit, premature reconciliation-clear, retained-receipt
 authority, integrity-conflict, authority-exhaustion, vocabulary, and freshness

@@ -27,7 +27,7 @@ import { renderManagedScopeAdmissionDiagram } from "./render-managed-scope-admis
 const traces = JSON.parse(
   await readFile(
     new URL(
-      "../fixtures/proof-artifacts/managed-scope-admission-traces.json",
+      "../fixtures/conformance-witnesses/managed-scope-admission-traces.json",
       import.meta.url,
     ),
     "utf8",
@@ -47,7 +47,30 @@ function pathSignatures(paths) {
     .toSorted();
 }
 
-test("derives deterministic paths across every modeled axis", () => {
+function declaredEdgeSignatures() {
+  return specification.events
+    .flatMap((event) =>
+      event.from.map((source) => `${source} > ${event.type}`),
+    )
+    .toSorted();
+}
+
+function reachableEdgeSignatures(paths) {
+  return specification.events
+    .flatMap((event) =>
+      event.from
+        .filter((source) =>
+          paths.some(
+            ({ state }) =>
+              state.value === source && state.can({ type: event.type }),
+          ),
+        )
+        .map((source) => `${source} > ${event.type}`),
+    )
+    .toSorted();
+}
+
+test("derives deterministic paths that reach every declared state and edge", () => {
   const options = {
     events: specification.events.map(({ type }) => ({ type })),
     serializeState: serializeModelState,
@@ -58,13 +81,31 @@ test("derives deterministic paths across every modeled axis", () => {
   for (const path of first) {
     assertCrossAxisInvariants(path.state);
   }
-  assert.ok(first.some(({ state }) => state.value === "ready"));
-  assert.ok(
-    first.some(
-      ({ state }) => state.context.reconciliation === "outcome-unknown",
+  for (const axis of ["lifecycle", "authority", "reconciliation"]) {
+    const reached = new Set(
+      first.map(({ state }) =>
+        axis === "lifecycle" ? state.value : state.context[axis],
+      ),
+    );
+    assert.deepEqual(
+      [...reached].toSorted(),
+      specification.axes[axis].states.toSorted(),
+      `every canonical ${axis} state must be reachable`,
+    );
+  }
+  assert.deepEqual(
+    [...new Set(first.map(({ state }) => state.context.generation))].toSorted(),
+    Array.from(
+      { length: specification.witnessBounds.generations },
+      (_, index) => specification.axes.generation.minimum + index,
     ),
+    "every bounded generation must be reachable",
   );
-  assert.ok(first.some(({ state }) => state.context.generation === 2));
+  assert.deepEqual(
+    reachableEdgeSignatures(first),
+    declaredEdgeSignatures(),
+    "every declared source/event edge must be enabled by a reachable state",
+  );
   assert.ok(
     first.some(
       ({ state }) => state.context.blockReason === "DATA_INTEGRITY_CONFLICT",
