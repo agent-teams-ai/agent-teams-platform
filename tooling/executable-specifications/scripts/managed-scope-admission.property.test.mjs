@@ -108,6 +108,7 @@ test("arbitrary production policy bounds match model guard boundaries", () => {
         }
         for (const eventType of [
           "RELEASE_EXHAUSTED",
+          "RELEASE_COMMERCIAL_EXHAUSTED",
           "RECONCILE_NOT_ACCEPTED_EXHAUSTED",
         ]) {
           assert.equal(
@@ -239,9 +240,16 @@ test("critical error paths preserve their recovery contract under arbitrary suff
   );
   assertProperty(
     property(array(eventArbitrary, { maxLength: 40 }), (suffix) => {
-      const integrity = runTrace([...traces.integrityConflict, ...suffix]);
-      assert.equal(integrity.value, "blocked");
-      assert.equal(integrity.context.blockReason, "DATA_INTEGRITY_CONFLICT");
+      for (const traceName of [
+        "primaryIntegrityConflict",
+        "reconciliationIntegrityConflict",
+        "cancellationIntegrityConflict",
+        "integrityConflict",
+      ]) {
+        const integrity = runTrace([...traces[traceName], ...suffix]);
+        assert.equal(integrity.value, "blocked");
+        assert.equal(integrity.context.blockReason, "DATA_INTEGRITY_CONFLICT");
+      }
 
       const actor = createActor(createManagedScopeAdmissionModel()).start();
       for (const type of traces.authorityRecheckExhausted) {

@@ -93,6 +93,58 @@ const mutants = [
       assertBlockedParity(snapshot, domainTraces.integrityConflict()),
   },
   {
+    name: "primary wrong-digest receipt ignored before receipt observation",
+    model: mutateEvent("OBSERVE_INTEGRITY_CONFLICT", (event) => {
+      event.from = event.from.filter((state) => state !== "dispatch-committed");
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_INTEGRITY_CONFLICT"],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.primaryIntegrityConflict()),
+  },
+  {
+    name: "cancellation reconciliation wrong-digest receipt ignored",
+    model: mutateEvent("OBSERVE_INTEGRITY_CONFLICT", (event) => {
+      event.from = event.from.filter(
+        (state) => state !== "cancel-reconcile-required",
+      );
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      "CANCEL_UNCERTAIN",
+      "OBSERVE_INTEGRITY_CONFLICT",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.cancellationIntegrityConflict()),
+  },
+  {
+    name: "commercial denial misclassified as generic authority denial",
+    model: mutateEvent("RESTRICT_DISPATCH", (event) => {
+      event.effects.set.blockReason = "AUTHORITY_DENIED";
+    }),
+    witness: ["CLAIM", "RESTRICT_DISPATCH"],
+    oracle: (snapshot) =>
+      assertBlockedParity(
+        snapshot,
+        domainTraces.preDispatchCommercialRestriction(),
+      ),
+  },
+  {
+    name: "commercial retry exhaustion loses commercial semantics",
+    model: mutateEvent("RELEASE_COMMERCIAL_EXHAUSTED", (event) => {
+      event.effects.set.blockReason = "SAFE_RETRY_EXHAUSTED";
+    }),
+    witness: [
+      "CLAIM",
+      "RELEASE_RETRY",
+      "CLAIM",
+      "RELEASE_COMMERCIAL_EXHAUSTED",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.commercialRetryExhausted()),
+  },
+  {
     name: "authority-recheck exhaustion made non-recoverable",
     model: mutateEvent("RESUME_ADMITTED", (event) => {
       event.guard.all

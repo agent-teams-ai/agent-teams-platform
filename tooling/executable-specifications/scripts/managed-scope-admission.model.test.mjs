@@ -92,11 +92,15 @@ test("matches direct and retained-receipt ready authority", () => {
   assert.equal(resumed.context.admissionAuthorityPresent, true);
 });
 
-test("matches integrity-conflict and authority-recheck exhaustion semantics", () => {
-  assertBlockedParity(
-    runTrace(traces.integrityConflict),
-    domainTraces.integrityConflict(),
-  );
+test("matches every integrity-conflict entry and authority-recheck exhaustion", () => {
+  for (const traceName of [
+    "primaryIntegrityConflict",
+    "reconciliationIntegrityConflict",
+    "cancellationIntegrityConflict",
+    "integrityConflict",
+  ]) {
+    assertBlockedParity(runTrace(traces[traceName]), domainTraces[traceName]());
+  }
   assertBlockedParity(
     runTrace(traces.authorityRecheckExhausted),
     domainTraces.authorityRecheckExhausted(),
@@ -104,6 +108,17 @@ test("matches integrity-conflict and authority-recheck exhaustion semantics", ()
   assertReadyParity(
     runTrace(traces.authorityRecheckRecovery),
     domainTraces.authorityRecheckRecovery(),
+  );
+});
+
+test("matches pre-dispatch commercial denial and retry exhaustion", () => {
+  assertBlockedParity(
+    runTrace(traces.preDispatchCommercialRestriction),
+    domainTraces.preDispatchCommercialRestriction(),
+  );
+  assertBlockedParity(
+    runTrace(traces.commercialRetryExhausted),
+    domainTraces.commercialRetryExhausted(),
   );
 });
 

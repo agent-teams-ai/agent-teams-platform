@@ -119,6 +119,19 @@
       }
     },
     {
+      "type": "RESTRICT_DISPATCH",
+      "from": ["claimed"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "commercially-restricted",
+          "blockReason": "COMMERCIAL_RESTRICTION",
+          "dispatchAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
       "type": "RELEASE_RETRY",
       "from": ["claimed", "dispatch-committed"],
       "to": "retry-wait",
@@ -150,6 +163,25 @@
         "set": {
           "authority": "closed",
           "blockReason": "SAFE_RETRY_EXHAUSTED",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "RELEASE_COMMERCIAL_EXHAUSTED",
+      "from": ["claimed"],
+      "to": "blocked",
+      "guard": {
+        "all": [
+          { "field": "attemptCount", "operator": "at-least-limit", "limit": "attempts" }
+        ]
+      },
+      "effects": {
+        "set": {
+          "authority": "commercially-restricted",
+          "blockReason": "COMMERCIAL_RESTRICTION",
           "reconciliation": "clear",
           "dispatchAuthorityPresent": false
         },
@@ -285,12 +317,13 @@
     },
     {
       "type": "OBSERVE_INTEGRITY_CONFLICT",
-      "from": ["receipt-observed"],
+      "from": ["dispatch-committed", "reconcile-required", "cancel-reconcile-required", "receipt-observed"],
       "to": "blocked",
       "effects": {
         "set": {
           "authority": "closed",
           "blockReason": "DATA_INTEGRITY_CONFLICT",
+          "reconciliation": "clear",
           "admissionAuthorityPresent": false
         },
         "increment": ["revision"]

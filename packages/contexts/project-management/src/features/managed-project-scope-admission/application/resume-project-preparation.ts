@@ -1,4 +1,5 @@
 import { resumeManagedScopeAdmission } from "../domain/managed-scope-admission-process.js";
+import { preparationGenerationExhausted } from "../domain/scope-admission-readiness.js";
 import type {
   ProjectPreparationCommand,
   ProjectManagementDependencies,
@@ -42,8 +43,12 @@ function isResumable(
     process.process.blockReason !== "DATA_INTEGRITY_CONFLICT" &&
     process.process.blockReason !== "DOWNSTREAM_CONFLICT" &&
     process.process.generation === command.expectedGeneration &&
-    process.process.resumptionCount < maxGenerations &&
-    (canReuseAdmittedReceipt || process.process.generation < maxGenerations);
+    !preparationGenerationExhausted({
+      generation: process.process.generation,
+      resumptionCount: process.process.resumptionCount,
+      retainsAdmittedReceipt: canReuseAdmittedReceipt,
+      maxPreparationGenerations: maxGenerations,
+    });
 }
 
 export function resumeProjectPreparationUseCase(

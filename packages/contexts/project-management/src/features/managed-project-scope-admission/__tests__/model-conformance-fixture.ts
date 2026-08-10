@@ -202,6 +202,65 @@ export function domainIntegrityConflictTrace() {
   });
 }
 
+function blockedTrace(process: ReturnType<typeof initialProcess>) {
+  return Object.freeze({
+    state: process.state,
+    receiptKind: process.receipt?.kind ?? null,
+    revision: process.revision,
+    blockReason: process.blockReason,
+    hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
+    hasAdmissionAuthority: process.admissionAuthorityBasis !== null,
+  });
+}
+
+export function domainPrimaryIntegrityConflictTrace() {
+  let process = claimDispatch(initialProcess());
+  process = authorizeDispatch(process, authorityBasis);
+  process = blockScopeAdmissionForIntegrity(process);
+  return blockedTrace(process);
+}
+
+export function domainReconciliationIntegrityConflictTrace() {
+  let process = claimDispatch(initialProcess());
+  process = authorizeDispatch(process, authorityBasis);
+  process = requireReconciliation(process);
+  process = blockScopeAdmissionForIntegrity(process);
+  return blockedTrace(process);
+}
+
+export function domainCancellationIntegrityConflictTrace() {
+  let process = claimDispatch(initialProcess());
+  process = authorizeDispatch(process, authorityBasis);
+  process = requireReconciliation(process);
+  process = requestScopeAdmissionCancellation(process).process;
+  process = completeScopeAdmissionCancellation(process, {
+    kind: "admitted",
+    receiptRef: ids.orchestratorReceipt("model-cancel-integrity"),
+    receiptDigest: ids.digest("model-wrong-cancel-digest"),
+  });
+  return blockedTrace(process);
+}
+
+export function domainPreDispatchCommercialRestrictionTrace() {
+  const process = blockDispatchForAuthority(
+    claimDispatch(initialProcess()),
+    "COMMERCIAL_RESTRICTION",
+  );
+  return blockedTrace(process);
+}
+
+export function domainCommercialRetryExhaustedTrace() {
+  let process = claimDispatch(initialProcess());
+  process = releaseUnsubmittedDispatch(process, false);
+  process = claimDispatch(process);
+  process = releaseUnsubmittedDispatch(
+    process,
+    true,
+    "COMMERCIAL_RESTRICTION",
+  );
+  return blockedTrace(process);
+}
+
 export function domainPolicyBoundary(input: {
   maxAttempts: number;
   attemptCount: number;

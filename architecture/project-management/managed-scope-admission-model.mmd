@@ -13,10 +13,12 @@ stateDiagram-v2
   lifecycle_3 --> lifecycle_1: CLAIM
   lifecycle_1 --> lifecycle_2: AUTHORIZE_DISPATCH
   lifecycle_1 --> lifecycle_8: DENY_DISPATCH
+  lifecycle_1 --> lifecycle_8: RESTRICT_DISPATCH
   lifecycle_1 --> lifecycle_3: RELEASE_RETRY
   lifecycle_2 --> lifecycle_3: RELEASE_RETRY
   lifecycle_1 --> lifecycle_8: RELEASE_EXHAUSTED
   lifecycle_2 --> lifecycle_8: RELEASE_EXHAUSTED
+  lifecycle_1 --> lifecycle_8: RELEASE_COMMERCIAL_EXHAUSTED
   lifecycle_2 --> lifecycle_4: LOSE_ACKNOWLEDGEMENT
   lifecycle_4 --> lifecycle_3: RECONCILE_NOT_ACCEPTED
   lifecycle_4 --> lifecycle_8: RECONCILE_NOT_ACCEPTED_EXHAUSTED
@@ -30,6 +32,9 @@ stateDiagram-v2
   lifecycle_4 --> lifecycle_8: OBSERVE_CONFLICT
   lifecycle_6 --> lifecycle_7: FINALIZE_READY
   lifecycle_6 --> lifecycle_8: EXHAUST_AUTHORITY_RECHECK
+  lifecycle_2 --> lifecycle_8: OBSERVE_INTEGRITY_CONFLICT
+  lifecycle_4 --> lifecycle_8: OBSERVE_INTEGRITY_CONFLICT
+  lifecycle_5 --> lifecycle_8: OBSERVE_INTEGRITY_CONFLICT
   lifecycle_6 --> lifecycle_8: OBSERVE_INTEGRITY_CONFLICT
   lifecycle_6 --> lifecycle_8: DENY_AFTER_RECEIPT
   lifecycle_6 --> lifecycle_8: RESTRICT_AFTER_RECEIPT
