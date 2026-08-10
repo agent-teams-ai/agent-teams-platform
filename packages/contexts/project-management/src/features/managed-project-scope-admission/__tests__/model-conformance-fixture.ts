@@ -284,13 +284,16 @@ export function domainCommercialRetryExhaustedTrace() {
 
 async function productionCommercialRouting(
   decision: "denied" | "unavailable",
-): Promise<ScopeAdmissionBlockReason> {
+  exhausted = true,
+) {
   let process = claimDispatch(initialProcess());
-  if (decision === "unavailable") {
+  if (decision === "unavailable" && exhausted) {
     process = claimDispatch(releaseUnsubmittedDispatch(process, false));
   }
   const claim = Object.freeze({ process }) as unknown as ScopeAdmissionDispatchClaim;
   let observedReason: ScopeAdmissionBlockReason | null = null;
+  let denialCalls = 0;
+  let releaseCalls = 0;
   const allowed = Object.freeze({
     kind: "allowed" as const,
     evidenceRef: ids.authorityEvidence("model-routing-allowed"),
@@ -325,6 +328,7 @@ async function productionCommercialRouting(
         _claim: ScopeAdmissionDispatchClaim,
         blockReason: ScopeAdmissionBlockReason,
       ) => {
+        denialCalls += 1;
         observedReason = blockReason;
         return { kind: "applied" as const };
       },
@@ -332,24 +336,31 @@ async function productionCommercialRouting(
         _claim: ScopeAdmissionDispatchClaim,
         input: { exhaustedReason?: ScopeAdmissionBlockReason },
       ) => {
+        releaseCalls += 1;
         observedReason = input.exhaustedReason ?? "SAFE_RETRY_EXHAUSTED";
         return { kind: "applied" as const };
       },
     },
   } as unknown as ProjectManagementDependencies;
   const result = await dispatchManagedScopeAdmissionUseCase(dependencies)();
-  if (result.kind !== "blocked" || observedReason === null) {
-    throw new Error("Production commercial routing did not block with a reason.");
-  }
-  return observedReason;
+  return Object.freeze({
+    resultKind: result.kind,
+    observedReason,
+    denialCalls,
+    releaseCalls,
+  });
 }
 
-export async function productionCommercialDenialReason() {
+export async function productionCommercialDenialEvidence() {
   return productionCommercialRouting("denied");
 }
 
-export async function productionCommercialExhaustionReason() {
+export async function productionCommercialExhaustionEvidence() {
   return productionCommercialRouting("unavailable");
+}
+
+export async function productionCommercialRetryEvidence() {
+  return productionCommercialRouting("unavailable", false);
 }
 
 export function domainPolicyBoundary(input: {

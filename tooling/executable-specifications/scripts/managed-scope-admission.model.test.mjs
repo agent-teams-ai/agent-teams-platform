@@ -112,14 +112,24 @@ test("matches every integrity-conflict entry and authority-recheck exhaustion", 
 });
 
 test("matches production pre-dispatch commercial denial and retry exhaustion", async () => {
-  assert.equal(
-    (await domainTraces.productionCommercialDenialReason()),
-    "COMMERCIAL_RESTRICTION",
-  );
-  assert.equal(
-    (await domainTraces.productionCommercialExhaustionReason()),
-    "COMMERCIAL_RESTRICTION",
-  );
+  assert.deepEqual(await domainTraces.productionCommercialDenialEvidence(), {
+    resultKind: "blocked",
+    observedReason: "COMMERCIAL_RESTRICTION",
+    denialCalls: 1,
+    releaseCalls: 0,
+  });
+  assert.deepEqual(await domainTraces.productionCommercialExhaustionEvidence(), {
+    resultKind: "blocked",
+    observedReason: "COMMERCIAL_RESTRICTION",
+    denialCalls: 0,
+    releaseCalls: 1,
+  });
+  assert.deepEqual(await domainTraces.productionCommercialRetryEvidence(), {
+    resultKind: "retry",
+    observedReason: "COMMERCIAL_RESTRICTION",
+    denialCalls: 0,
+    releaseCalls: 1,
+  });
   assertBlockedParity(
     runTrace(traces.preDispatchCommercialRestriction),
     domainTraces.preDispatchCommercialRestriction(),
