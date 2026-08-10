@@ -86,15 +86,41 @@ test("arbitrary production policy bounds match model guard boundaries", () => {
           resumptionCount,
           retainsAdmittedReceipt,
         });
-        assert.equal(
-          eventAllows(
-            { ...specification.initialContext, attemptCount },
-            "CLAIM",
-            specification,
-            bounds,
-          ),
-          !domain.attemptExhausted,
-        );
+        const attemptContext = {
+          ...specification.initialContext,
+          attemptCount,
+        };
+        for (const eventType of [
+          "CLAIM",
+          "RELEASE_RETRY",
+          "RECONCILE_NOT_ACCEPTED",
+        ]) {
+          assert.equal(
+            eventAllows(
+              attemptContext,
+              eventType,
+              specification,
+              bounds,
+            ),
+            !domain.attemptExhausted,
+            `${eventType} must match safeRetryExhausted`,
+          );
+        }
+        for (const eventType of [
+          "RELEASE_EXHAUSTED",
+          "RECONCILE_NOT_ACCEPTED_EXHAUSTED",
+        ]) {
+          assert.equal(
+            eventAllows(
+              attemptContext,
+              eventType,
+              specification,
+              bounds,
+            ),
+            domain.attemptExhausted,
+            `${eventType} must match safeRetryExhausted`,
+          );
+        }
 
         const eventType = retainsAdmittedReceipt
           ? "RESUME_ADMITTED"

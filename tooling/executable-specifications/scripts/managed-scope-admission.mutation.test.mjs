@@ -44,6 +44,27 @@ const mutants = [
     oracle: assertCrossAxisInvariants,
   },
   {
+    name: "unsubmitted dispatch exhausted before production retry policy",
+    model: mutateEvent("RELEASE_EXHAUSTED", (event) => {
+      event.guard.all[0].operator = "less-than-limit";
+    }),
+    witness: ["CLAIM", "RELEASE_EXHAUSTED"],
+    oracle: (snapshot) => assert.equal(snapshot.value, "claimed"),
+  },
+  {
+    name: "reconciliation exhausted before production retry policy",
+    model: mutateEvent("RECONCILE_NOT_ACCEPTED_EXHAUSTED", (event) => {
+      event.guard.all[0].operator = "less-than-limit";
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      "RECONCILE_NOT_ACCEPTED_EXHAUSTED",
+    ],
+    oracle: (snapshot) => assert.equal(snapshot.value, "reconcile-required"),
+  },
+  {
     name: "authority-recheck exhaustion misclassified as a generic denial",
     model: mutateEvent("EXHAUST_AUTHORITY_RECHECK", (event) => {
       event.effects.set.blockReason = "AUTHORITY_DENIED";
