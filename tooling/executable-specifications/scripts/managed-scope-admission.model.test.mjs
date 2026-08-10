@@ -143,6 +143,23 @@ test("matches production pre-dispatch commercial denial and retry exhaustion", a
   );
 });
 
+test("matches exact denial, cancellation and downstream receipt mappings", () => {
+  for (const traceName of [
+    "preDispatchAuthorityDenied",
+    "safeCancellation",
+    "rejectedReceipt",
+    "staleReceipt",
+    "conflictReceipt",
+    "retryExhausted",
+    "reconciliationRetryExhausted",
+    "afterReceiptAuthorityDenied",
+    "afterReceiptCommercialRestriction",
+    "reconciledCancellation",
+  ]) {
+    assertBlockedParity(runTrace(traces[traceName]), domainTraces[traceName]());
+  }
+});
+
 test("JSON vocabulary has exact executable domain evidence", () => {
   const evidence = domainTraces.vocabularyEvidence();
   assert.deepEqual(evidence.receiptKinds, specification.vocabulary.receiptKinds);

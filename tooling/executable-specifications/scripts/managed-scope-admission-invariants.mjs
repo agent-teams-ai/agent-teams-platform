@@ -36,6 +36,19 @@ export function assertCrossAxisInvariants(
   if (snapshot.value === "cancel-reconcile-required") {
     assert.equal(context.reconciliation, "cancellation-unknown");
   }
+  const reasonByReceipt = {
+    rejected: "DOWNSTREAM_REJECTED",
+    stale: "DOWNSTREAM_STALE",
+    conflict: "DOWNSTREAM_CONFLICT",
+  };
+  if (context.receipt in reasonByReceipt) {
+    assert.equal(context.blockReason, reasonByReceipt[context.receipt]);
+  }
+  if (snapshot.value === "receipt-observed") {
+    assert.equal(context.receipt, "admitted");
+    assert.equal(context.authority, "admission-recheck-pending");
+    assert.equal(context.reconciliation, "clear");
+  }
   if (context.blockReason === "DATA_INTEGRITY_CONFLICT") {
     assert.equal(snapshot.value, "blocked");
   }

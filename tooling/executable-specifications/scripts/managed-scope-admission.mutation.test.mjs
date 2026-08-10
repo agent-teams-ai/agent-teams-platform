@@ -293,6 +293,124 @@ const mutants = [
       assertReadyParity(snapshot, domainTraces.authorityRecheckRecovery()),
   },
   {
+    name: "rejected receipt misclassified as stale",
+    model: mutateEvent("OBSERVE_REJECTED", (event) => {
+      event.effects.set.blockReason = "DOWNSTREAM_STALE";
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_REJECTED"],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.rejectedReceipt()),
+  },
+  {
+    name: "stale receipt misclassified as rejected",
+    model: mutateEvent("OBSERVE_STALE", (event) => {
+      event.effects.set.blockReason = "DOWNSTREAM_REJECTED";
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_STALE"],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.staleReceipt()),
+  },
+  {
+    name: "conflict receipt misclassified as rejected",
+    model: mutateEvent("OBSERVE_CONFLICT", (event) => {
+      event.effects.set.blockReason = "DOWNSTREAM_REJECTED";
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_CONFLICT"],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.conflictReceipt()),
+  },
+  {
+    name: "pre-dispatch denial misclassified as commercial",
+    model: mutateEvent("DENY_DISPATCH", (event) => {
+      event.effects.set.blockReason = "COMMERCIAL_RESTRICTION";
+    }),
+    witness: ["CLAIM", "DENY_DISPATCH"],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.preDispatchAuthorityDenied()),
+  },
+  {
+    name: "safe cancellation misclassified as authority denial",
+    model: mutateEvent("CANCEL_SAFE", (event) => {
+      event.effects.set.blockReason = "AUTHORITY_DENIED";
+    }),
+    witness: ["CANCEL_SAFE"],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.safeCancellation()),
+  },
+  {
+    name: "retry exhaustion misclassified as authority denial",
+    model: mutateEvent("RELEASE_EXHAUSTED", (event) => {
+      event.effects.set.blockReason = "AUTHORITY_DENIED";
+    }),
+    witness: ["CLAIM", "RELEASE_RETRY", "CLAIM", "RELEASE_EXHAUSTED"],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.retryExhausted()),
+  },
+  {
+    name: "reconciliation exhaustion misclassified as authority denial",
+    model: mutateEvent("RECONCILE_NOT_ACCEPTED_EXHAUSTED", (event) => {
+      event.effects.set.blockReason = "AUTHORITY_DENIED";
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      "RECONCILE_NOT_ACCEPTED",
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      "RECONCILE_NOT_ACCEPTED_EXHAUSTED",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.reconciliationRetryExhausted()),
+  },
+  {
+    name: "post-receipt denial misclassified as commercial",
+    model: mutateEvent("DENY_AFTER_RECEIPT", (event) => {
+      event.effects.set.blockReason = "COMMERCIAL_RESTRICTION";
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "OBSERVE_ADMITTED",
+      "DENY_AFTER_RECEIPT",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.afterReceiptAuthorityDenied()),
+  },
+  {
+    name: "post-receipt commercial restriction misclassified as denial",
+    model: mutateEvent("RESTRICT_AFTER_RECEIPT", (event) => {
+      event.effects.set.blockReason = "AUTHORITY_DENIED";
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "OBSERVE_ADMITTED",
+      "RESTRICT_AFTER_RECEIPT",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(
+        snapshot,
+        domainTraces.afterReceiptCommercialRestriction(),
+      ),
+  },
+  {
+    name: "reconciled cancellation misclassified as authority denial",
+    model: mutateEvent("CANCEL_RECONCILED", (event) => {
+      event.effects.set.blockReason = "AUTHORITY_DENIED";
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      "CANCEL_UNCERTAIN",
+      "CANCEL_RECONCILED",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.reconciledCancellation()),
+  },
+  {
     name: "premature reconciliation clear after lost acknowledgement",
     model: mutateEvent("LOSE_ACKNOWLEDGEMENT", (event) => {
       event.effects.set.reconciliation = "clear";

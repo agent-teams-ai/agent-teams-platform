@@ -4,7 +4,6 @@ import {
   blockDispatchForAuthority,
   blockScopeAdmissionForAuthority,
   blockScopeAdmissionForAuthorityRecheckExhaustion,
-  blockScopeAdmissionForIntegrity,
   claimDispatch,
   completeScopeAdmissionCancellation,
   finalizeScopeAdmission,
@@ -12,14 +11,12 @@ import {
   requestManagedScopeAdmission,
   requestScopeAdmissionCancellation,
   releaseUnsubmittedDispatch,
+  releaseReconciledNonAcceptance,
   requireReconciliation,
   resumeManagedScopeAdmission,
   type ScopeAdmissionBlockReason,
-  type ScopeAdmissionReceipt,
 } from "../domain/managed-scope-admission-process.js";
-import { preparationGenerationExhausted } from "../domain/scope-admission-readiness.js";
 import { ids } from "../domain/value-objects.js";
-import { safeRetryExhausted } from "../application/safe-retry-policy.js";
 import { dispatchManagedScopeAdmissionUseCase } from "../application/dispatch-scope-admission.js";
 import { applyScopeAdmissionReceipt } from "../application/apply-scope-admission-receipt.js";
 import type { ProjectManagementDependencies } from "../application/contracts.js";
@@ -50,19 +47,6 @@ const authorityBasis: CreationAuthorityBasisSnapshot = Object.freeze({
     }),
   ] as const),
 });
-
-function exactVocabularyEvidence<T extends string>(
-  evidence: Record<T, T | null | undefined>,
-): readonly T[] {
-  return Object.freeze(
-    Object.entries(evidence).map(([expected, observed]) => {
-      if (expected !== observed) {
-        throw new Error(`Domain vocabulary evidence mismatch for ${expected}.`);
-      }
-      return expected as T;
-    }),
-  );
-}
 
 function initialProcess() {
   return requestManagedScopeAdmission({
@@ -321,6 +305,92 @@ export function domainCommercialRetryExhaustedTrace() {
   return blockedTrace(process);
 }
 
+export function domainPreDispatchAuthorityDeniedTrace() {
+  const process = blockDispatchForAuthority(
+    claimDispatch(initialProcess()),
+    "AUTHORITY_DENIED",
+  );
+  return blockedTrace(process);
+}
+
+export function domainSafeCancellationTrace() {
+  return blockedTrace(requestScopeAdmissionCancellation(initialProcess()).process);
+}
+
+function domainBlockedReceiptTrace(kind: "rejected" | "stale" | "conflict") {
+  let process = claimDispatch(initialProcess());
+  process = authorizeDispatch(process, authorityBasis);
+  process = observeScopeAdmissionReceipt(process, {
+    kind,
+    receiptRef: ids.orchestratorReceipt(`model-${kind}`),
+    receiptDigest: process.stepDigest,
+  });
+  return blockedTrace(process);
+}
+
+export function domainRejectedReceiptTrace() {
+  return domainBlockedReceiptTrace("rejected");
+}
+
+export function domainStaleReceiptTrace() {
+  return domainBlockedReceiptTrace("stale");
+}
+
+export function domainConflictReceiptTrace() {
+  return domainBlockedReceiptTrace("conflict");
+}
+
+export function domainRetryExhaustedTrace() {
+  let process = claimDispatch(initialProcess());
+  process = releaseUnsubmittedDispatch(process, false);
+  process = claimDispatch(process);
+  process = releaseUnsubmittedDispatch(process, true);
+  return blockedTrace(process);
+}
+
+export function domainReconciliationRetryExhaustedTrace() {
+  let process = claimDispatch(initialProcess());
+  process = authorizeDispatch(process, authorityBasis);
+  process = requireReconciliation(process);
+  process = releaseReconciledNonAcceptance(process, false);
+  process = claimDispatch(process);
+  process = authorizeDispatch(process, authorityBasis);
+  process = requireReconciliation(process);
+  process = releaseReconciledNonAcceptance(process, true);
+  return blockedTrace(process);
+}
+
+function domainAfterReceiptAuthorityTrace(
+  reason: "AUTHORITY_DENIED" | "COMMERCIAL_RESTRICTION",
+) {
+  let process = claimDispatch(initialProcess());
+  process = authorizeDispatch(process, authorityBasis);
+  process = observeScopeAdmissionReceipt(process, {
+    kind: "admitted",
+    receiptRef: ids.orchestratorReceipt(`model-${reason}`),
+    receiptDigest: process.stepDigest,
+  });
+  process = blockScopeAdmissionForAuthority(process, reason);
+  return blockedTrace(process);
+}
+
+export function domainAfterReceiptAuthorityDeniedTrace() {
+  return domainAfterReceiptAuthorityTrace("AUTHORITY_DENIED");
+}
+
+export function domainAfterReceiptCommercialRestrictionTrace() {
+  return domainAfterReceiptAuthorityTrace("COMMERCIAL_RESTRICTION");
+}
+
+export function domainReconciledCancellationTrace() {
+  let process = claimDispatch(initialProcess());
+  process = authorizeDispatch(process, authorityBasis);
+  process = requireReconciliation(process);
+  process = requestScopeAdmissionCancellation(process).process;
+  process = completeScopeAdmissionCancellation(process, null);
+  return blockedTrace(process);
+}
+
 async function productionCommercialRouting(
   decision: "denied" | "unavailable",
   exhausted = true,
@@ -408,81 +478,5 @@ export async function productionCommercialRetryEvidence() {
   return productionCommercialRouting("unavailable", false);
 }
 
-export function domainPolicyBoundary(input: {
-  maxAttempts: number;
-  attemptCount: number;
-  maxPreparationGenerations: number;
-  generation: number;
-  resumptionCount: number;
-  retainsAdmittedReceipt: boolean;
-}) {
-  return Object.freeze({
-    attemptExhausted: safeRetryExhausted(
-      {
-        defaultDelayMs: 1,
-        maxDelayMs: 1,
-        maxAttempts: input.maxAttempts,
-      },
-      input.attemptCount,
-    ),
-    generationExhausted: preparationGenerationExhausted(input),
-  });
-}
-
-export function domainVocabularyEvidence() {
-  function observe(kind: ScopeAdmissionReceipt["kind"]) {
-    let process = claimDispatch(initialProcess());
-    process = authorizeDispatch(process, authorityBasis);
-    return observeScopeAdmissionReceipt(process, {
-      kind,
-      receiptRef: ids.orchestratorReceipt(`model-vocabulary-${kind}`),
-      receiptDigest: process.stepDigest,
-    });
-  }
-  const admitted = observe("admitted");
-  const rejected = observe("rejected");
-  const stale = observe("stale");
-  const conflict = observe("conflict");
-
-  const denied = blockDispatchForAuthority(
-    claimDispatch(initialProcess()),
-    "AUTHORITY_DENIED",
-  );
-  const restricted = blockDispatchForAuthority(
-    claimDispatch(initialProcess()),
-    "COMMERCIAL_RESTRICTION",
-  );
-  const exhausted = releaseUnsubmittedDispatch(
-    claimDispatch(initialProcess()),
-    true,
-  );
-  const cancelled = requestScopeAdmissionCancellation(initialProcess()).process;
-  const integrity = blockScopeAdmissionForIntegrity(initialProcess());
-  const authorityExhausted = domainAuthorityRecheckExhaustedTrace();
-
-  return Object.freeze({
-    receiptKinds: exactVocabularyEvidence({
-      admitted: admitted.receipt?.kind,
-      rejected: rejected.receipt?.kind,
-      stale: stale.receipt?.kind,
-      conflict: conflict.receipt?.kind,
-    } satisfies Record<
-      ScopeAdmissionReceipt["kind"],
-      ScopeAdmissionReceipt["kind"] | null | undefined
-    >),
-    blockReasons: exactVocabularyEvidence({
-      AUTHORITY_DENIED: denied.blockReason,
-      AUTHORITY_RECHECK_EXHAUSTED: authorityExhausted.blockReason,
-      COMMERCIAL_RESTRICTION: restricted.blockReason,
-      DOWNSTREAM_REJECTED: rejected.blockReason,
-      DOWNSTREAM_STALE: stale.blockReason,
-      DOWNSTREAM_CONFLICT: conflict.blockReason,
-      SAFE_RETRY_EXHAUSTED: exhausted.blockReason,
-      USER_CANCELLED: cancelled.blockReason,
-      DATA_INTEGRITY_CONFLICT: integrity.blockReason,
-    } satisfies Record<
-      ScopeAdmissionBlockReason,
-      ScopeAdmissionBlockReason | null | undefined
-    >),
-  });
-}
+export { domainPolicyBoundary } from "./model-conformance-policy-fixture.js";
+export { domainVocabularyEvidence } from "./model-conformance-vocabulary-fixture.js";
