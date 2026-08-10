@@ -318,7 +318,7 @@ export function resumePreparationInMemory(
   if (input.outbox !== null) {
     state.outboxes.set(input.outbox.id, input.outbox);
   }
-  const predecessorReceiptRetained = current.process.receipt !== null;
+  const predecessorReceiptRetained = current.process.receipt?.kind === "admitted";
   state.preparationCommands.set(commandKey, Object.freeze({
     identity: input.identity,
     kind: "resume",

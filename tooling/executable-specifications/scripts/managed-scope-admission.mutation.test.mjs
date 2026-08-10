@@ -730,6 +730,16 @@ test("production pending-cancellation guard supplies its no-op oracle", async ()
   assert.deepEqual(evidence.after, evidence.before);
 });
 
+test("production resume receipt authority supplies the non-admitted oracle", async () => {
+  for (const evidence of await domainTraces.productionNonAdmittedResumeEvidence()) {
+    assert.equal(evidence.first.predecessorReceiptRetained, false);
+    assert.equal(evidence.replay.predecessorReceiptRetained, false);
+    assert.equal(evidence.replay.replayed, true);
+    assert.equal(evidence.successorReceiptKind, null);
+    assert.notEqual(evidence.successorCommandId, evidence.predecessorCommandId);
+  }
+});
+
 for (const [eventType, field] of [
   ["STALE_GENERATION", "generation"],
   ["STALE_REVISION", "revision"],

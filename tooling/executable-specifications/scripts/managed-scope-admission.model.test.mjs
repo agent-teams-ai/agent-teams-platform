@@ -339,3 +339,26 @@ test("production pending cancellation is repeat-command invariant", async () => 
   assert.equal(evidence.before.state, "cancel-reconcile-required");
   assert.deepEqual(evidence.after, evidence.before);
 });
+
+test("production non-admitted resumes report and replay a clean successor", async () => {
+  for (const evidence of await domainTraces.productionNonAdmittedResumeEvidence()) {
+    assert.deepEqual(evidence.first, {
+      kind: "accepted",
+      generation: 2,
+      predecessorReceiptRetained: false,
+      replayed: false,
+    }, evidence.receiptKind);
+    assert.deepEqual(evidence.replay, {
+      kind: "accepted",
+      generation: 2,
+      predecessorReceiptRetained: false,
+      replayed: true,
+    }, evidence.receiptKind);
+    assert.equal(evidence.successorReceiptKind, null, evidence.receiptKind);
+    assert.notEqual(
+      evidence.successorCommandId,
+      evidence.predecessorCommandId,
+      evidence.receiptKind,
+    );
+  }
+});

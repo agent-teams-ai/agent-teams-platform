@@ -296,3 +296,42 @@ export async function productionPendingCancellationNoOpEvidence() {
     after: processProjection(after.process),
   });
 }
+
+export async function productionNonAdmittedResumeEvidence() {
+  const evidence = [];
+  for (const receiptKind of ["rejected", "stale"] as const) {
+    const subject = fixture();
+    const created = await acceptedProject(subject);
+    subject.orchestration.submission = (intent) => ({
+      kind: "receipt",
+      receipt: {
+        kind: receiptKind,
+        receiptRef: ids.orchestratorReceipt(`model-resume-${receiptKind}`),
+        receiptDigest: intent.commandDigest,
+      },
+    });
+    await subject.worker.dispatchManagedScopeAdmission();
+    const predecessor = await requireSnapshot(
+      subject,
+      created.operationRef,
+      `Expected ${receiptKind} predecessor before resume.`,
+    );
+    const command = resumeCommand(created.operationRef);
+    const first = await subject.application.resumeProjectPreparation(command);
+    const replay = await subject.application.resumeProjectPreparation(command);
+    const successor = await requireSnapshot(
+      subject,
+      created.operationRef,
+      `Expected successor after ${receiptKind} resume.`,
+    );
+    evidence.push(Object.freeze({
+      receiptKind,
+      first,
+      replay,
+      predecessorCommandId: predecessor.process.stepCommandId,
+      successorCommandId: successor.process.stepCommandId,
+      successorReceiptKind: successor.process.receipt?.kind ?? null,
+    }));
+  }
+  return Object.freeze(evidence);
+}
