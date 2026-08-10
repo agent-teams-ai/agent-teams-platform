@@ -41,6 +41,8 @@ export function assertCrossAxisInvariants(
 
 export function assertReadyParity(model, domain) {
   assert.equal(model.value, domain.state);
+  assert.equal(model.context.authority, domain.authority);
+  assert.equal(model.context.reconciliation, domain.reconciliation);
   assert.equal(model.context.receipt, domain.receiptKind);
   assert.equal(model.context.revision, domain.revision);
   assert.equal(

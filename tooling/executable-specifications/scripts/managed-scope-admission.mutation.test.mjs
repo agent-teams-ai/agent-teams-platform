@@ -28,6 +28,22 @@ const mutants = [
     oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.ready()),
   },
   {
+    name: "ready without admission-authorized axis",
+    model: mutateEvent("FINALIZE_READY", (event) => {
+      event.effects.set.authority = "closed";
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "FINALIZE_READY"],
+    oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.ready()),
+  },
+  {
+    name: "ready with unresolved reconciliation axis",
+    model: mutateEvent("FINALIZE_READY", (event) => {
+      event.effects.set.reconciliation = "outcome-unknown";
+    }),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "FINALIZE_READY"],
+    oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.ready()),
+  },
+  {
     name: "retry beyond the canonical attempt limit",
     model: mutateEvent("CLAIM", (_event, mutant) => {
       mutant.witnessBounds.attempts += 1;

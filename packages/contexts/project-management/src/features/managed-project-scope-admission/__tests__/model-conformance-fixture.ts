@@ -107,6 +107,8 @@ export function domainReadyTrace() {
   process = finalizeScopeAdmission(process, authorityBasis);
   return Object.freeze({
     state: process.state,
+    authority: "admission-authorized",
+    reconciliation: "clear",
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
     hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
@@ -130,6 +132,8 @@ export function domainResumedReadyTrace() {
   process = finalizeScopeAdmission(process, authorityBasis);
   return Object.freeze({
     state: process.state,
+    authority: "admission-authorized",
+    reconciliation: "clear",
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
     generation: process.generation,
@@ -176,6 +180,8 @@ export function domainAuthorityRecheckRecoveryTrace() {
   process = finalizeScopeAdmission(process, authorityBasis);
   return Object.freeze({
     state: process.state,
+    authority: "admission-authorized",
+    reconciliation: "clear",
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
     generation: process.generation,
