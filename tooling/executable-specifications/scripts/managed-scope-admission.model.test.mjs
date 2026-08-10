@@ -7,6 +7,7 @@ import { getShortestPaths } from "@xstate/graph";
 import { domainTraces } from "./managed-scope-admission-domain-adapter.mjs";
 import {
   assertBlockedParity,
+  assertCancellationRecoveryMatrixEvidence,
   assertCrossAxisInvariants,
   assertProcessParity,
   assertRecoveryPredecessor,
@@ -398,5 +399,11 @@ test("production reconciliation exhausts on the exact retry boundary", async () 
 test("production reconciliation preserves every recovered receipt kind", async () => {
   assertReconciledReceiptMatrixEvidence(
     await domainTraces.productionReconciledReceiptMatrixEvidence(),
+  );
+});
+
+test("production cancellation recovery preserves every receipt kind", async () => {
+  assertCancellationRecoveryMatrixEvidence(
+    await domainTraces.productionCancellationRecoveryMatrixEvidence(),
   );
 });

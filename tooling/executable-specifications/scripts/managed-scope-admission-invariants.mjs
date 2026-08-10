@@ -315,13 +315,45 @@ export function assertReconciledReceiptMatrixEvidence(evidence) {
       blockReason: "DOWNSTREAM_CONFLICT",
       hasDispatchAuthority: true,
     }),
+    "wrong-digest": recoveryPredecessor({
+      revision: 5,
+      blockReason: "DATA_INTEGRITY_CONFLICT",
+      hasDispatchAuthority: true,
+    }),
   };
   assert.deepEqual(
-    evidence.map(({ receiptKind }) => receiptKind),
-    ["admitted", "rejected", "stale", "conflict"],
+    evidence.map(({ label }) => label),
+    ["admitted", "rejected", "stale", "conflict", "wrong-digest"],
   );
   for (const item of evidence) {
-    assert.equal(item.resultKind, "receipt-recorded", item.receiptKind);
-    assert.deepEqual(item.process, expected[item.receiptKind], item.receiptKind);
+    assert.equal(
+      item.resultKind,
+      item.label === "wrong-digest" ? "integrity-conflict" : "receipt-recorded",
+      item.label,
+    );
+    assert.deepEqual(item.process, expected[item.label], item.label);
+  }
+}
+
+export function assertCancellationRecoveryMatrixEvidence(evidence) {
+  assert.deepEqual(
+    evidence.map(({ label }) => label),
+    ["known-not-accepted", "admitted", "rejected", "stale", "conflict", "wrong-digest"],
+  );
+  for (const item of evidence) {
+    const conflict = item.receiptKind === "conflict";
+    const integrityConflict = item.label === "wrong-digest";
+    assert.equal(
+      item.resultKind,
+      integrityConflict ? "integrity-conflict" : conflict ? "blocked" : "cancelled",
+    );
+    assert.deepEqual(item.process, recoveryPredecessor({
+      revision: 6,
+      receiptKind: integrityConflict ? null : item.receiptKind,
+      blockReason: integrityConflict
+        ? "DATA_INTEGRITY_CONFLICT"
+        : conflict ? "DOWNSTREAM_CONFLICT" : "USER_CANCELLED",
+      hasDispatchAuthority: integrityConflict,
+    }), item.label);
   }
 }

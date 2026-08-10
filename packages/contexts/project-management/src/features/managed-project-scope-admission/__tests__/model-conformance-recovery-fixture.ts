@@ -412,7 +412,14 @@ export async function productionReconciliationExhaustionEvidence() {
 
 export async function productionReconciledReceiptMatrixEvidence() {
   const evidence = [];
-  for (const receiptKind of ["admitted", "rejected", "stale", "conflict"] as const) {
+  const cases = [
+    { label: "admitted", receiptKind: "admitted" },
+    { label: "rejected", receiptKind: "rejected" },
+    { label: "stale", receiptKind: "stale" },
+    { label: "conflict", receiptKind: "conflict" },
+    { label: "wrong-digest", receiptKind: "admitted" },
+  ] as const;
+  for (const { label, receiptKind } of cases) {
     const subject = fixture();
     const created = await acceptedProject(subject);
     subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
@@ -421,8 +428,10 @@ export async function productionReconciledReceiptMatrixEvidence() {
       kind: "receipt",
       receipt: {
         kind: receiptKind,
-        receiptRef: ids.orchestratorReceipt(`model-recovered-${receiptKind}`),
-        receiptDigest: intent.commandDigest,
+        receiptRef: ids.orchestratorReceipt(`model-recovered-${label}`),
+        receiptDigest: label === "wrong-digest"
+          ? ids.digest("model-recovered-wrong-digest")
+          : intent.commandDigest,
       },
     });
     const result = await subject.worker.reconcileManagedScopeAdmission(
@@ -434,6 +443,55 @@ export async function productionReconciledReceiptMatrixEvidence() {
       `Expected recovered ${receiptKind} receipt.`,
     );
     evidence.push(Object.freeze({
+      label,
+      receiptKind,
+      resultKind: result.kind,
+      process: productionProcessProjection(snapshot.process),
+    }));
+  }
+  return Object.freeze(evidence);
+}
+
+export async function productionCancellationRecoveryMatrixEvidence() {
+  const evidence = [];
+  const cases = [
+    { label: "known-not-accepted", receiptKind: null },
+    { label: "admitted", receiptKind: "admitted" },
+    { label: "rejected", receiptKind: "rejected" },
+    { label: "stale", receiptKind: "stale" },
+    { label: "conflict", receiptKind: "conflict" },
+    { label: "wrong-digest", receiptKind: "admitted" },
+  ] as const;
+  for (const { label, receiptKind } of cases) {
+    const subject = fixture();
+    const created = await acceptedProject(subject);
+    subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
+    await subject.worker.dispatchManagedScopeAdmission();
+    await subject.application.cancelProjectPreparation(
+      cancelCommand(created.operationRef),
+    );
+    subject.orchestration.recovery = receiptKind === null
+      ? () => ({ kind: "known-not-accepted" })
+      : (intent) => ({
+        kind: "receipt",
+        receipt: {
+          kind: receiptKind,
+          receiptRef: ids.orchestratorReceipt(`model-cancel-recovered-${label}`),
+          receiptDigest: label === "wrong-digest"
+            ? ids.digest("model-cancel-recovered-wrong-digest")
+            : intent.commandDigest,
+        },
+      });
+    const result = await subject.worker.reconcileManagedScopeAdmission(
+      created.operationRef,
+    );
+    const snapshot = await requireProductionSnapshot(
+      subject,
+      created.operationRef,
+      `Expected cancellation recovery for ${receiptKind ?? "known-not-accepted"}.`,
+    );
+    evidence.push(Object.freeze({
+      label,
       receiptKind,
       resultKind: result.kind,
       process: productionProcessProjection(snapshot.process),

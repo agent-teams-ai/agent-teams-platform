@@ -529,7 +529,7 @@ export {
 } from "./model-conformance-freshness-fixture.js";
 export { domainVocabularyEvidence } from "./model-conformance-vocabulary-fixture.js";
 export {
-  productionBlockedResumeEvidence,
+  productionBlockedResumeEvidence, productionCancellationRecoveryMatrixEvidence,
   productionReconciliationExhaustionEvidence,
   productionReconciledReceiptMatrixEvidence,
   productionRecoverableCancellationEvidence,

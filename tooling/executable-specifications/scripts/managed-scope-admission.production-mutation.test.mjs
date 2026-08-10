@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { domainTraces } from "./managed-scope-admission-domain-adapter.mjs";
 import {
+  assertCancellationRecoveryMatrixEvidence,
   assertRecoveryPredecessor,
   assertReconciliationExhaustionEvidence,
   assertReconciledReceiptMatrixEvidence,
@@ -40,5 +41,11 @@ test("production reconciliation exhaustion-boundary mutants are killed", async (
 test("production reconciliation receipt-routing mutants are killed", async () => {
   assertReconciledReceiptMatrixEvidence(
     await domainTraces.productionReconciledReceiptMatrixEvidence(),
+  );
+});
+
+test("production cancellation-recovery receipt mutants are killed", async () => {
+  assertCancellationRecoveryMatrixEvidence(
+    await domainTraces.productionCancellationRecoveryMatrixEvidence(),
   );
 });
