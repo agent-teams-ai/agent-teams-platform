@@ -292,6 +292,14 @@ test("kills JSON vocabulary drift against executable domain evidence", () => {
 
 test("kills commercial unavailability routed as permanent denial", async () => {
   const evidence = await domainTraces.productionCommercialRetryEvidence();
+  const expected = {
+    resultKind: "retry",
+    observedReason: "COMMERCIAL_RESTRICTION",
+    denialCalls: 0,
+    releaseCalls: 1,
+    releaseExhausted: false,
+  };
+  assert.deepEqual(evidence, expected);
   const mutant = {
     ...evidence,
     resultKind: "blocked",
@@ -300,14 +308,7 @@ test("kills commercial unavailability routed as permanent denial", async () => {
     releaseExhausted: null,
   };
   assert.throws(
-    () =>
-      assert.deepEqual(mutant, {
-        resultKind: "retry",
-        observedReason: "COMMERCIAL_RESTRICTION",
-        denialCalls: 0,
-        releaseCalls: 1,
-        releaseExhausted: false,
-      }),
+    () => assert.deepEqual(mutant, expected),
     { name: "AssertionError" },
   );
 });
