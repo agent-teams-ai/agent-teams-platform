@@ -101,3 +101,40 @@ export function assertBlockedParity(model, domain) {
   assertProcessParity(model, domain);
   assert.equal(model.context.blockReason, domain.blockReason);
 }
+
+export function assertResumeEvidence(evidence) {
+  const retained = evidence.predecessor.receiptKind === "admitted";
+  assert.deepEqual(evidence.first, {
+    kind: "accepted",
+    generation: evidence.predecessor.generation + (retained ? 0 : 1),
+    predecessorReceiptRetained: retained,
+    replayed: false,
+  }, evidence.reason);
+  assert.deepEqual(evidence.replay, {
+    ...evidence.first,
+    replayed: true,
+  }, evidence.reason);
+  assert.deepEqual(evidence.successor, {
+    state: retained ? "receipt-observed" : "requested",
+    authority: retained ? "admission-recheck-pending" : "creation-authorized",
+    reconciliation: "clear",
+    generation: evidence.predecessor.generation + (retained ? 0 : 1),
+    revision: evidence.predecessor.revision + 1,
+    attemptCount: 0,
+    resumptionCount: evidence.predecessor.resumptionCount + 1,
+    receiptKind: retained ? "admitted" : null,
+    blockReason: null,
+    hasDispatchAuthority: false,
+    hasAdmissionAuthority: false,
+  }, evidence.reason);
+  assert.equal(
+    evidence.successorCommandId === evidence.predecessorCommandId,
+    retained,
+    evidence.reason,
+  );
+  assert.equal(
+    evidence.outboxesAfter,
+    evidence.outboxesBefore + (retained ? 0 : 1),
+    evidence.reason,
+  );
+}
