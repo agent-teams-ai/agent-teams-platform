@@ -16,15 +16,15 @@ export function productionProcessProjection(
     ? "admission-authorized"
     : process.state === "receipt-observed"
       ? "admission-recheck-pending"
-      : process.dispatchAuthorityBasis !== null
-        ? "dispatch-authorized"
-        : process.blockReason === "COMMERCIAL_RESTRICTION"
+      : process.blockReason === "COMMERCIAL_RESTRICTION"
           ? "commercially-restricted"
           : process.blockReason === "AUTHORITY_DENIED"
             ? "denied"
             : process.state === "blocked"
               ? "closed"
-              : "creation-authorized";
+              : process.dispatchAuthorityBasis !== null
+                ? "dispatch-authorized"
+                : "creation-authorized";
   const reconciliation = process.state === "reconcile-required"
     ? "outcome-unknown"
     : process.state === "cancel-reconcile-required"

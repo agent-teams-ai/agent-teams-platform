@@ -102,7 +102,114 @@ export function assertBlockedParity(model, domain) {
   assert.equal(model.context.blockReason, domain.blockReason);
 }
 
+function recoveryPredecessor({
+  state = "blocked",
+  authority = "closed",
+  revision,
+  attemptCount = 1,
+  receiptKind = null,
+  blockReason = null,
+  hasDispatchAuthority = false,
+}) {
+  return {
+    state,
+    authority,
+    reconciliation: "clear",
+    generation: 1,
+    revision,
+    attemptCount,
+    resumptionCount: 0,
+    receiptKind,
+    blockReason,
+    hasDispatchAuthority,
+    hasAdmissionAuthority: false,
+  };
+}
+
+const recoveryPredecessors = Object.freeze({
+  RETRY_WAIT: recoveryPredecessor({
+    state: "retry-wait",
+    authority: "creation-authorized",
+    revision: 3,
+  }),
+  AUTHORITY_DENIED_PRE_DISPATCH: recoveryPredecessor({
+    authority: "denied",
+    revision: 3,
+    blockReason: "AUTHORITY_DENIED",
+  }),
+  AUTHORITY_DENIED_AFTER_RECEIPT: recoveryPredecessor({
+    authority: "denied",
+    revision: 5,
+    receiptKind: "admitted",
+    blockReason: "AUTHORITY_DENIED",
+    hasDispatchAuthority: true,
+  }),
+  COMMERCIAL_RESTRICTION_PRE_DISPATCH: recoveryPredecessor({
+    authority: "commercially-restricted",
+    revision: 3,
+    blockReason: "COMMERCIAL_RESTRICTION",
+  }),
+  COMMERCIAL_RESTRICTION_AFTER_RECEIPT: recoveryPredecessor({
+    authority: "commercially-restricted",
+    revision: 5,
+    receiptKind: "admitted",
+    blockReason: "COMMERCIAL_RESTRICTION",
+    hasDispatchAuthority: true,
+  }),
+  USER_CANCELLED_NO_RECEIPT: recoveryPredecessor({
+    revision: 2,
+    attemptCount: 0,
+    blockReason: "USER_CANCELLED",
+  }),
+  USER_CANCELLED_ADMITTED: recoveryPredecessor({
+    revision: 5,
+    receiptKind: "admitted",
+    blockReason: "USER_CANCELLED",
+  }),
+  USER_CANCELLED_REJECTED: recoveryPredecessor({
+    revision: 5,
+    receiptKind: "rejected",
+    blockReason: "USER_CANCELLED",
+  }),
+  USER_CANCELLED_STALE: recoveryPredecessor({
+    revision: 5,
+    receiptKind: "stale",
+    blockReason: "USER_CANCELLED",
+  }),
+  SAFE_RETRY_EXHAUSTED: recoveryPredecessor({
+    revision: 3,
+    blockReason: "SAFE_RETRY_EXHAUSTED",
+  }),
+  DOWNSTREAM_REJECTED: recoveryPredecessor({
+    revision: 4,
+    receiptKind: "rejected",
+    blockReason: "DOWNSTREAM_REJECTED",
+    hasDispatchAuthority: true,
+  }),
+  DOWNSTREAM_STALE: recoveryPredecessor({
+    revision: 4,
+    receiptKind: "stale",
+    blockReason: "DOWNSTREAM_STALE",
+    hasDispatchAuthority: true,
+  }),
+  AUTHORITY_RECHECK_EXHAUSTED: recoveryPredecessor({
+    revision: 5,
+    receiptKind: "admitted",
+    blockReason: "AUTHORITY_RECHECK_EXHAUSTED",
+    hasDispatchAuthority: true,
+  }),
+});
+
+export function assertRecoveryPredecessor(evidence) {
+  assert.deepEqual(
+    evidence.predecessor ?? evidence.before,
+    recoveryPredecessors[evidence.reason],
+    evidence.reason,
+  );
+}
+
 export function assertResumeEvidence(evidence) {
+  assertRecoveryPredecessor(evidence);
   const retained = evidence.predecessor.receiptKind === "admitted";
   assert.deepEqual(evidence.first, {
     kind: "accepted",

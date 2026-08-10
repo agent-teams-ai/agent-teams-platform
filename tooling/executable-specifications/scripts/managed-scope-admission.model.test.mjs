@@ -9,6 +9,7 @@ import {
   assertBlockedParity,
   assertCrossAxisInvariants,
   assertProcessParity,
+  assertRecoveryPredecessor,
   assertReadyParity,
   assertResumeEvidence,
 } from "./managed-scope-admission-invariants.mjs";
@@ -366,6 +367,7 @@ test("production non-admitted resumes report and replay a clean successor", asyn
 
 test("production retry and every recoverable block cancel exactly", async () => {
   for (const evidence of await domainTraces.productionRecoverableCancellationEvidence()) {
+    assertRecoveryPredecessor(evidence);
     assert.equal(evidence.resultKind, "cancelled", evidence.reason);
     assert.deepEqual(evidence.after, {
       ...evidence.before,

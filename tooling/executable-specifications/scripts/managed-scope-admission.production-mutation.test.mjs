@@ -2,10 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { domainTraces } from "./managed-scope-admission-domain-adapter.mjs";
-import { assertResumeEvidence } from "./managed-scope-admission-invariants.mjs";
+import {
+  assertRecoveryPredecessor,
+  assertResumeEvidence,
+} from "./managed-scope-admission-invariants.mjs";
 
 test("production retry and blocked-reason cancellation mutants are killed", async () => {
   for (const evidence of await domainTraces.productionRecoverableCancellationEvidence()) {
+    assertRecoveryPredecessor(evidence);
     assert.equal(evidence.resultKind, "cancelled", evidence.reason);
     assert.deepEqual(evidence.after, {
       ...evidence.before,
