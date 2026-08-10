@@ -101,6 +101,10 @@ test("matches integrity-conflict and authority-recheck exhaustion semantics", ()
     runTrace(traces.authorityRecheckExhausted),
     domainTraces.authorityRecheckExhausted(),
   );
+  assertReadyParity(
+    runTrace(traces.authorityRecheckRecovery),
+    domainTraces.authorityRecheckRecovery(),
+  );
 });
 
 test("JSON vocabulary has exact executable domain evidence", () => {
@@ -130,6 +134,24 @@ test("Mermaid parity rejects authoritative transition drift", () => {
     committedDiagram,
     renderManagedScopeAdmissionDiagram(drifted),
   );
+});
+
+test("Mermaid aliases remain injective for punctuation-equivalent state names", () => {
+  const counterexample = structuredClone(specification);
+  counterexample.axes.lifecycle.states = ["retry-wait", "retry_wait"];
+  counterexample.axes.lifecycle.initial = "retry-wait";
+  counterexample.events = [
+    {
+      type: "COLLISION_PROBE",
+      from: ["retry-wait"],
+      to: "retry_wait",
+      effects: { set: {}, increment: ["revision"] },
+    },
+  ];
+  const rendered = renderManagedScopeAdmissionDiagram(counterexample);
+  assert.match(rendered, /state "retry-wait" as lifecycle_0/u);
+  assert.match(rendered, /state "retry_wait" as lifecycle_1/u);
+  assert.match(rendered, /lifecycle_0 --> lifecycle_1: COLLISION_PROBE/u);
 });
 
 test("covers retry, cancellation, stale and illegal-event paths", () => {

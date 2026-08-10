@@ -114,6 +114,23 @@ test("arbitrary production policy bounds match model guard boundaries", () => {
           ),
           !domain.generationExhausted,
         );
+        if (retainsAdmittedReceipt) {
+          assert.equal(
+            eventAllows(
+              {
+                ...specification.initialContext,
+                blockReason: "AUTHORITY_RECHECK_EXHAUSTED",
+                generation,
+                receipt: "admitted",
+                resumptionCount,
+              },
+              "RESUME_ADMITTED",
+              specification,
+              bounds,
+            ),
+            !domain.generationExhausted,
+          );
+        }
       },
     ),
     { numRuns: 500, seed: 0x50afe },
@@ -154,6 +171,40 @@ test("four-generation production fixture boundary is not the two-step witness bo
       expectedAllowed,
     );
   }
+});
+
+test("authority-recheck exhaustion recovery matches every retained-receipt bound", () => {
+  assertProperty(
+    property(
+      integer({ min: 1, max: 8 }),
+      integer({ min: 0, max: 9 }),
+      (maxPreparationGenerations, resumptionCount) => {
+        const domain = domainTraces.policyBoundary({
+          maxAttempts: 1,
+          attemptCount: 0,
+          maxPreparationGenerations,
+          generation: 1,
+          resumptionCount,
+          retainsAdmittedReceipt: true,
+        });
+        assert.equal(
+          eventAllows(
+            {
+              ...specification.initialContext,
+              blockReason: "AUTHORITY_RECHECK_EXHAUSTED",
+              receipt: "admitted",
+              resumptionCount,
+            },
+            "RESUME_ADMITTED",
+            specification,
+            { attempts: 1, generations: maxPreparationGenerations },
+          ),
+          !domain.generationExhausted,
+        );
+      },
+    ),
+    { numRuns: 300, seed: 0xa0710 },
+  );
 });
 
 test("critical error paths preserve their recovery contract under arbitrary suffixes", () => {

@@ -72,6 +72,24 @@ const mutants = [
       assertBlockedParity(snapshot, domainTraces.integrityConflict()),
   },
   {
+    name: "authority-recheck exhaustion made non-recoverable",
+    model: mutateEvent("RESUME_ADMITTED", (event) => {
+      event.guard.all
+        .find(({ field }) => field === "blockReason")
+        .values.push("AUTHORITY_RECHECK_EXHAUSTED");
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "OBSERVE_ADMITTED",
+      "EXHAUST_AUTHORITY_RECHECK",
+      "RESUME_ADMITTED",
+      "FINALIZE_READY",
+    ],
+    oracle: (snapshot) =>
+      assertReadyParity(snapshot, domainTraces.authorityRecheckRecovery()),
+  },
+  {
     name: "premature reconciliation clear after lost acknowledgement",
     model: mutateEvent("LOSE_ACKNOWLEDGEMENT", (event) => {
       event.effects.set.reconciliation = "clear";

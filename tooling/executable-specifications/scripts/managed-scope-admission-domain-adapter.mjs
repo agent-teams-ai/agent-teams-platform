@@ -1,6 +1,7 @@
 import {
   domainLostAckCancellationResumeTrace,
   domainAuthorityRecheckExhaustedTrace,
+  domainAuthorityRecheckRecoveryTrace,
   domainIntegrityConflictTrace,
   domainPolicyBoundary,
   domainReadyTrace,
@@ -11,6 +12,7 @@ import {
 export const domainTraces = Object.freeze({
   lostAckCancellationResume: domainLostAckCancellationResumeTrace,
   authorityRecheckExhausted: domainAuthorityRecheckExhaustedTrace,
+  authorityRecheckRecovery: domainAuthorityRecheckRecoveryTrace,
   integrityConflict: domainIntegrityConflictTrace,
   policyBoundary: domainPolicyBoundary,
   ready: domainReadyTrace,

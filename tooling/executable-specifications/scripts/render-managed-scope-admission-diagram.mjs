@@ -10,12 +10,21 @@ const diagramUrl = new URL(
   import.meta.url,
 );
 
-function stateId(state) {
-  return state.replaceAll("-", "_");
-}
-
 export function renderManagedScopeAdmissionDiagram(specification) {
   const lines = ["stateDiagram-v2"];
+  const stateIds = new Map(
+    specification.axes.lifecycle.states.map((state, index) => [
+      state,
+      `lifecycle_${index}`,
+    ]),
+  );
+  const stateId = (state) => {
+    const identifier = stateIds.get(state);
+    if (identifier === undefined) {
+      throw new Error(`Diagram references undeclared lifecycle state ${state}.`);
+    }
+    return identifier;
+  };
   for (const state of specification.axes.lifecycle.states) {
     lines.push(`  state "${state}" as ${stateId(state)}`);
   }

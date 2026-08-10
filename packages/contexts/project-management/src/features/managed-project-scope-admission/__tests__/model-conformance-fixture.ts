@@ -14,6 +14,8 @@ import {
   releaseUnsubmittedDispatch,
   requireReconciliation,
   resumeManagedScopeAdmission,
+  type ScopeAdmissionBlockReason,
+  type ScopeAdmissionReceipt,
 } from "../domain/managed-scope-admission-process.js";
 import { preparationGenerationExhausted } from "../domain/scope-admission-readiness.js";
 import { ids } from "../domain/value-objects.js";
@@ -43,6 +45,19 @@ const authorityBasis: CreationAuthorityBasisSnapshot = Object.freeze({
     }),
   ] as const),
 });
+
+function exactVocabularyEvidence<T extends string>(
+  evidence: Record<T, T | null | undefined>,
+): readonly T[] {
+  return Object.freeze(
+    Object.entries(evidence).map(([expected, observed]) => {
+      if (expected !== observed) {
+        throw new Error(`Domain vocabulary evidence mismatch for ${expected}.`);
+      }
+      return expected as T;
+    }),
+  );
+}
 
 function initialProcess() {
   return requestManagedScopeAdmission({
@@ -120,7 +135,7 @@ export function domainResumedReadyTrace() {
   });
 }
 
-export function domainAuthorityRecheckExhaustedTrace() {
+function authorityRecheckExhaustedProcess() {
   let process = claimDispatch(initialProcess());
   process = authorizeDispatch(process, authorityBasis);
   process = observeScopeAdmissionReceipt(process, {
@@ -132,11 +147,33 @@ export function domainAuthorityRecheckExhaustedTrace() {
     process,
     "AUTHORITY_RECHECK_EXHAUSTED",
   );
+  return process;
+}
+
+export function domainAuthorityRecheckExhaustedTrace() {
+  const process = authorityRecheckExhaustedProcess();
   return Object.freeze({
     state: process.state,
     receiptKind: process.receipt?.kind ?? null,
     revision: process.revision,
     blockReason: process.blockReason,
+    hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
+    hasAdmissionAuthority: process.admissionAuthorityBasis !== null,
+  });
+}
+
+export function domainAuthorityRecheckRecoveryTrace() {
+  let process = authorityRecheckExhaustedProcess();
+  process = resumeManagedScopeAdmission(process, {
+    creationAuthorityBasis: authorityBasis,
+    requesterRef: ids.requester("model-authority-recovery"),
+  });
+  process = finalizeScopeAdmission(process, authorityBasis);
+  return Object.freeze({
+    state: process.state,
+    receiptKind: process.receipt?.kind ?? null,
+    revision: process.revision,
+    generation: process.generation,
     hasDispatchAuthority: process.dispatchAuthorityBasis !== null,
     hasAdmissionAuthority: process.admissionAuthorityBasis !== null,
   });
@@ -187,8 +224,7 @@ export function domainPolicyBoundary(input: {
 }
 
 export function domainVocabularyEvidence() {
-  const receiptKinds = ["admitted", "rejected", "stale", "conflict"] as const;
-  const observedReceipts = receiptKinds.map((kind) => {
+  function observe(kind: ScopeAdmissionReceipt["kind"]) {
     let process = claimDispatch(initialProcess());
     process = authorizeDispatch(process, authorityBasis);
     return observeScopeAdmissionReceipt(process, {
@@ -196,7 +232,11 @@ export function domainVocabularyEvidence() {
       receiptRef: ids.orchestratorReceipt(`model-vocabulary-${kind}`),
       receiptDigest: process.stepDigest,
     });
-  });
+  }
+  const admitted = observe("admitted");
+  const rejected = observe("rejected");
+  const stale = observe("stale");
+  const conflict = observe("conflict");
 
   const denied = blockDispatchForAuthority(
     claimDispatch(initialProcess()),
@@ -215,19 +255,28 @@ export function domainVocabularyEvidence() {
   const authorityExhausted = domainAuthorityRecheckExhaustedTrace();
 
   return Object.freeze({
-    receiptKinds: Object.freeze(
-      observedReceipts.map((process) => process.receipt?.kind),
-    ),
-    blockReasons: Object.freeze([
-      denied.blockReason,
-      authorityExhausted.blockReason,
-      restricted.blockReason,
-      ...observedReceipts
-        .filter((process) => process.blockReason !== null)
-        .map((process) => process.blockReason),
-      exhausted.blockReason,
-      cancelled.blockReason,
-      integrity.blockReason,
-    ]),
+    receiptKinds: exactVocabularyEvidence({
+      admitted: admitted.receipt?.kind,
+      rejected: rejected.receipt?.kind,
+      stale: stale.receipt?.kind,
+      conflict: conflict.receipt?.kind,
+    } satisfies Record<
+      ScopeAdmissionReceipt["kind"],
+      ScopeAdmissionReceipt["kind"] | null | undefined
+    >),
+    blockReasons: exactVocabularyEvidence({
+      AUTHORITY_DENIED: denied.blockReason,
+      AUTHORITY_RECHECK_EXHAUSTED: authorityExhausted.blockReason,
+      COMMERCIAL_RESTRICTION: restricted.blockReason,
+      DOWNSTREAM_REJECTED: rejected.blockReason,
+      DOWNSTREAM_STALE: stale.blockReason,
+      DOWNSTREAM_CONFLICT: conflict.blockReason,
+      SAFE_RETRY_EXHAUSTED: exhausted.blockReason,
+      USER_CANCELLED: cancelled.blockReason,
+      DATA_INTEGRITY_CONFLICT: integrity.blockReason,
+    } satisfies Record<
+      ScopeAdmissionBlockReason,
+      ScopeAdmissionBlockReason | null | undefined
+    >),
   });
 }
