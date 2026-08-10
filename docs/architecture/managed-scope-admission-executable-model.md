@@ -46,6 +46,19 @@ cross-axis invariants, including:
   safe retained-receipt resume clears it and re-authorizes the admitted receipt
   without redispatch; both paths are parity-tested against the aggregate.
 
+Foundation connects these artifacts through the consumer-owned executable
+specification catalog. The catalog is data-only (`generatedTypes: []`) and
+binds three independent package gates: property histories, semantic mutation
+tests, and XState graph/conformance tests. Passing one gate cannot stand in for
+another. The mutation gate proves that its oracle rejects ready-without-
+authority, retry-limit, premature reconciliation-clear, and retained-receipt
+authority regressions.
+
+The test harness lives in the development-only executable-specifications
+workspace package. Its only access to domain trace fixtures is the private
+`./testing/model-conformance` package subpath; no production surface imports
+that subpath or any model-testing dependency.
+
 ## Evidence Limits
 
 These checks prove consistency between the internal catalog and the current

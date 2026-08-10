@@ -4,7 +4,31 @@ workspace:
   manifest: pnpm-workspace.yaml
 governedRoots:
   - packages/contexts/project-management/src
+  - tooling/executable-specifications/scripts
 boundaries:
+  - id: tooling.managed-scope-admission-executable-specification
+    dependencyMode: development
+    roots:
+      - tooling/executable-specifications/scripts
+    entrypoints:
+      - tooling/executable-specifications/scripts/managed-scope-admission-domain-adapter.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission-invariants.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission-model.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission.model.test.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission.mutation.test.mjs
+      - tooling/executable-specifications/scripts/managed-scope-admission.property.test.mjs
+    allow:
+      boundaries: []
+      packages:
+        - "@agent-teams/platform-project-management"
+        - "@xstate/graph"
+        - fast-check
+        - xstate
+      builtins:
+        - node:assert/strict
+        - node:fs/promises
+        - node:test
+      runtimeReferences: []
   - id: context.project-management.public-surface
     roots:
       - packages/contexts/project-management/src/index.ts
@@ -104,9 +128,11 @@ boundaries:
       builtins: []
       runtimeReferences: []
   - id: context.project-management.tests
+    dependencyMode: development
     roots:
       - packages/contexts/project-management/src/features/managed-project-scope-admission/__tests__
-    entrypoints: []
+    entrypoints:
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/__tests__/model-conformance-fixture.ts
     allow:
       boundaries:
         - context.project-management.in-memory-adapter

@@ -203,6 +203,16 @@ async function validatePackageManifest(repositoryRoot, target, errors) {
       types: "./dist/worker.d.ts",
       import: "./dist/worker.js",
     },
+    ...(target.id === "context.project-management"
+      ? {
+          "./testing/model-conformance": {
+            types:
+              "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.d.ts",
+            import:
+              "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.js",
+          },
+        }
+      : {}),
   };
   if (
     manifest.name !== target.package_name ||

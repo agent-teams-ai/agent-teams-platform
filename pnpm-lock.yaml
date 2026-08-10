@@ -107,6 +107,21 @@ importers:
 
   packages/contexts/project-management: {}
 
+  tooling/executable-specifications:
+    devDependencies:
+      '@agent-teams/platform-project-management':
+        specifier: workspace:*
+        version: link:../../packages/contexts/project-management
+      '@xstate/graph':
+        specifier: 'catalog:'
+        version: 3.0.4(xstate@5.32.5)
+      fast-check:
+        specifier: 'catalog:'
+        version: 4.9.0
+      xstate:
+        specifier: 'catalog:'
+        version: 5.32.5
+
 packages:
 
   '@agent-teams/engineering-foundation@0.9.0':

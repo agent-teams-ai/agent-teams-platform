@@ -1,0 +1,17 @@
+{
+  "name": "@agent-teams/platform-executable-specifications",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "spec:model": "node --test --test-concurrency=1 scripts/managed-scope-admission.model.test.mjs",
+    "spec:mutation": "node --test --test-concurrency=1 scripts/managed-scope-admission.mutation.test.mjs",
+    "spec:property": "node --test --test-concurrency=1 scripts/managed-scope-admission.property.test.mjs"
+  },
+  "devDependencies": {
+    "@agent-teams/platform-project-management": "workspace:*",
+    "@xstate/graph": "catalog:",
+    "fast-check": "catalog:",
+    "xstate": "catalog:"
+  }
+}

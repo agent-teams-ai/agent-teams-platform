@@ -1,0 +1,17 @@
+stateDiagram-v2
+  [*] --> requested
+  requested --> claimed: CLAIM
+  claimed --> dispatchCommitted: AUTHORIZE_DISPATCH
+  dispatchCommitted --> reconcileRequired: LOSE_ACKNOWLEDGEMENT
+  reconcileRequired --> retryWait: RECONCILE_NOT_ACCEPTED
+  dispatchCommitted --> receiptObserved: OBSERVE_ADMITTED
+  receiptObserved --> ready: FINALIZE_READY
+  receiptObserved --> blocked: DENY_AFTER_RECEIPT
+  blocked --> receiptObserved: RESUME_ADMITTED
+  reconcileRequired --> cancelReconcileRequired: CANCEL_UNCERTAIN
+  cancelReconcileRequired --> blocked: CANCEL_RECONCILED
+  blocked --> requested: RESUME_NEW_GENERATION
+
+  note right of ready
+    admission authority + admitted receipt + clear reconciliation
+  end note
