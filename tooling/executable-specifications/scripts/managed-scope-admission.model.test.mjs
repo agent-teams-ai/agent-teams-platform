@@ -273,3 +273,42 @@ test("production stale generation command is an exact no-op", async () => {
   assert.equal(evidence.resultKind, "stale");
   assert.deepEqual(evidence.after, evidence.before);
 });
+
+test("production stale process revision is an exact no-op", async () => {
+  const evidence = await domainTraces.productionStaleRevisionEvidence();
+  assert.equal(evidence.resultKind, "stale");
+  assert.deepEqual(evidence.after, evidence.before);
+});
+
+test("matches admitted recovery from reconciliation", async () => {
+  const evidence = await domainTraces.productionReconciledAdmittedEvidence();
+  assert.equal(evidence.resultKind, "receipt-recorded");
+  assertReadyParity(
+    runTrace([
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      "OBSERVE_ADMITTED",
+      "FINALIZE_READY",
+    ]),
+    evidence.process,
+  );
+});
+
+test("matches cancellation directly from committed dispatch authority", async () => {
+  const evidence =
+    await domainTraces.productionDispatchCommittedCancellationEvidence();
+  assert.equal(evidence.resultKind, "reconciliation-required");
+  assertProcessParity(
+    runTrace(["CLAIM", "AUTHORIZE_DISPATCH", "CANCEL_UNCERTAIN"]),
+    evidence.process,
+  );
+});
+
+test("production integrity block is cancellation-invariant", async () => {
+  const evidence =
+    await domainTraces.productionIntegrityCancellationNoOpEvidence();
+  assert.equal(evidence.resultKind, "already-completed");
+  assert.equal(evidence.before.blockReason, "DATA_INTEGRITY_CONFLICT");
+  assert.deepEqual(evidence.after, evidence.before);
+});

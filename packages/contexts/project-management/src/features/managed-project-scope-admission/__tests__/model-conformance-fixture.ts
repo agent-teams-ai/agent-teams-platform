@@ -517,5 +517,11 @@ export {
   domainReconciledStaleCancellationTrace,
   domainSafeCancellationTrace,
 } from "./model-conformance-cancellation-fixture.js";
-export { productionStaleGenerationEvidence } from "./model-conformance-freshness-fixture.js";
+export {
+  productionDispatchCommittedCancellationEvidence,
+  productionIntegrityCancellationNoOpEvidence,
+  productionReconciledAdmittedEvidence,
+  productionStaleGenerationEvidence,
+  productionStaleRevisionEvidence,
+} from "./model-conformance-freshness-fixture.js";
 export { domainVocabularyEvidence } from "./model-conformance-vocabulary-fixture.js";

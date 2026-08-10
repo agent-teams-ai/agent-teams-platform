@@ -39,7 +39,11 @@ import {
   productionCommercialDenialEvidence,
   productionCommercialExhaustionEvidence,
   productionCommercialRetryEvidence,
+  productionDispatchCommittedCancellationEvidence,
+  productionIntegrityCancellationNoOpEvidence,
+  productionReconciledAdmittedEvidence,
   productionStaleGenerationEvidence,
+  productionStaleRevisionEvidence,
 } from "@agent-teams/platform-project-management/testing/model-conformance";
 
 export const domainTraces = Object.freeze({
@@ -83,5 +87,9 @@ export const domainTraces = Object.freeze({
   productionCommercialDenialEvidence,
   productionCommercialExhaustionEvidence,
   productionCommercialRetryEvidence,
+  productionDispatchCommittedCancellationEvidence,
+  productionIntegrityCancellationNoOpEvidence,
+  productionReconciledAdmittedEvidence,
   productionStaleGenerationEvidence,
+  productionStaleRevisionEvidence,
 });
