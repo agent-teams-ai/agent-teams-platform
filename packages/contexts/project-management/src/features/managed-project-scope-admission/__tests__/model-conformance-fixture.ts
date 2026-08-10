@@ -294,6 +294,7 @@ async function productionCommercialRouting(
   let observedReason: ScopeAdmissionBlockReason | null = null;
   let denialCalls = 0;
   let releaseCalls = 0;
+  let releaseExhausted: boolean | null = null;
   const allowed = Object.freeze({
     kind: "allowed" as const,
     evidenceRef: ids.authorityEvidence("model-routing-allowed"),
@@ -334,9 +335,13 @@ async function productionCommercialRouting(
       },
       releaseNotSubmitted: async (
         _claim: ScopeAdmissionDispatchClaim,
-        input: { exhaustedReason?: ScopeAdmissionBlockReason },
+        input: {
+          exhausted: boolean;
+          exhaustedReason?: ScopeAdmissionBlockReason;
+        },
       ) => {
         releaseCalls += 1;
+        releaseExhausted = input.exhausted;
         observedReason = input.exhaustedReason ?? "SAFE_RETRY_EXHAUSTED";
         return { kind: "applied" as const };
       },
@@ -348,6 +353,7 @@ async function productionCommercialRouting(
     observedReason,
     denialCalls,
     releaseCalls,
+    releaseExhausted,
   });
 }
 
