@@ -20,6 +20,7 @@ import YAML from "yaml";
 
 import { validatePlatformDomain } from "./validate-platform-domain.mjs";
 import { validatePlatformPackageManifest } from "./platform-domain-materialization.mjs";
+import { reproduciblePlanProjection } from "./platform-domain-scaffold-evidence.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = path.resolve(scriptDirectory, "../..");
@@ -33,6 +34,27 @@ const productDecisionPacketPath = "docs/domain/product-decision-packet.md";
 const packagePath = "packages/contexts/project-management";
 const decisionId = "ADR-9999";
 const decisionPath = "docs/decisions/9999-accept-project-management.md";
+
+test("reproduction preserves immutable plans across compiler upgrades", () => {
+  const plan = {
+    compiler: {
+      id: "@agent-teams/engineering-foundation",
+      version: "0.9.0",
+    },
+    operations: [{ id: "materialize/example" }],
+  };
+  const upgraded = structuredClone(plan);
+  upgraded.compiler.version = "0.10.0";
+  assert.deepEqual(
+    reproduciblePlanProjection(plan),
+    reproduciblePlanProjection(upgraded),
+  );
+  upgraded.compiler.id = "other-compiler";
+  assert.notDeepEqual(
+    reproduciblePlanProjection(plan),
+    reproduciblePlanProjection(upgraded),
+  );
+});
 
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "platform-domain-"));
