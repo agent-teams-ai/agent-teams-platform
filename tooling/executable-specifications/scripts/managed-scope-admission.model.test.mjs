@@ -312,3 +312,30 @@ test("production integrity block is cancellation-invariant", async () => {
   assert.equal(evidence.before.blockReason, "DATA_INTEGRITY_CONFLICT");
   assert.deepEqual(evidence.after, evidence.before);
 });
+
+test("production protected terminal states are cancellation-invariant", async () => {
+  const evidence =
+    await domainTraces.productionProtectedCancellationNoOpEvidence();
+  for (const [name, terminal] of Object.entries(evidence)) {
+    assert.equal(
+      terminal.resultKind,
+      name === "userCancelled" ? "cancelled" : "already-completed",
+      name,
+    );
+    assert.deepEqual(terminal.after, terminal.before, name);
+  }
+  assert.equal(evidence.ready.before.state, "ready");
+  assert.equal(
+    evidence.downstreamConflict.before.blockReason,
+    "DOWNSTREAM_CONFLICT",
+  );
+  assert.equal(evidence.userCancelled.before.blockReason, "USER_CANCELLED");
+});
+
+test("production pending cancellation is repeat-command invariant", async () => {
+  const evidence =
+    await domainTraces.productionPendingCancellationNoOpEvidence();
+  assert.equal(evidence.resultKind, "reconciliation-required");
+  assert.equal(evidence.before.state, "cancel-reconcile-required");
+  assert.deepEqual(evidence.after, evidence.before);
+});

@@ -207,3 +207,92 @@ export async function productionIntegrityCancellationNoOpEvidence() {
     after: processProjection(after.process),
   });
 }
+
+async function cancellationNoOpEvidence(
+  subject: ReturnType<typeof fixture>,
+  operationRef: Awaited<ReturnType<typeof acceptedProject>>["operationRef"],
+  commandId = "model-terminal-no-op",
+) {
+  const before = await requireSnapshot(
+    subject,
+    operationRef,
+    "Expected terminal process before cancellation no-op.",
+  );
+  const result = await subject.application.cancelProjectPreparation(
+    cancelCommand(operationRef, 1, commandId),
+  );
+  const after = await requireSnapshot(
+    subject,
+    operationRef,
+    "Expected terminal process after cancellation no-op.",
+  );
+  return Object.freeze({
+    resultKind: result.kind,
+    before: processProjection(before.process),
+    after: processProjection(after.process),
+  });
+}
+
+export async function productionProtectedCancellationNoOpEvidence() {
+  const readySubject = fixture();
+  const ready = await acceptedProject(readySubject);
+  await readySubject.worker.dispatchManagedScopeAdmission();
+
+  const conflictSubject = fixture();
+  const conflict = await acceptedProject(conflictSubject);
+  conflictSubject.orchestration.submission = (intent) => ({
+    kind: "receipt",
+    receipt: {
+      kind: "conflict",
+      receiptRef: ids.orchestratorReceipt("model-terminal-conflict"),
+      receiptDigest: intent.commandDigest,
+    },
+  });
+  await conflictSubject.worker.dispatchManagedScopeAdmission();
+
+  const cancelledSubject = fixture();
+  const cancelled = await acceptedProject(cancelledSubject);
+  await cancelledSubject.application.cancelProjectPreparation(
+    cancelCommand(cancelled.operationRef),
+  );
+
+  return Object.freeze({
+    ready: await cancellationNoOpEvidence(readySubject, ready.operationRef),
+    downstreamConflict: await cancellationNoOpEvidence(
+      conflictSubject,
+      conflict.operationRef,
+    ),
+    userCancelled: await cancellationNoOpEvidence(
+      cancelledSubject,
+      cancelled.operationRef,
+    ),
+  });
+}
+
+export async function productionPendingCancellationNoOpEvidence() {
+  const subject = fixture();
+  const created = await acceptedProject(subject);
+  subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
+  await subject.worker.dispatchManagedScopeAdmission();
+  await subject.application.cancelProjectPreparation(
+    cancelCommand(created.operationRef, 1, "model-first-uncertain-cancel"),
+  );
+  const before = await requireSnapshot(
+    subject,
+    created.operationRef,
+    "Expected pending cancellation reconciliation before repeat command.",
+  );
+  const result = await subject.application.cancelProjectPreparation(
+    cancelCommand(created.operationRef, 1, "model-repeat-uncertain-cancel"),
+  );
+  const after = await requireSnapshot(
+    subject,
+    created.operationRef,
+    "Expected pending cancellation reconciliation after repeat command.",
+  );
+  return Object.freeze({
+    resultKind: result.kind,
+    before: processProjection(before.process),
+    after: processProjection(after.process),
+  });
+}

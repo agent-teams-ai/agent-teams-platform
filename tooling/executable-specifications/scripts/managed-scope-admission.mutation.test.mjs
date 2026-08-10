@@ -703,6 +703,33 @@ test("production integrity block supplies the cancellation no-op oracle", async 
   assert.deepEqual(evidence.after, evidence.before);
 });
 
+test("production terminal guards supply every cancellation no-op oracle", async () => {
+  const evidence =
+    await domainTraces.productionProtectedCancellationNoOpEvidence();
+  for (const [name, terminal] of Object.entries(evidence)) {
+    assert.equal(
+      terminal.resultKind,
+      name === "userCancelled" ? "cancelled" : "already-completed",
+      name,
+    );
+    assert.deepEqual(terminal.after, terminal.before, name);
+  }
+  assert.equal(evidence.ready.before.state, "ready");
+  assert.equal(
+    evidence.downstreamConflict.before.blockReason,
+    "DOWNSTREAM_CONFLICT",
+  );
+  assert.equal(evidence.userCancelled.before.blockReason, "USER_CANCELLED");
+});
+
+test("production pending-cancellation guard supplies its no-op oracle", async () => {
+  const evidence =
+    await domainTraces.productionPendingCancellationNoOpEvidence();
+  assert.equal(evidence.resultKind, "reconciliation-required");
+  assert.equal(evidence.before.state, "cancel-reconcile-required");
+  assert.deepEqual(evidence.after, evidence.before);
+});
+
 for (const [eventType, field] of [
   ["STALE_GENERATION", "generation"],
   ["STALE_REVISION", "revision"],

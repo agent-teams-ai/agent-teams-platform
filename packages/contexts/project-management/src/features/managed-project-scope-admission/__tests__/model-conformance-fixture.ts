@@ -520,6 +520,8 @@ export {
 export {
   productionDispatchCommittedCancellationEvidence,
   productionIntegrityCancellationNoOpEvidence,
+  productionPendingCancellationNoOpEvidence,
+  productionProtectedCancellationNoOpEvidence,
   productionReconciledAdmittedEvidence,
   productionStaleGenerationEvidence,
   productionStaleRevisionEvidence,
