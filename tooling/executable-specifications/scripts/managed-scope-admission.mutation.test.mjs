@@ -5,6 +5,7 @@ import { domainTraces } from "./managed-scope-admission-domain-adapter.mjs";
 import {
   assertBlockedParity,
   assertCrossAxisInvariants,
+  assertProcessParity,
   assertReadyParity,
 } from "./managed-scope-admission-invariants.mjs";
 import {
@@ -97,7 +98,8 @@ const mutants = [
       delete event.effects.set.dispatchAuthorityPresent;
     }),
     witness: ["CLAIM", "AUTHORIZE_DISPATCH", "RELEASE_RETRY"],
-    oracle: assertCrossAxisInvariants,
+    oracle: (snapshot) =>
+      assertProcessParity(snapshot, domainTraces.dispatchCommittedRetry()),
   },
   {
     name: "dispatch-committed exhaustion retains stale dispatch authority",
@@ -111,7 +113,11 @@ const mutants = [
       "AUTHORIZE_DISPATCH",
       "RELEASE_EXHAUSTED",
     ],
-    oracle: assertCrossAxisInvariants,
+    oracle: (snapshot) =>
+      assertBlockedParity(
+        snapshot,
+        domainTraces.dispatchCommittedRetryExhausted(),
+      ),
   },
   {
     name: "unsubmitted dispatch exhausted before production retry policy",
@@ -342,10 +348,10 @@ const mutants = [
       assertBlockedParity(snapshot, domainTraces.conflictReceipt()),
   },
   ...[
-    ["OBSERVE_REJECTED", "rejected"],
-    ["OBSERVE_STALE", "stale"],
-    ["OBSERVE_CONFLICT", "conflict"],
-  ].map(([eventType, receipt]) => ({
+    ["OBSERVE_REJECTED", "rejected", "reconciledRejectedReceipt"],
+    ["OBSERVE_STALE", "stale", "reconciledStaleReceipt"],
+    ["OBSERVE_CONFLICT", "conflict", "reconciledConflictReceipt"],
+  ].map(([eventType, receipt, traceName]) => ({
     name: `${receipt} reconciliation receipt leaves outcome unresolved`,
     model: mutateEvent(eventType, (event) => {
       delete event.effects.set.reconciliation;
@@ -356,7 +362,8 @@ const mutants = [
       "LOSE_ACKNOWLEDGEMENT",
       eventType,
     ],
-    oracle: assertCrossAxisInvariants,
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces[traceName]()),
   })),
   {
     name: "pre-dispatch denial misclassified as commercial",
@@ -392,6 +399,29 @@ const mutants = [
         snapshot,
         domainTraces.admittedReceiptSafeCancellation(),
       ),
+  },
+  {
+    name: "blocked authority denial cannot be cancelled",
+    model: mutateEvent("CANCEL_BLOCKED_SAFE", (event) => {
+      event.guard.all[0].values.push("AUTHORITY_DENIED");
+    }),
+    witness: ["CLAIM", "DENY_DISPATCH", "CANCEL_BLOCKED_SAFE"],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.blockedAuthorityCancellation()),
+  },
+  {
+    name: "blocked receipt cancellation discards its receipt",
+    model: mutateEvent("CANCEL_BLOCKED_SAFE", (event) => {
+      event.effects.set.receipt = null;
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "OBSERVE_REJECTED",
+      "CANCEL_BLOCKED_SAFE",
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces.blockedRejectedCancellation()),
   },
   {
     name: "retry exhaustion misclassified as authority denial",
@@ -466,6 +496,42 @@ const mutants = [
     oracle: (snapshot) =>
       assertBlockedParity(snapshot, domainTraces.reconciledCancellation()),
   },
+  ...[
+    [
+      "CANCEL_RECONCILED_ADMITTED",
+      "reconciledAdmittedCancellation",
+      "AUTHORITY_DENIED",
+    ],
+    [
+      "CANCEL_RECONCILED_REJECTED",
+      "reconciledRejectedCancellation",
+      "AUTHORITY_DENIED",
+    ],
+    [
+      "CANCEL_RECONCILED_STALE",
+      "reconciledStaleCancellation",
+      "AUTHORITY_DENIED",
+    ],
+    [
+      "CANCEL_RECONCILED_CONFLICT",
+      "reconciledConflictCancellation",
+      "USER_CANCELLED",
+    ],
+  ].map(([eventType, traceName, blockReason]) => ({
+    name: `${eventType} loses its production terminal reason`,
+    model: mutateEvent(eventType, (event) => {
+      event.effects.set.blockReason = blockReason;
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      "CANCEL_UNCERTAIN",
+      eventType,
+    ],
+    oracle: (snapshot) =>
+      assertBlockedParity(snapshot, domainTraces[traceName]()),
+  })),
   {
     name: "premature reconciliation clear after lost acknowledgement",
     model: mutateEvent("LOSE_ACKNOWLEDGEMENT", (event) => {
@@ -497,6 +563,24 @@ const mutants = [
     ],
     oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.resumedReady()),
   },
+  {
+    name: "new-generation resume does not consume a resumption",
+    model: mutateEvent("RESUME_NEW_GENERATION", (event) => {
+      event.effects.increment = event.effects.increment.filter(
+        (field) => field !== "resumptionCount",
+      );
+    }),
+    witness: [
+      "CLAIM",
+      "AUTHORIZE_DISPATCH",
+      "LOSE_ACKNOWLEDGEMENT",
+      "CANCEL_UNCERTAIN",
+      "CANCEL_RECONCILED",
+      "RESUME_NEW_GENERATION",
+    ],
+    oracle: (snapshot) =>
+      assertProcessParity(snapshot, domainTraces.lostAckCancellationResume()),
+  },
 ];
 
 for (const mutant of mutants) {
@@ -514,6 +598,46 @@ test("production wrong-digest detector supplies the integrity oracle", () => {
     assert.equal(evidence.state, "blocked");
     assert.equal(evidence.blockReason, "DATA_INTEGRITY_CONFLICT");
     assert.equal(evidence.receiptKind, null);
+  }
+});
+
+test("production reconciliation supplies exact receipt terminal oracles", () => {
+  for (const [evidence, receiptKind, blockReason] of [
+    [
+      domainTraces.reconciledRejectedReceipt(),
+      "rejected",
+      "DOWNSTREAM_REJECTED",
+    ],
+    [domainTraces.reconciledStaleReceipt(), "stale", "DOWNSTREAM_STALE"],
+    [
+      domainTraces.reconciledConflictReceipt(),
+      "conflict",
+      "DOWNSTREAM_CONFLICT",
+    ],
+  ]) {
+    assert.equal(evidence.receiptKind, receiptKind);
+    assert.equal(evidence.blockReason, blockReason);
+    assert.equal(evidence.reconciliation, "clear");
+  }
+});
+
+test("production cancellation supplies every modeled terminal oracle", () => {
+  for (const [evidence, receiptKind, blockReason] of [
+    [domainTraces.blockedAuthorityCancellation(), null, "USER_CANCELLED"],
+    [domainTraces.blockedRejectedCancellation(), "rejected", "USER_CANCELLED"],
+    [domainTraces.reconciledCancellation(), null, "USER_CANCELLED"],
+    [domainTraces.reconciledAdmittedCancellation(), "admitted", "USER_CANCELLED"],
+    [domainTraces.reconciledRejectedCancellation(), "rejected", "USER_CANCELLED"],
+    [domainTraces.reconciledStaleCancellation(), "stale", "USER_CANCELLED"],
+    [
+      domainTraces.reconciledConflictCancellation(),
+      "conflict",
+      "DOWNSTREAM_CONFLICT",
+    ],
+  ]) {
+    assert.equal(evidence.state, "blocked");
+    assert.equal(evidence.receiptKind, receiptKind);
+    assert.equal(evidence.blockReason, blockReason);
   }
 });
 

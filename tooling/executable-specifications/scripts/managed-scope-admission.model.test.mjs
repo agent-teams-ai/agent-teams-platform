@@ -8,6 +8,7 @@ import { domainTraces } from "./managed-scope-admission-domain-adapter.mjs";
 import {
   assertBlockedParity,
   assertCrossAxisInvariants,
+  assertProcessParity,
   assertReadyParity,
 } from "./managed-scope-admission-invariants.mjs";
 import {
@@ -75,11 +76,18 @@ test("derives deterministic paths across every modeled axis", () => {
 test("matches aggregate lost-ack cancellation and successor fencing", () => {
   const model = runTrace(traces.lostAcknowledgementCancellationResume);
   const domain = domainTraces.lostAckCancellationResume();
-  assert.equal(model.value, domain.state);
-  assert.equal(model.context.generation, domain.generation);
-  assert.equal(model.context.revision, domain.revision);
-  assert.equal(model.context.attemptCount, domain.attemptCount);
-  assert.equal(model.context.blockReason, domain.blockReason);
+  assertProcessParity(model, domain);
+});
+
+test("matches dispatch-committed retry authority release", () => {
+  assertProcessParity(
+    runTrace(traces.dispatchCommittedRetry),
+    domainTraces.dispatchCommittedRetry(),
+  );
+  assertBlockedParity(
+    runTrace(traces.dispatchCommittedRetryExhausted),
+    domainTraces.dispatchCommittedRetryExhausted(),
+  );
 });
 
 test("matches direct and retained-receipt ready authority", () => {
@@ -148,14 +156,23 @@ test("matches exact denial, cancellation and downstream receipt mappings", () =>
     "preDispatchAuthorityDenied",
     "safeCancellation",
     "admittedReceiptSafeCancellation",
+    "blockedAuthorityCancellation",
+    "blockedRejectedCancellation",
     "rejectedReceipt",
     "staleReceipt",
     "conflictReceipt",
+    "reconciledRejectedReceipt",
+    "reconciledStaleReceipt",
+    "reconciledConflictReceipt",
     "retryExhausted",
     "reconciliationRetryExhausted",
     "afterReceiptAuthorityDenied",
     "afterReceiptCommercialRestriction",
     "reconciledCancellation",
+    "reconciledAdmittedCancellation",
+    "reconciledRejectedCancellation",
+    "reconciledStaleCancellation",
+    "reconciledConflictCancellation",
   ]) {
     assertBlockedParity(runTrace(traces[traceName]), domainTraces[traceName]());
   }

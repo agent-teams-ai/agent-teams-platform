@@ -42,9 +42,14 @@ stateDiagram-v2
   lifecycle_1 --> lifecycle_8: CANCEL_SAFE
   lifecycle_3 --> lifecycle_8: CANCEL_SAFE
   lifecycle_6 --> lifecycle_8: CANCEL_SAFE
+  lifecycle_8 --> lifecycle_8: CANCEL_BLOCKED_SAFE
   lifecycle_2 --> lifecycle_5: CANCEL_UNCERTAIN
   lifecycle_4 --> lifecycle_5: CANCEL_UNCERTAIN
   lifecycle_5 --> lifecycle_8: CANCEL_RECONCILED
+  lifecycle_5 --> lifecycle_8: CANCEL_RECONCILED_ADMITTED
+  lifecycle_5 --> lifecycle_8: CANCEL_RECONCILED_REJECTED
+  lifecycle_5 --> lifecycle_8: CANCEL_RECONCILED_STALE
+  lifecycle_5 --> lifecycle_8: CANCEL_RECONCILED_CONFLICT
   lifecycle_8 --> lifecycle_0: RESUME_NEW_GENERATION
   lifecycle_8 --> lifecycle_6: RESUME_ADMITTED
   lifecycle_0 --> lifecycle_0: STALE_GENERATION

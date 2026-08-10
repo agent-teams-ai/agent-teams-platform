@@ -369,6 +369,30 @@
       }
     },
     {
+      "type": "CANCEL_BLOCKED_SAFE",
+      "from": ["blocked"],
+      "to": "blocked",
+      "guard": {
+        "all": [
+          {
+            "field": "blockReason",
+            "operator": "not-in",
+            "values": ["DATA_INTEGRITY_CONFLICT", "DOWNSTREAM_CONFLICT", "USER_CANCELLED"]
+          }
+        ]
+      },
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "USER_CANCELLED",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
       "type": "CANCEL_UNCERTAIN",
       "from": ["dispatch-committed", "reconcile-required"],
       "to": "cancel-reconcile-required",
@@ -385,6 +409,70 @@
         "set": {
           "authority": "closed",
           "blockReason": "USER_CANCELLED",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_RECONCILED_ADMITTED",
+      "from": ["cancel-reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "USER_CANCELLED",
+          "receipt": "admitted",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_RECONCILED_REJECTED",
+      "from": ["cancel-reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "USER_CANCELLED",
+          "receipt": "rejected",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_RECONCILED_STALE",
+      "from": ["cancel-reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "USER_CANCELLED",
+          "receipt": "stale",
+          "reconciliation": "clear",
+          "dispatchAuthorityPresent": false,
+          "admissionAuthorityPresent": false
+        },
+        "increment": ["revision"]
+      }
+    },
+    {
+      "type": "CANCEL_RECONCILED_CONFLICT",
+      "from": ["cancel-reconcile-required"],
+      "to": "blocked",
+      "effects": {
+        "set": {
+          "authority": "closed",
+          "blockReason": "DOWNSTREAM_CONFLICT",
+          "receipt": "conflict",
           "reconciliation": "clear",
           "dispatchAuthorityPresent": false,
           "admissionAuthorityPresent": false

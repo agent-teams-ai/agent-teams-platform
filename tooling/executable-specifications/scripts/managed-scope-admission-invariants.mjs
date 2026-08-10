@@ -47,8 +47,15 @@ export function assertCrossAxisInvariants(
     stale: "DOWNSTREAM_STALE",
     conflict: "DOWNSTREAM_CONFLICT",
   };
-  if (context.receipt in reasonByReceipt) {
+  if (
+    context.receipt in reasonByReceipt &&
+    context.blockReason !== "USER_CANCELLED"
+  ) {
     assert.equal(context.blockReason, reasonByReceipt[context.receipt]);
+    assert.equal(context.reconciliation, "clear");
+  }
+  if (context.blockReason === "USER_CANCELLED") {
+    assert.notEqual(context.receipt, "conflict");
     assert.equal(context.reconciliation, "clear");
   }
   if (snapshot.value === "receipt-observed") {
@@ -66,7 +73,7 @@ export function assertCrossAxisInvariants(
   }
 }
 
-export function assertReadyParity(model, domain) {
+export function assertProcessParity(model, domain) {
   assert.equal(model.value, domain.state);
   assert.equal(model.context.authority, domain.authority);
   assert.equal(model.context.reconciliation, domain.reconciliation);
@@ -86,22 +93,11 @@ export function assertReadyParity(model, domain) {
   );
 }
 
+export function assertReadyParity(model, domain) {
+  assertProcessParity(model, domain);
+}
+
 export function assertBlockedParity(model, domain) {
-  assert.equal(model.value, domain.state);
-  assert.equal(model.context.authority, domain.authority);
-  assert.equal(model.context.reconciliation, domain.reconciliation);
-  assert.equal(model.context.generation, domain.generation);
-  assert.equal(model.context.attemptCount, domain.attemptCount);
-  assert.equal(model.context.resumptionCount, domain.resumptionCount);
-  assert.equal(model.context.receipt, domain.receiptKind);
-  assert.equal(model.context.revision, domain.revision);
+  assertProcessParity(model, domain);
   assert.equal(model.context.blockReason, domain.blockReason);
-  assert.equal(
-    model.context.dispatchAuthorityPresent,
-    domain.hasDispatchAuthority,
-  );
-  assert.equal(
-    model.context.admissionAuthorityPresent,
-    domain.hasAdmissionAuthority,
-  );
 }
