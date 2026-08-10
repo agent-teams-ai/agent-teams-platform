@@ -156,6 +156,13 @@ const recoveryPredecessors = Object.freeze({
     blockReason: "COMMERCIAL_RESTRICTION",
     hasDispatchAuthority: true,
   }),
+  COMMERCIAL_RESTRICTION_AFTER_RECEIPT_UNAVAILABLE: recoveryPredecessor({
+    authority: "commercially-restricted",
+    revision: 5,
+    receiptKind: "admitted",
+    blockReason: "COMMERCIAL_RESTRICTION",
+    hasDispatchAuthority: true,
+  }),
   USER_CANCELLED_NO_RECEIPT: recoveryPredecessor({
     revision: 2,
     attemptCount: 0,

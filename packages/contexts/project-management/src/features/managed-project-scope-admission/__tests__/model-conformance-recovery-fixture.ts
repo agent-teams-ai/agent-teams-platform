@@ -98,10 +98,33 @@ async function postReceiptCommercialBlockedSubject() {
     subject.setNow(NOW + 60_000);
   });
   await subject.worker.dispatchManagedScopeAdmission();
+  subject.tenantAuthority.decision = allowedAuthority("commercial-recheck-tenant");
+  subject.projectAuthority.decision = allowedAuthority("commercial-recheck-project");
   subject.commercialAuthority.decision = {
     kind: "denied",
     reason: "COMMERCIAL_POLICY_DENIED",
   };
+  await subject.worker.recheckScopeAdmissionAuthority();
+  return { subject, created };
+}
+
+async function postReceiptCommercialUnavailableSubject() {
+  const subject = fixture({
+    safeRetryPolicy: { defaultDelayMs: 1000, maxDelayMs: 1000, maxAttempts: 2 },
+  });
+  const created = await acceptedProject(subject);
+  subject.store.injectBeforeReceiptLinearizationForTest(() => {
+    subject.setNow(NOW + 60_000);
+  });
+  await subject.worker.dispatchManagedScopeAdmission();
+  subject.tenantAuthority.decision = allowedAuthority("commercial-unavailable-tenant");
+  subject.projectAuthority.decision = allowedAuthority("commercial-unavailable-project");
+  subject.commercialAuthority.decision = {
+    kind: "unavailable",
+    reason: "COMMERCIAL_AUTHORITY_OFFLINE",
+  };
+  await subject.worker.recheckScopeAdmissionAuthority();
+  subject.setNow(NOW + 61_000);
   await subject.worker.recheckScopeAdmissionAuthority();
   return { subject, created };
 }
@@ -234,6 +257,7 @@ export async function productionRecoverableCancellationEvidence() {
     ["AUTHORITY_DENIED_AFTER_RECEIPT", await authorityDeniedSubject(true)],
     ["COMMERCIAL_RESTRICTION_PRE_DISPATCH", await blockedSubject("COMMERCIAL_RESTRICTION")],
     ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT", await postReceiptCommercialBlockedSubject()],
+    ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT_UNAVAILABLE", await postReceiptCommercialUnavailableSubject()],
     ["DOWNSTREAM_REJECTED", await downstreamBlockedSubject("rejected")],
     ["DOWNSTREAM_STALE", await downstreamBlockedSubject("stale")],
     ["SAFE_RETRY_EXHAUSTED", await blockedSubject("SAFE_RETRY_EXHAUSTED")],
@@ -275,6 +299,7 @@ export async function productionBlockedResumeEvidence() {
     ["AUTHORITY_DENIED_AFTER_RECEIPT", await authorityDeniedSubject(true)],
     ["COMMERCIAL_RESTRICTION_PRE_DISPATCH", await blockedSubject("COMMERCIAL_RESTRICTION")],
     ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT", await postReceiptCommercialBlockedSubject()],
+    ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT_UNAVAILABLE", await postReceiptCommercialUnavailableSubject()],
     ["USER_CANCELLED_NO_RECEIPT", await userCancelledSubject(null)],
     ["USER_CANCELLED_ADMITTED", await userCancelledSubject("admitted")],
     ["USER_CANCELLED_REJECTED", await userCancelledSubject("rejected")],
