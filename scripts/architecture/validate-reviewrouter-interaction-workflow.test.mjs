@@ -9,7 +9,7 @@ import {
   validateReviewRouterInteractionWorkflow,
 } from "./validate-reviewrouter-interaction-workflow.mjs";
 
-const runtimeRef = "6b35091c824b1d4d5ee6bf8316121ed08d3e4861";
+const runtimeRef = "c7b7d5c5da0587c9fecdc2b7ec65be3df8e4acf4";
 const document = YAML.parse(
   await readFile(
     new URL("../../.github/workflows/reviewrouter-interaction.yml", import.meta.url),
