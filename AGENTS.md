@@ -42,6 +42,13 @@ Start here:
 - Keep accepted ADR history immutable. Supersede a decision with a new ADR.
 - Keep unresolved cross-system design in proposed documents until the required
   matrices, state machines, and failure traces have been reviewed.
+- Documentation, ADR, package-catalog, scaffolding-plan, and design-review
+  approval is not implementation approval. Do not create or expand a production
+  package, executable domain specification, public schema, adapter, migration,
+  or behavioral test for a new vertical slice until the product owner gives a
+  fresh explicit `GO TO CODE: <scope>` in the active task. Read-only review and
+  explicitly requested documentation work remain allowed. Approval is bounded
+  to the named scope and does not implicitly authorize the next slice.
 
 ## Verification
 
