@@ -309,7 +309,20 @@ test("rejects a Project Management manifest without its testing export", async (
 test("Foundation rejects planning for a proposed owner", async () => {
   await withFixture(async (root) => {
     const intent = await writeProjectManagementIntent(root);
-    await assert.rejects(planFixture(root, intent), /Owner document status is not admitted/u);
+    await assert.rejects(planFixture(root, intent), (error) => {
+      assert.equal(error.code, 1);
+      assert.equal(error.stderr, "");
+      assert.deepEqual(JSON.parse(error.stdout), {
+        schemaVersion: 1,
+        outcome: "execution-failure",
+        error: {
+          code: "UNEXPECTED",
+          message: "Owner document status is not admitted by the selected Composition.",
+          retryable: false,
+        },
+      });
+      return true;
+    });
   });
 });
 
