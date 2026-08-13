@@ -18,6 +18,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 - [Deployment profiles](architecture/deployment-profiles.md)
 - [Managed installation control](architecture/managed-installation-control.md)
 - [Engineering Foundation adoption](architecture/engineering-foundation-adoption.md)
+- [Modular product composition](architecture/modular-product-composition.md)
 - [Managed scope-admission executable model](architecture/managed-scope-admission-executable-model.md)
 - [Platform-Orchestrator boundary direction](architecture/platform-orchestrator-boundary.md)
 - [Platform-Orchestrator design review](architecture/platform-orchestrator-review/README.md)
@@ -32,6 +33,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 - [ADR-0005: Managed customer installation control](decisions/0005-managed-customer-installation-control.md)
 - [ADR-0006: Authority-reducing break-glass (Proposed)](decisions/0006-authority-reducing-break-glass.md)
 - [ADR-0007: Platform strategic context map and first Project Management slice](decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md)
+- [ADR-0008: Composite managed Project scope readiness](decisions/0008-composite-managed-project-scope-readiness.md)
 
 ## Sources of truth
 
