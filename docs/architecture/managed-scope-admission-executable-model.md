@@ -81,6 +81,13 @@ workspace package. Its only access to domain trace fixtures is the private
 `./testing/model-conformance` package subpath; no production surface imports
 that subpath or any model-testing dependency.
 
+The current private package and its composition/testing surfaces are a reference
+implementation, not the reusable SaaS module or plugin system. Those physical
+surfaces may change substantially after the independently designed open-source
+module system is reviewed and adopted. The executable model protects the
+Platform-owned behavioral invariants during such a migration; it does not make
+the current package layout a compatibility contract.
+
 ## Evidence Limits
 
 These checks prove consistency between the internal catalog and the current

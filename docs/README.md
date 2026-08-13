@@ -18,7 +18,6 @@ Read documentation by responsibility instead of scanning the whole repository.
 - [Deployment profiles](architecture/deployment-profiles.md)
 - [Managed installation control](architecture/managed-installation-control.md)
 - [Engineering Foundation adoption](architecture/engineering-foundation-adoption.md)
-- [Modular product composition](architecture/modular-product-composition.md)
 - [Managed scope-admission executable model](architecture/managed-scope-admission-executable-model.md)
 - [Platform-Orchestrator boundary direction](architecture/platform-orchestrator-boundary.md)
 - [Platform-Orchestrator design review](architecture/platform-orchestrator-review/README.md)
