@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-teams.ai/platform/docs/metadata.schema.json",
+  "title": "Agent Teams Platform documentation metadata",
+  "oneOf": [
+    {"$ref": "#/$defs/adrAccepted"},
+    {"$ref": "#/$defs/adrProposed"},
+    {"$ref": "#/$defs/architectureAccepted"},
+    {"$ref": "#/$defs/architectureActive"},
+    {"$ref": "#/$defs/architectureProposed"},
+    {"$ref": "#/$defs/boundedContextAccepted"},
+    {"$ref": "#/$defs/boundedContextProposed"},
+    {"$ref": "#/$defs/indexAccepted"},
+    {"$ref": "#/$defs/indexActive"},
+    {"$ref": "#/$defs/indexProposed"},
+    {"$ref": "#/$defs/productDecisionPacketAccepted"},
+    {"$ref": "#/$defs/template"}
+  ],
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 214, "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$"},
+    "owner": {
+      "enum": [
+        "architecture",
+        "architecture/authority",
+        "architecture/deployment",
+        "architecture/domain",
+        "architecture/integration",
+        "architecture/provisioning",
+        "product-owner",
+        "product/access-authority",
+        "product/authority",
+        "product/commercial-access",
+        "product/customer-ownership",
+        "product/deployment-management",
+        "product/platform-identity",
+        "product/project-lifecycle",
+        "product/project-management",
+        "product/tenancy",
+        "project-management",
+        "security/operations"
+      ]
+    },
+    "summary": {"type": "string", "minLength": 1, "maxLength": 1000, "pattern": "[^\\s]"},
+    "reference": {"type": "string", "minLength": 1, "maxLength": 214, "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$"},
+    "references": {"type": "array", "maxItems": 256, "uniqueItems": true, "items": {"$ref": "#/$defs/reference"}},
+    "codeAnchors": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pattern", "enforcement"],
+        "properties": {
+          "pattern": {"type": "string", "minLength": 1, "maxLength": 512, "pattern": "^[^\\r\\n]+$"},
+          "enforcement": {"enum": ["advisory", "required"]}
+        }
+      }
+    },
+    "adrAccepted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "status", "owner", "summary", "approved_by", "accepted_at"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^ADR-[0-9]{4}$"},
+        "type": {"const": "adr"}, "status": {"const": "accepted"}, "owner": {"$ref": "#/$defs/owner"}, "summary": {"$ref": "#/$defs/summary"},
+        "approved_by": {"$ref": "#/$defs/reference"}, "accepted_at": {"type": "string", "format": "date"},
+        "supersedes": {"$ref": "#/$defs/references"}, "superseded_by": {"$ref": "#/$defs/references"},
+        "accepts_architecture_documents": {"$ref": "#/$defs/references"}, "accepts_product_decisions": {"$ref": "#/$defs/references"}, "accepts_package_targets": {"$ref": "#/$defs/references"},
+        "related": {"$ref": "#/$defs/references"}, "blocked_by": {"$ref": "#/$defs/references"}, "code_anchors": {"$ref": "#/$defs/codeAnchors"}
+      }
+    },
+    "adrProposed": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "type", "status", "owner", "summary"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^ADR-[0-9]{4}$"}, "type": {"const": "adr"}, "status": {"const": "proposed"},
+        "owner": {"$ref": "#/$defs/owner"}, "summary": {"$ref": "#/$defs/summary"}, "supersedes": {"$ref": "#/$defs/references"}, "superseded_by": {"$ref": "#/$defs/references"},
+        "related": {"$ref": "#/$defs/references"}, "blocked_by": {"$ref": "#/$defs/references"}, "code_anchors": {"$ref": "#/$defs/codeAnchors"}
+      }
+    },
+    "architectureAccepted": {"$ref": "#/$defs/architecture", "type": "object", "properties": {"status": {"const": "accepted"}}},
+    "architectureActive": {"$ref": "#/$defs/architecture", "type": "object", "properties": {"status": {"const": "active"}}},
+    "architectureProposed": {"$ref": "#/$defs/architecture", "type": "object", "properties": {"status": {"const": "proposed"}}},
+    "architecture": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "type", "status", "owner", "summary"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "type": {"const": "architecture"}, "status": {"enum": ["accepted", "active", "proposed"]},
+        "owner": {"$ref": "#/$defs/owner"}, "summary": {"$ref": "#/$defs/summary"},
+        "related": {"$ref": "#/$defs/references"}, "blocked_by": {"$ref": "#/$defs/references"}, "code_anchors": {"$ref": "#/$defs/codeAnchors"}
+      }
+    },
+    "boundedContextAccepted": {
+      "$ref": "#/$defs/boundedContext", "type": "object",
+      "required": ["owner_decision", "first_feature", "first_feature_public_exports"],
+      "properties": {
+        "status": {"const": "accepted"},
+        "owner_decision": {},
+        "first_feature": {},
+        "first_feature_public_exports": {}
+      }
+    },
+    "boundedContextProposed": {"$ref": "#/$defs/boundedContext", "type": "object", "properties": {"status": {"const": "proposed"}}},
+    "boundedContext": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "type", "status", "owner", "classification", "package_target", "summary"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "type": {"const": "bounded-context"}, "status": {"enum": ["accepted", "proposed"]},
+        "owner": {"$ref": "#/$defs/owner"}, "summary": {"$ref": "#/$defs/summary"},
+        "classification": {"enum": ["core", "supporting", "supporting-security-critical", "supporting-strategic-enabling"]},
+        "package_target": {"$ref": "#/$defs/reference"}, "owner_decision": {"$ref": "#/$defs/reference"}, "first_feature": {"$ref": "#/$defs/reference"},
+        "first_feature_public_exports": {"type": "array", "minItems": 1, "maxItems": 256, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
+        "related": {"$ref": "#/$defs/references"}, "blocked_by": {"$ref": "#/$defs/references"}, "code_anchors": {"$ref": "#/$defs/codeAnchors"}
+      }
+    },
+    "indexAccepted": {"$ref": "#/$defs/index", "type": "object", "properties": {"status": {"const": "accepted"}}},
+    "indexActive": {"$ref": "#/$defs/index", "type": "object", "properties": {"status": {"const": "active"}}},
+    "indexProposed": {"$ref": "#/$defs/index", "type": "object", "properties": {"status": {"const": "proposed"}}},
+    "index": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "type", "status", "owner", "summary"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "type": {"const": "index"}, "status": {"enum": ["accepted", "active", "proposed"]},
+        "owner": {"$ref": "#/$defs/owner"}, "summary": {"$ref": "#/$defs/summary"},
+        "related": {"$ref": "#/$defs/references"}, "blocked_by": {"$ref": "#/$defs/references"}, "code_anchors": {"$ref": "#/$defs/codeAnchors"}
+      }
+    },
+    "productDecisionPacketAccepted": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "type", "status", "owner", "summary", "owner_decision", "decisions"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "type": {"const": "product-decision-packet"}, "status": {"const": "accepted"},
+        "owner": {"$ref": "#/$defs/owner"}, "summary": {"$ref": "#/$defs/summary"}, "owner_decision": {"$ref": "#/$defs/reference"},
+        "decisions": {"type": "object", "minProperties": 1, "maxProperties": 256, "additionalProperties": {"const": "accepted"}, "propertyNames": {"pattern": "^PO-PLAT-[0-9]{3}$"}},
+        "related": {"$ref": "#/$defs/references"}, "blocked_by": {"$ref": "#/$defs/references"}, "code_anchors": {"$ref": "#/$defs/codeAnchors"}
+      }
+    },
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["placeholder"],
+      "properties": {"placeholder": {"const": true}}
+    }
+  }
+}

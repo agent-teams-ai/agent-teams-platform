@@ -2,6 +2,8 @@
 
 This file is a navigation layer, not a second architecture source of truth.
 
+Use [.agents/skills/docs-authoring/SKILL.md](.agents/skills/docs-authoring/SKILL.md) for documentation.
+
 Start here:
 
 - [Documentation index](docs/README.md)
