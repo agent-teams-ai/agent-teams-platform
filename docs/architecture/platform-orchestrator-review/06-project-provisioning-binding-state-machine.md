@@ -9,6 +9,7 @@ related:
   - ADR-0004
   - ADR-0005
   - ADR-0007
+  - ADR-0008
 ---
 
 # Project Scope Admission, Authority, and Retirement
@@ -37,22 +38,21 @@ state or receipt from one lifecycle cannot serve as authority for another.
 ```mermaid
 stateDiagram-v2
     [*] --> ProjectRecorded
-    ProjectRecorded --> ScopeAdmissionRequested
-    ScopeAdmissionRequested --> OutcomeResolving
-    OutcomeResolving --> ScopeAdmitted
-    ScopeAdmitted --> ObservationVerifying
-    ObservationVerifying --> ScopeAdmissionReady
+    ProjectRecorded --> ProviderRequestPending
+    ProviderRequestPending --> ProviderOutcomeResolving
+    ProviderOutcomeResolving --> CompositeReadinessAccepted
+    CompositeReadinessAccepted --> ScopeAdmissionReady
     ProjectRecorded --> ReconcileRequired
-    ScopeAdmissionRequested --> ReconcileRequired
-    OutcomeResolving --> ReconcileRequired
-    ScopeAdmitted --> ReconcileRequired
-    ObservationVerifying --> ReconcileRequired
-    ReconcileRequired --> OutcomeResolving
-    ReconcileRequired --> ScopeAdmissionRequested
+    ProviderRequestPending --> ReconcileRequired
+    ProviderOutcomeResolving --> ReconcileRequired
+    CompositeReadinessAccepted --> ReconcileRequired
+    ReconcileRequired --> ProviderOutcomeResolving
+    ReconcileRequired --> ProviderRequestPending
     ReconcileRequired --> Blocked
 ```
 
-`ManagedProjectScopeAdmissionProcess` owns these steps. ProductProject exists
+`ManagedProjectScopeAdmissionProcess` owns these Platform-local states.
+ProductProject exists
 with an `OPEN` identity before scope readiness, but Platform admission remains
 closed until required Platform and Orchestrator authority gates allow it. A read
 model may display `SCOPE_ADMISSION_PENDING`, `SCOPE_ADMISSION_READY`, or
@@ -62,12 +62,16 @@ model may display `SCOPE_ADMISSION_PENDING`, `SCOPE_ADMISSION_READY`, or
 different projections. Runtime placement, provider capacity, AR scope activation,
 and runtime dispatch are not inputs to this first state machine.
 
-Platform ADR-0007 confirms the process ownership and product behavior; exact
-process state names remain tactical. Scope identity, authority
-binding, and local Orchestrator admission are separate provider facts. Neither a
-binding receipt nor a process-alive observation proves admission. A transition
-out of `ReconcileRequired` first queries or replays the original step command and
-then re-evaluates current preconditions. It is never a blind retry edge.
+Platform ADR-0007 confirms the process ownership and product behavior, and
+ADR-0008 confirms that Platform consumes one composite managed Project scope
+capability. Exact process state names remain tactical. Scope identity, authority
+binding, and local admission are Orchestrator-owned internal substeps, not
+Platform commands or Platform process obligations. Neither an intermediate
+binding receipt nor a process-alive observation proves readiness. Platform
+accepts only terminal composite scope-readiness evidence for the exact requested
+ProductProject incarnation. A transition out of `ReconcileRequired` first
+queries or exactly replays the original provider request and then re-evaluates
+current Platform preconditions. It is never a blind retry edge.
 
 ### Creation safety requirements
 
@@ -90,13 +94,18 @@ reconciliation arrives without creating an authorization window.
 The following identities are distinct and durable:
 
 - the customer Platform create-command identity;
-- the managed scope-admission process identity;
-- one command identity and canonical digest for each downstream step;
-- each owner-local receipt identity.
+- the managed scope-admission process identity and Platform intent digest;
+- the opaque Orchestrator request identity, semantic fingerprint, and Operation
+  reference for the one composite provider capability;
+- the terminal composite provider receipt identity.
 
-Reusing one identifier for all four concerns is forbidden. A retry reuses the
-original step command identity and digest. A changed command requires a
-successor attempt identity after fresh precondition evaluation.
+Reusing one identifier for all four concerns is forbidden. Project Management
+persists the original opaque provider request envelope or command reference
+needed for recovery; the stateless ACL does not own it. An exact retry or query
+targets the original provider request. Changed Platform intent requires a
+successor process attempt and a new provider request after fresh precondition
+evaluation. Orchestrator-internal create, bind, and admit identities and receipts
+remain owner-local and are never promoted into the Platform process model.
 
 ## Authoritative resources and processes
 
@@ -105,7 +114,7 @@ successor attempt identity after fresh precondition evaluation.
 | `CONFIRMED` | ProductProject | Platform Project Management | `OPEN` or terminal `RETIRED`, lifecycle revision, retirement epoch | The accepted first-slice create UoW atomically initializes identity, denied admission, receipt, process intent, and outbox | Platform ADR-0004 confirms retirement atomicity; Platform ADR-0007 confirms creation atomicity |
 | `CONFIRMED` | ProjectRestriction | Owning Platform authority capability through Project Management | Exact restriction identity, source, scope, revision, and status | One source clears only its exact restriction; stale or conflicting source revision fails closed | Platform ADR-0004 |
 | `CONFIRMED` | ProjectAdmissionAuthority | Platform Project Management | Effective gate, admission revision, lifecycle epoch | Restriction mutation and gate revision commit atomically | Platform ADR-0004 |
-| `CONFIRMED` | Managed scope-admission process semantics | Platform Project Management | Process identity, immutable request digest, generation, and bounded step obligations with command and receipt refs | Eventual convergence; unknown steps queried by original stable identity; cancellation stops new claims but does not roll back identity or inferred remote effects | Platform ADR-0007; exact state names and Orchestrator contract remain proposed |
+| `CONFIRMED` | Managed scope-admission process semantics | Platform Project Management | Process identity, immutable Platform intent digest, generation, one composite provider-request obligation, opaque recovery reference, and terminal receipt reference | Eventual convergence; an unknown provider outcome is queried or exactly replayed by its original identity; cancellation stops new claims but does not roll back identity or inferred remote effects | Platform ADR-0007 and ADR-0008; exact state names and Orchestrator contract remain proposed |
 | `CONFIRMED` | ProductProjectRetirementProcess | Platform Project Management | Commitment, policy and catalog revisions, participant obligations, opaque receipt refs | Cancel and commit race by ProductProject CAS; participant outcomes converge independently | Platform ADR-0004 |
 | `CONFIRMED` | OrchestrationProject | Orchestration Scope | Stable identity, local admission authority, lifecycle and deletion epochs | Ownership and terminal lifecycle accepted; tactical aggregate split remains open | Orchestrator ADR-0080 and OD-006 |
 | `CONFIRMED` | OrchestrationProjectDispositionProcess | Orchestration Scope | Versioned participant plan, owner obligations, exact receipt refs | Coordinates but never mutates another context's data | Orchestrator ADR-0080 |

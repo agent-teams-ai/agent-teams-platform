@@ -12,6 +12,7 @@ related:
   - architecture.platform-orchestrator-review.contract-conformance
   - ADR-0004
   - ADR-0007
+  - ADR-0008
 ---
 
 # Platform-Orchestrator-AR Concurrency and Failure Traces
@@ -31,10 +32,10 @@ The names below describe distinct semantic identities, not accepted DTO fields:
 customerCreateCommandId
 managedScopeAdmissionProcessId
 processGeneration
-stepCommandId + canonicalStepDigest
+platformRequestAttemptId + canonicalPlatformIntentDigest
 canonicalCommandScope + commandDescriptor + requestId
 canonicalizationVersion + semanticFingerprint
-ownerLocalReceiptRef
+providerOperationRef + terminalCompositeReceiptRef
 ProductProjectId + productProjectIncarnation
 AuthorityBindingSlot.PRIMARY
 expected owner-local revisions and generations
@@ -44,25 +45,30 @@ The following invariants apply to every trace:
 
 1. Platform and Orchestrator commit independently. No distributed transaction or
    rollback spans them.
-2. A state-changing step records its intent and outbox before an external call.
-3. An accepted state-changing command atomically commits its owner-local
-   mutation, command disposition, durable receipt, and owner outbox. A rejected
-   command atomically retains its typed rejection receipt and disposition
-   without the requested mutation or integration outbox.
+2. A Platform provider-request attempt records its intent, opaque recovery
+   reference or original request envelope, and outbox before an external call.
+3. Each Orchestrator-internal state-changing subcommand atomically commits only
+   its owner-local mutation, disposition, receipt, and outbox. The composite
+   provider operation may span several such transactions and publishes terminal
+   readiness only after its own reconciliation condition is satisfied. A
+   rejected request retains a typed provider outcome without claiming readiness.
 4. A command is addressed by its complete owner-defined idempotency scope. For
    Orchestrator durable public commands this is `CanonicalCommandScope +
    CommandDescriptor + requestId`, plus canonicalization version and semantic
    fingerprint. The same scoped identity and fingerprint replays its original
    receipt; a conflict has no requested domain side effect. Request ID alone is
    never a lookup key.
-5. Unknown outcome is resolved by exact query or replay. A replacement create,
-   scope, binding, or activation command is forbidden.
-6. Binding existence does not open scope admission. Opening admission is a
-   separate Orchestration Scope CAS after current binding verification.
+5. Unknown outcome is resolved by exact query or replay of the one original
+   composite provider request. Platform must not issue replacement create,
+   bind, admit, or activation commands.
+6. Scope identity, binding, and local admission are Orchestrator-owned internal
+   substeps. Binding existence does not prove readiness. Platform accepts only a
+   terminal composite receipt proving the exact Orchestrator-defined readiness
+   condition for the requested ProductProject incarnation.
 7. `READY` is a Platform projection for one process generation. Its owner-local
    CAS checks current Platform incarnation, lifecycle, admission revision,
-   process generation, and the complete latest receipt set, including observed
-   remote generations. It cannot atomically assert current Orchestrator state,
+   process generation, and the validated terminal composite receipt with its
+   observed remote generations. It cannot atomically assert current Orchestrator state,
    runtime capacity, admission, or execution authority. Every later operation
    checks each current owner independently.
 8. Delayed evidence can be retained for audit and reconciliation but cannot
@@ -73,37 +79,37 @@ The following invariants apply to every trace:
 ### CF-01 preconditions
 
 - ProductProject exists and its Platform admission gate is closed.
-- The process has one current step with a stable command identity, canonical
-  digest, expected ProductProject incarnation, binding slot, and owner-local
-  preconditions.
-- No receipt has yet been applied to the step.
+- The process has one current composite provider-request attempt with a stable
+  Platform intent identity and digest, opaque provider recovery reference,
+  expected ProductProject incarnation, and Platform-owned preconditions.
+- No terminal composite receipt has yet been applied to the attempt.
 
 ### CF-01 commit order
 
 | Order | Owner | Durable action |
 | --- | --- | --- |
-| 1 | Platform process | CAS the step to dispatchable and append its outbox record in one transaction |
-| 2 | Dispatcher | Deliver the exact command and digest; no state authority is held by the transport |
-| 3 | Orchestration Scope | Validate command identity, digest, trusted scope, lifecycle, admission, binding, and expected revisions |
-| 4 | Orchestration Scope | **Linearization point:** atomically commit the owner mutation, command disposition, durable receipt, and outbox |
-| 5 | Transport | Lose the response after the Orchestrator commit |
-| 6 | Platform process | Keep the step outcome unknown; do not create a replacement command or infer failure |
-| 7 | Reconciler | Query the original command/receipt identity or replay the same identity and digest |
-| 8 | Platform process | Apply the recovered receipt only if process generation, step command, digest, Project incarnation, and expected step revision still match |
+| 1 | Platform process | CAS the composite request attempt to dispatchable and append its outbox record in one transaction |
+| 2 | Dispatcher and ACL | Translate and deliver the exact composite capability request; neither holds durable state authority |
+| 3 | Orchestrator provider | Validate its request identity, fingerprint, trusted scope, lifecycle, and provider-owned preconditions; coordinate create, bind, and admit internally |
+| 4 | Orchestrator provider | **Provider terminal linearization point:** durably retain the terminal composite readiness receipt or terminal typed failure under the original request identity |
+| 5 | Transport | Lose the response after provider completion |
+| 6 | Platform process | Keep the provider outcome unknown; do not create a replacement request or infer failure |
+| 7 | Reconciler | Query the original provider Operation/request identity or exactly replay the same request and fingerprint |
+| 8 | Platform process | Apply the recovered terminal receipt only if process generation, request attempt, Platform intent digest, Project incarnation, and expected attempt revision still match |
 
 ### Crash windows
 
 | Window | Recovery |
 | --- | --- |
-| Before the Orchestrator commit | Replay the same command. No receiver mutation exists |
-| After the Orchestrator commit and before response | Query or exact replay returns the durable receipt |
+| Before provider acceptance | Replay the same request. No provider acceptance is known |
+| After any internal provider commit and before terminal response | Query or exact replay lets Orchestrator reconcile its internal substeps and return the durable terminal outcome; Platform does not infer their state |
 | After response delivery and before Platform receipt commit | Query or exact replay; applying the receipt is idempotent |
 | After a successor Platform generation exists | Retain the old receipt as evidence; it cannot activate or mark the successor ready |
 
-A receiver `not_found` is not terminal absence while the original producer
-outbox can still deliver the command. Terminal absence requires an owner-defined
-authoritative negative receipt that covers the original command identity and
-restore horizon; that exact protocol remains `OPEN`.
+A provider `not_found` is not terminal absence while the original producer
+outbox can still deliver the request. Terminal absence requires an owner-defined
+authoritative negative receipt that covers the original provider request
+identity and restore horizon; that exact protocol remains `OPEN`.
 
 ### CF-01 conformance evidence
 
@@ -112,7 +118,8 @@ restore horizon; that exact protocol remains `OPEN`.
 - restart of both participants before recovery;
 - exact replay and receipt query returning one stable result;
 - delayed receipt against a successor process generation;
-- proof that no replacement OrchestrationProject or binding is created.
+- proof that Platform issues no replacement request and that Orchestrator
+  deduplicates or reconciles its internal scope and binding effects.
 
 ## CF-02 Duplicate command
 
@@ -127,16 +134,21 @@ Operation identity remains separate.
 ### CF-02 commit order
 
 1. Both requests reach the same owner-local command authority.
-2. The receiver serializes command-ledger admission and the requested mutation
-   in one transaction.
-3. For the same identity and digest, exactly one transaction creates or changes
-   owner state. The loser reads or waits for the canonical receipt.
-4. For the same identity with another digest, the receiver records or returns a
-   typed conflict without the requested mutation or integration outbox.
-5. Platform applies the canonical receipt once through its step revision CAS.
+2. The receiver serializes provider-operation admission under the complete
+   Orchestrator-owned idempotency key. Its create, bind, and admit substeps may
+   then use several owner-local transactions hidden behind that operation.
+3. For the same identity and fingerprint, exactly one provider operation is
+   authoritative. Duplicates read, wait for, or advance that operation toward
+   its one canonical terminal receipt.
+4. For the same identity with another fingerprint, the receiver records or
+   returns a typed conflict without starting another provider operation.
+5. Platform applies the terminal composite receipt once through its
+   request-attempt revision CAS.
 
 The same rule applies separately to the customer ProductProject create command
-and every downstream scope-admission step. For an exact create-command replay,
+and the one composite Orchestrator provider request. Platform does not address
+or deduplicate Orchestrator-internal create, bind, or admit substeps. For an
+exact ProductProject create-command replay,
 either no ProductProject commit exists or one fail-closed ProductProject exists
 with durable owner-local recovery intent. Each bounded context atomically commits
 only its own state, receipt, and outbox. Exact aggregate placement remains
@@ -156,15 +168,16 @@ identities remains `OPEN`; retries must preserve the original identity.
 - duplicate inbox and outbox delivery after restart and restore;
 - stale duplicate receipt after successor process generation;
 - wrong-tenant and wrong-incarnation substitution without an existence oracle;
-- exactly one ProductProject, process, OrchestrationProject, binding mutation,
-  and owner receipt for the exact command identity.
+- exactly one ProductProject and Platform process for the customer command, plus
+  one authoritative provider operation and terminal result for the provider
+  request; internal Orchestrator effects remain owner-local and deduplicated.
 
 ## CF-03 Stale revision or generation
 
 ### CF-03 preconditions
 
-The command binds the Platform ProductProject identity/incarnation and the
-expected Platform evidence relevant to the step. It also carries only the
+The composite request binds the Platform ProductProject identity/incarnation and
+the expected Platform evidence relevant to the capability. It also carries only
 published Orchestrator preconditions needed by the receiving use case.
 Platform evidence never asserts an Orchestrator deletion epoch, aggregate
 revision, or binding generation as Platform-owned truth.
@@ -183,10 +196,11 @@ revision, or binding generation as Platform-owned truth.
 5. Platform records the stale attempt receipt without changing readiness.
 6. Reconciliation obtains a current owner snapshot or receipt, re-evaluates the
    original product intent and current ProductProject gate, and either stops or
-   creates a successor step attempt.
+   creates a successor provider-request attempt.
 
-A changed digest or precondition set uses a successor step command identity. The
-old command identity cannot be reused with altered content. Revisions belonging
+A changed intent digest or precondition set uses a successor Platform attempt
+and a new provider request identity. The old provider request cannot be reused
+with altered content. Revisions belonging
 to different owners or source incarnations are opaque and incomparable; no
 cross-system numeric maximum is computed.
 
@@ -244,7 +258,8 @@ There is no global ordering transaction. The supported commit orders are:
 3. The durable suspension command eventually closes Orchestrator admission by a
    successor CAS. Work accepted before closure is not represented as rolled back;
    each owning lifecycle applies its cutoff or reconciliation semantics.
-4. A delayed binding or opening receipt cannot mark Platform `READY` because the
+4. A delayed intermediate binding/opening observation or terminal receipt for a
+   predecessor request cannot mark Platform `READY` because the
    final readiness CAS sees the newer Platform admission revision or restriction.
 
 ### Platform suspension commits while delivery is partitioned
@@ -257,8 +272,9 @@ suspension is observed, closure is monotonic and recovery queries the original
 receipt.
 
 Clearing the Platform restriction never reopens Orchestrator admission
-automatically. A fresh verification step and explicit successor admission CAS
-are required; clearing one source cannot clear another active restriction.
+automatically. A fresh composite provider request or provider-defined recovery
+action is required; Platform never issues an admission subcommand. Clearing one
+source cannot clear another active restriction.
 
 ### CF-04 conformance evidence
 
@@ -274,41 +290,50 @@ are required; clearing one source cannot clear another active restriction.
 
 ### CF-05 preconditions and durable model
 
-The process stores an immutable request digest and a bounded set of step
-obligations. Each obligation has its own command identity, digest, expected
-preconditions, dispatch state, outcome classification, and opaque receipt
-reference. A single global error scalar is not canonical truth.
+The process stores an immutable Platform intent digest and one bounded composite
+provider-request obligation per current attempt. The obligation retains the
+Platform attempt identity, opaque provider recovery reference or original
+request envelope, expected Platform preconditions, dispatch state, outcome
+classification, and terminal receipt reference. Orchestrator owns any internal
+create, bind, admit, and reconciliation ledger. A single global error scalar is
+not canonical truth.
 
 ### CF-05 trace
 
 1. Platform commits ProductProject in a fail-closed state plus owner-local
    durable recovery intent before any downstream call. Exact aggregate and
    process transaction boundaries remain `OPEN`.
-2. Placement resolution succeeds and its receipt is committed.
-3. Orchestration scope creation or binding commits remotely, but a later binding,
-   verification, or admission-opening step fails or becomes unknown.
-4. Platform retains ProductProject and every proven receipt. It does not execute
-   a distributed rollback or infer that remote resources were absent.
-5. Admission remains closed. The process records the exact failed/unknown
-   obligation and enters reconciliation.
+2. Required Platform policy or placement inputs are resolved and committed
+   owner-locally before dispatch of the composite provider request.
+3. Orchestrator may commit scope creation or binding internally, while a later
+   provider-owned admission substep fails or becomes unknown. Platform observes
+   only that its composite request has no terminal readiness result.
+4. Platform retains ProductProject and the opaque original provider recovery
+   reference. It does not import intermediate receipts, execute a distributed
+   rollback, or infer that remote resources were absent.
+5. Admission remains closed. The process records the exact composite request as
+   failed or unknown and enters reconciliation.
 6. For an unknown outcome, reconciliation queries or exactly replays the
-   original command. For a proven non-acceptance retry, it reuses the original
-   identity only when the producer contract allows it.
+   original provider request. For a proven non-acceptance retry, it reuses the
+   original identity only when the producer contract allows it.
 7. A stale or conflicting attempt triggers fresh intent evaluation and, when
-   still eligible, a successor command identity. A permanent incompatibility or
+   still eligible, a successor Platform attempt and provider request identity. A
+   permanent incompatibility or
    policy denial records a typed operational block without retiring the Project.
 8. If forward repair is no longer allowed, an explicit separately authorized
    retirement or disposition process handles the retained resources. The setup
    process never disguises compensation as rollback.
 9. The Platform `READY` projection CAS succeeds only from current Platform-owned
-   state and complete receipts for the current process generation. It stores the
-   observed binding/admission evidence but does not claim the remote gate remains
+   state and one validated terminal composite receipt for the current process
+   generation. It stores the observed terminal readiness evidence but does not
+   claim the remote gate remains
    open after observation. Subsequent use checks Platform and Orchestrator gates
    independently; remote change eventually marks the projection stale.
 
 `RECONCILE_REQUIRED` is non-terminal. `BLOCKED` means automatic progress is not
 currently possible; it is not ProductProject retirement or proof of cleanup.
-The accepted Platform v1 semantics make cancellation generation-scoped: it stops new step
+The accepted Platform v1 semantics make cancellation generation-scoped: it
+stops new request-attempt
 claims, reconciles ambiguous outcomes, preserves the `OPEN` fail-closed Project,
 and yields `BLOCKED(reason=USER_CANCELLED)`. Resume creates a successor process
 generation after fresh precondition evaluation. Platform ADR-0007 accepts these
@@ -318,14 +343,15 @@ product semantics; exact state names and external commands remain proposed.
 
 - fault injection before and after every Platform and Orchestrator commit;
 - Platform commit while Orchestrator is unavailable;
-- every partial-success combination across placement, scope creation, binding,
-  verification, and admission opening;
+- every Orchestrator-internal partial-success combination across scope creation,
+  binding, verification, and admission opening, observed by Platform only as a
+  pending, terminal-failed, or terminal-ready composite outcome;
 - restart with duplicate and out-of-order receipts;
 - stale events from a predecessor process or binding generation;
 - remote suspension after the last observed receipt but before Platform projection
   commit, proving the projection cannot authorize later work;
 - convergence by forward repair and explicit retirement/disposition fallback;
-- no readiness while an obligation is missing, unknown, stale, or blocked.
+- no readiness while the composite outcome is missing, unknown, stale, or blocked.
 
 ## RT-01 Runtime target dispatch and cutoff race
 
@@ -458,8 +484,8 @@ validity deadline
 - exact Project Management aggregate split after the proposed atomic
   fail-closed initialization;
 - exact Project restriction representation after initial denied authority;
-- managed Orchestrator command, query, receipt, and authoritative-negative
-  schemas;
+- managed Orchestrator composite request, query, terminal receipt, and
+  authoritative-negative schemas;
 - terminal customer semantics for cancellation, abandonment, and `BLOCKED`;
 - idempotency, receipt, tombstone, retry, and PITR retention horizons;
 - authority freshness duration and suspension propagation SLO;
