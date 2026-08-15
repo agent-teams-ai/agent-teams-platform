@@ -20,6 +20,7 @@ summary: Index of immutable Platform architecture decisions.
 - [ADR-0004: Project Retirement Authority and Disposition](0004-project-retirement-authority-and-disposition.md)
 - [ADR-0005: Managed Customer Installation Control](0005-managed-customer-installation-control.md)
 - [ADR-0007: Platform Strategic Context Map and First Project Management Slice](0007-platform-strategic-context-map-and-first-project-management-slice.md)
+- [ADR-0008: Composite Managed Project Scope Readiness](0008-composite-managed-project-scope-readiness.md)
 
 ## Superseded Decisions
 

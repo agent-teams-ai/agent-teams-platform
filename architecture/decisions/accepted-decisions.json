@@ -31,6 +31,11 @@
       "id": "ADR-0007",
       "path": "docs/decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md",
       "immutableDigest": "sha256:26085aa43e0bc08b6e7988bb1946b3e753c61cebf398c52f30644478be1006db"
+    },
+    {
+      "id": "ADR-0008",
+      "path": "docs/decisions/0008-composite-managed-project-scope-readiness.md",
+      "immutableDigest": "sha256:a19fa50c9ce3653d144e06ad3587e9b811687d7cae8e96c956bffb2803fb7733"
     }
   ]
 }
