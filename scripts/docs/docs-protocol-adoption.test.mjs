@@ -89,14 +89,15 @@ function docs(root, command, ...args) {
 
 test("keeps protocol and Platform semantics in every repository gate", async () => {
   const manifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8"));
-  assert.equal(manifest.scripts["docs:protocol:check"], "pnpm docs:check && pnpm docs:semantic");
+  assert.equal(manifest.scripts["docs:protocol:check"], "pnpm docs:check && pnpm docs:semantic && pnpm docs:qualification");
   assert.equal(
     manifest.scripts["docs:semantic"],
     "markdownlint-cli2 README.md AGENTS.md 'docs/**/*.md'"
   );
-  for (const gate of ["check", "check:fast", "check:changed"]) {
+  for (const gate of ["check", "check:fast"]) {
     assert.match(manifest.scripts[gate], /pnpm docs:protocol:check/u);
   }
+  assert.equal(manifest.scripts["check:changed"], "agent-teams-foundation agent-workflow changed --consumer .");
 });
 
 test("qualifies Platform authoring through the shared disposable runner", async () => {
