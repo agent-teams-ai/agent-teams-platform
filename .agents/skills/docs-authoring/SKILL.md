@@ -1,23 +1,27 @@
-# Platform Documentation Authoring
+---
+name: docs-authoring
+description: Use when creating, changing, reorganizing, or reviewing governed documentation in this repository.
+---
 
-Protocol: `agent-teams.docs-protocol/v1`
+# Documentation Authoring
 
-Use this Skill for every new governed Platform document.
+Protocol: `agent-teams.docs-protocol/v1`.
 
-1. Run `pnpm docs:info` before choosing a type, owner, path, or metadata.
-2. Find existing authority with `pnpm docs:find -- --text '<topic>'`.
-3. Narrow the search by ID, type, status, owner, relation, or blocker.
-4. Treat zero matches as a valid result, not as a command failure.
-5. Create only a type listed as authoring-enabled by `docs:info`.
-6. Build a non-mutating preview with `pnpm docs:new -- ... --dry-run`.
-7. Review the exact destination, metadata, heading, and index instruction.
-8. Resolve duplicate IDs, missing references, owners, and stale code anchors.
-9. Apply the reviewed plan explicitly with `pnpm docs:new -- ... --apply`.
-10. Add the manual reported index link to the exact reported index path.
-11. Run `pnpm docs:check`; it combines protocol and declared semantic gates.
-12. If a transaction is pending, run `pnpm docs:doctor` before any new write.
-13. Use `pnpm docs:recover` only for the exact installed Foundation build.
+## Required workflow
 
-Never hand-edit recovery state, bypass explicit reachability, or infer a policy
-that is absent from `docs:info`. Platform architecture and domain validators
-remain authoritative for document meaning.
+- Read the current types, owners, placement, metadata, and index policy with `pnpm docs:info`.
+- Search first with `pnpm docs:find -- --text query`.
+- Reuse or relate existing authority instead of creating a competing source.
+- Preview with `pnpm docs:new -- --type TYPE --id ID --dry-run`.
+- Review the exact destination, metadata, relations, anchors, and diagnostics.
+- Apply with `pnpm docs:new -- --type TYPE --id ID --apply` after review.
+- Manually update the reported index/link exactly when reachability requires it.
+- Finish with `pnpm docs:check` after the index is current.
+
+## Rules
+
+- Never invent owners, types, statuses, paths, or metadata outside `docs:info`.
+- Keep preview and apply inputs identical.
+- Stop when recovery is required; use `pnpm docs:doctor` before `pnpm docs:recover`.
+- Resolve required anchors and blockers before apply.
+- Do not bypass repository scripts or hand-edit transaction evidence.
