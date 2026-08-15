@@ -17,7 +17,7 @@
     "architecture:review": "node scripts/architecture/validate-deployment-profiles.mjs --references-only && node scripts/architecture/validate-platform-orchestrator-review.mjs && pnpm architecture:domain",
     "architecture:test": "node --test --test-concurrency=1 scripts/architecture/*.test.mjs",
     "check": "pnpm foundation:check && pnpm docs:protocol:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm lint && pnpm typecheck && pnpm packages:check",
-    "check:changed": "agent-teams-foundation agent-workflow changed --consumer . && pnpm docs:protocol:check",
+    "check:changed": "agent-teams-foundation agent-workflow changed --consumer .",
     "check:fast": "pnpm foundation:check && pnpm docs:protocol:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm lint && pnpm typecheck && pnpm packages:check",
     "docs:check": "agent-teams-docs check --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:doctor": "agent-teams-docs doctor --consumer . --profile architecture/foundation/docs-protocol.yaml",
