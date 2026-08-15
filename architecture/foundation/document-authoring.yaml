@@ -29,6 +29,7 @@ authoring:
         - product/customer-ownership
         - product/deployment-management
         - product/project-lifecycle
+        - project-management
         - security/operations
       reachability:
         kind: manual-fixed-index

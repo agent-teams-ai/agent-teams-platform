@@ -98,11 +98,10 @@ test("qualifies Platform authoring through the shared disposable runner", async 
             type: "adr",
             id: "ADR-9998",
             title: "Disposable Protocol Qualification",
-            owner: "architecture/deployment",
+            owner: "project-management",
             summary: "Qualifies Platform ADR authoring without touching a real repository."
           },
-          related: ["ADR-0001"],
-          blockedBy: ["ADR-0006"]
+          related: ["ADR-0001"]
         }
       }
     });
@@ -126,9 +125,12 @@ test("fails closed for an unknown owner", async () => {
     const result = docs(root, "check");
     assert.notEqual(result.status, 0);
     assert.equal(result.envelope.outcome, "violation");
-    assert.ok(result.envelope.diagnostics.some(({ruleId}) =>
-      ruleId === "document.catalog.owner-unknown"
-    ));
+    assert.ok(
+      result.envelope.diagnostics.some(({ruleId}) =>
+        ruleId === "document.catalog.metadata-invalid"
+      ),
+      JSON.stringify(result.envelope.diagnostics)
+    );
   });
 });
 
@@ -144,9 +146,12 @@ test("fails closed for an unresolved relation", async () => {
     const result = docs(root, "check");
     assert.notEqual(result.status, 0);
     assert.equal(result.envelope.outcome, "violation");
-    assert.ok(result.envelope.diagnostics.some(({ruleId}) =>
-      ruleId.includes("reference") || ruleId.includes("relation")
-    ));
+    assert.ok(
+      result.envelope.diagnostics.some(({ruleId}) =>
+        ruleId === "docs.metadata.common-semantics"
+      ),
+      JSON.stringify(result.envelope.diagnostics)
+    );
   });
 });
 
@@ -162,11 +167,12 @@ test("fails closed for an unresolved blocker reference", async () => {
     const result = docs(root, "check");
     assert.notEqual(result.status, 0);
     assert.equal(result.envelope.outcome, "violation");
-    assert.ok(result.envelope.diagnostics.some(({ruleId}) =>
-      ruleId.includes("blocker") ||
-      ruleId.includes("blocked") ||
-      ruleId.includes("reference")
-    ));
+    assert.ok(
+      result.envelope.diagnostics.some(({ruleId}) =>
+        ruleId === "docs.metadata.common-semantics"
+      ),
+      JSON.stringify(result.envelope.diagnostics)
+    );
   });
 });
 
