@@ -1,0 +1,20 @@
+version: 1
+owners:
+  architecture: {kind: architecture}
+  architecture/authority: {kind: architecture}
+  architecture/deployment: {kind: architecture}
+  architecture/domain: {kind: architecture}
+  architecture/integration: {kind: architecture}
+  architecture/provisioning: {kind: architecture}
+  product-owner: {kind: product}
+  product/access-authority: {kind: product}
+  product/authority: {kind: product}
+  product/commercial-access: {kind: product}
+  product/customer-ownership: {kind: product}
+  product/deployment-management: {kind: product}
+  product/platform-identity: {kind: product}
+  product/project-lifecycle: {kind: product}
+  product/project-management: {kind: product}
+  product/tenancy: {kind: product}
+  project-management: {kind: bounded-context}
+  security/operations: {kind: security}
