@@ -38,7 +38,7 @@ test("qualification manifest binds the exact protocol gate and registry packages
 });
 
 async function disposableRepository(run) {
-  const root = await mkdtemp(join(tmpdir(), "platform-docs-protocol-"));
+  const root = await mkdtemp(join(tmpdir(), "atd-p-"));
   try {
     await cp(join(repositoryRoot, "docs"), join(root, "docs"), {recursive: true});
     await mkdir(join(root, "architecture", "foundation"), {recursive: true});
