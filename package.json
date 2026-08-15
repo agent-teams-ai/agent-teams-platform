@@ -40,7 +40,7 @@
     "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"
   },
   "devDependencies": {
-    "@agent-teams/engineering-foundation": "0.16.0-rc.0",
+    "@agent-teams/engineering-foundation": "0.16.1",
     "@ast-grep/napi": "catalog:",
     "@types/node": "catalog:",
     "@xstate/graph": "catalog:",
