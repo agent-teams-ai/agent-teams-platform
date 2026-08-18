@@ -2,7 +2,9 @@
 
 This file is a navigation layer, not a second architecture source of truth.
 
+<!-- agent-teams-docs:route/v1 begin -->
 Use [.agents/skills/docs-authoring/SKILL.md](.agents/skills/docs-authoring/SKILL.md) for documentation.
+<!-- agent-teams-docs:route/v1 end -->
 
 Start here:
 
