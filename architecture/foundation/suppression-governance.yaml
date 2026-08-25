@@ -1,6 +1,8 @@
 schemaVersion: 1
 governedRoots:
+  - packages
   - scripts
+  - tooling/executable-specifications/scripts
 nonWaivableRulePrefixes:
   - typescript/no-unsafe-
 waivers: []
