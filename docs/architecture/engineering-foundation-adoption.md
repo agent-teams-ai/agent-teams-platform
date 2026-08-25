@@ -37,8 +37,9 @@ versions.
 | `workspace.dependency-declarations` | Yes | Yes | Root pnpm workspace, exact catalog, and dev-only dependency policy |
 | `repository.agent-workflow` | Yes | Yes | Canonical instructions and changed, fast, and full checks are declared |
 | `documentation.local-references` | Yes | Yes | `docs` is checked with GitHub-compatible anchors and containment |
-| `governance.architecture-decisions` | Yes | Yes | Six accepted ADRs have a committed immutable baseline |
-| `quality.suppression-governance` | Yes | Yes | Architecture tooling is governed; no waiver currently exists |
+| `governance.architecture-decisions` | Yes | Yes | Seven accepted ADRs have a committed immutable baseline |
+| `quality.suppression-governance` | Yes | Yes | Package, architecture-script, and executable-specification source roots are governed; no waiver currently exists |
+| `quality.executable-specifications` | Yes | Yes | The Project Management model, property, mutation, and production-conformance bindings are blocking |
 | `architecture.source-dependencies` | Yes | Yes | ADR-0007 authorizes the first Project Management package; source boundaries become blocking in the same materializing change |
 | `contract.json-schema-releases` | Later | No | Current schemas are repository-internal architecture policy; no published release contract, release baseline, or consumer fixture set exists |
 | `package.public-api-compatibility` | No | No | Platform publishes no versioned TypeScript API or SDK |
@@ -50,6 +51,14 @@ capabilities are not represented by disabled placeholders or fabricated
 evidence. When applicability changes, the enabling change adds consumer-owned
 configuration, adversarial fixtures, and registry-backed CI evidence before it
 deletes a donor check.
+
+The full repository gate runs for pull requests, merge-queue synthetic commits,
+and pushes to `main`. The fast gate retains Foundation, Docs, architecture,
+lint, type, package, and direct executable-specification checks, but leaves the
+four isolated clean-checkout reruns to the authoritative full gate. Platform
+also owns exact validators for both privileged ReviewRouter workflow callers;
+their triggers, filters, immutable producer refs, permissions, OIDC inputs, and
+secret forwarding must change together with their target-owned qualification.
 
 ## Maintainability budgets
 

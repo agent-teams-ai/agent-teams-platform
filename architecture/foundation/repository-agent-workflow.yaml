@@ -33,15 +33,30 @@ changedChecks:
     extensions: [.mjs]
     passPaths: false
 fullScanPaths:
+  - .agents/skills/docs-authoring/SKILL.md
+  - .github/copilot-instructions.md
+  - .github/dependabot.yml
   - .github/workflows
+  - .markdownlint-cli2.mjs
+  - .node-version
+  - .npmrc
   - .oxlintrc.json
+  - AGENTS.md
+  - CLAUDE.md
+  - GEMINI.md
+  - README.md
   - architecture/decisions
   - architecture/foundation
   - architecture/package-catalog.yaml
+  - architecture/project-management
   - architecture/scaffolding
   - docs
+  - foundation.config.yaml
+  - package.json
   - packages/contexts
   - pnpm-lock.yaml
   - pnpm-workspace.yaml
   - scripts/architecture
+  - scripts/docs
+  - tooling/executable-specifications
   - tsconfig.json
