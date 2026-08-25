@@ -24,6 +24,19 @@ test("runs the authoritative full gate on merge-queue commits", async () => {
   assert.equal(workflow.jobs.architecture.if, undefined);
 });
 
+test("compares merge-queue qualification records to the exact merge-group base", async () => {
+  const workflow = await readYaml(".github/workflows/architecture.yml");
+  const mergeGroupProtection = workflow.jobs.architecture.steps.find(
+    ({ name }) =>
+      name === "Protect published qualification records in the merge queue",
+  );
+  assert.deepEqual(mergeGroupProtection, {
+    name: "Protect published qualification records in the merge queue",
+    if: "github.event_name == 'merge_group'",
+    run: 'pnpm architecture:immutability -- --base "${{ github.event.merge_group.base_sha }}"',
+  });
+});
+
 test("keeps the fast gate comprehensive but excludes clean-checkout qualification", async () => {
   const manifest = await readJson("package.json");
   const scripts = manifest.scripts;
