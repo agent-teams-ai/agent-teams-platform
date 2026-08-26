@@ -49,8 +49,8 @@
     "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"
   },
   "devDependencies": {
-    "@agent-teams/docs-protocol": "0.1.2",
-    "@agent-teams/engineering-foundation": "0.18.0",
+    "@agent-teams/docs-protocol": "0.1.4",
+    "@agent-teams/engineering-foundation": "0.19.0",
     "@ast-grep/napi": "catalog:",
     "@types/node": "catalog:",
     "@xstate/graph": "catalog:",
