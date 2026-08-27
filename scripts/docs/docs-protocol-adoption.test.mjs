@@ -13,7 +13,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import {runDocsProtocolQualification} from "@agent-teams/docs-protocol/qualification";
+import {parse as parseYaml} from "yaml";
 
 const repositoryRoot = fileURLToPath(new URL("../..", import.meta.url));
 const protocolPackage = fileURLToPath(
@@ -21,35 +21,25 @@ const protocolPackage = fileURLToPath(
 );
 const protocolCli = join(dirname(protocolPackage), "dist/cli.js");
 const protocolProfile = "architecture/foundation/docs-protocol.yaml";
-
-test("qualification manifest binds the exact protocol gate and registry packages", async () => {
-  const [qualification, manifest] = await Promise.all([
+test("qualification authority is staged without mutating stable3 integration", async () => {
+  const [qualification, integration, rollout] = await Promise.all([
     readFile(join(repositoryRoot, "architecture/foundation/docs-protocol-qualification.json"), "utf8").then(JSON.parse),
-    readFile(join(repositoryRoot, "package.json"), "utf8").then(JSON.parse),
+    readFile(join(repositoryRoot, "architecture/foundation/docs-consumer-integration.json"), "utf8").then(JSON.parse),
+    readFile(join(repositoryRoot, "architecture/foundation/docs-protocol-rollout.yaml"), "utf8")
   ]);
-  assert.equal(qualification.gateCommand, "pnpm docs:protocol:check");
-  assert.deepEqual(qualification.packages, {
-    "@agent-teams/docs-protocol": manifest.devDependencies["@agent-teams/docs-protocol"],
-    "@agent-teams/engineering-foundation": manifest.devDependencies["@agent-teams/engineering-foundation"],
-  });
-  assert.deepEqual(qualification.qualificationTests, [
-    "scripts/docs/docs-protocol-adoption.test.mjs"
-  ]);
+  assert.equal(integration.schemaVersion, 1);
+  assert.match(rollout, /^status: stable3-current-v2-staged$/mu);
+  assert.match(rollout, /^  integrationSchemaVersion: 2$/mu);
+  assert.match(rollout, /^  qualificationContractSchemaVersion: 2$/mu);
+  assert.equal(qualification.schemaVersion, 2);
+  assert.deepEqual(Object.keys(qualification).toSorted(), ["scenarios", "schemaVersion"]);
 });
 
 async function disposableRepository(run) {
   const root = await mkdtemp(join(tmpdir(), "atd-p-"));
   try {
     await cp(join(repositoryRoot, "docs"), join(root, "docs"), {recursive: true});
-    await mkdir(join(root, "architecture", "foundation"), {recursive: true});
-    await cp(
-      join(repositoryRoot, "architecture", "foundation", "document-authoring.yaml"),
-      join(root, "architecture", "foundation", "document-authoring.yaml")
-    );
-    await cp(
-      join(repositoryRoot, "architecture", "foundation", "docs-protocol.yaml"),
-      join(root, "architecture", "foundation", "docs-protocol.yaml")
-    );
+    await cp(join(repositoryRoot, "architecture"), join(root, "architecture"), {recursive: true});
     await mkdir(join(root, ".agents", "skills", "docs-authoring"), {recursive: true});
     await cp(
       join(repositoryRoot, ".agents", "skills", "docs-authoring", "SKILL.md"),
@@ -88,45 +78,57 @@ function docs(root, command, ...args) {
 }
 
 test("keeps protocol and Platform semantics in every repository gate", async () => {
-  const manifest = JSON.parse(await readFile(join(repositoryRoot, "package.json"), "utf8"));
-  assert.equal(manifest.scripts["docs:protocol:check"], "pnpm docs:check && pnpm docs:semantic && pnpm docs:qualification");
+  const [manifest, protocol] = await Promise.all([
+    readFile(join(repositoryRoot, "package.json"), "utf8").then(JSON.parse),
+    readFile(join(repositoryRoot, protocolProfile), "utf8").then(parseYaml)
+  ]);
+  assert.equal(
+    manifest.scripts["docs:protocol:check"],
+    "pnpm docs:check && pnpm docs:semantic && pnpm docs:validators && pnpm docs:qualification"
+  );
   assert.equal(
     manifest.scripts["docs:semantic"],
     "markdownlint-cli2 README.md AGENTS.md 'docs/**/*.md'"
   );
+  assert.equal(
+    manifest.scripts["docs:validators"],
+    "pnpm docs:validate:platform-architecture && pnpm docs:validate:domain-materialization"
+  );
+  assert.match(
+    manifest.scripts["docs:validate:platform-architecture"],
+    /validate-platform-orchestrator-review\.mjs/u
+  );
+  assert.match(
+    manifest.scripts["docs:validate:domain-materialization"],
+    /validate-platform-domain\.mjs/u
+  );
+  assert.deepEqual(protocol.semanticValidatorIds, [
+    "platform.architecture",
+    "platform.domain-materialization",
+    "platform.documentation-markdown"
+  ]);
   for (const gate of ["check", "check:fast"]) {
     assert.match(manifest.scripts[gate], /pnpm docs:protocol:check/u);
   }
   assert.equal(manifest.scripts["check:changed"], "agent-teams-foundation agent-workflow changed --consumer .");
 });
 
-test("qualifies Platform authoring through the shared disposable runner", async () => {
-  await disposableRepository(async (root) => {
-    const receipt = await runDocsProtocolQualification({
-      fixtureRoot: root,
-      scenario: {
-        find: {
-          query: {id: "ADR-0001"},
-          expectedIds: ["ADR-0001"]
-        },
-        newDocument: {
-          intent: {
-            type: "adr",
-            id: "ADR-9998",
-            title: "Disposable Protocol Qualification",
-            owner: "project-management",
-            summary: "Qualifies Platform ADR authoring without touching a real repository."
-          },
-          related: ["ADR-0001"]
-        }
-      }
-    });
-    assert.equal(receipt.projectId, "agent-teams-platform");
-    assert.equal(
-      receipt.appliedDocumentPath,
-      "docs/decisions/9998-disposable-protocol-qualification.md"
-    );
-  });
+test("stages every declared Platform authoring type as data-only scenarios", async () => {
+  const [qualification, authoringProfile] = await Promise.all([
+    readFile(
+      join(repositoryRoot, "architecture/foundation/docs-protocol-qualification.json"),
+      "utf8"
+    ).then(JSON.parse),
+    readFile(
+      join(repositoryRoot, "architecture/foundation/rollouts/docs-protocol-v2/document-authoring.yaml"),
+      "utf8"
+    ).then(parseYaml)
+  ]);
+  assert.deepEqual(
+    qualification.scenarios.map(({type}) => type).toSorted(),
+    authoringProfile.authoring.artifactTypes.map(({type}) => type).toSorted()
+  );
+  assert.equal(authoringProfile.schemaVersion, 3);
 });
 
 test("fails closed for an unknown owner", async () => {
@@ -143,7 +145,7 @@ test("fails closed for an unknown owner", async () => {
     assert.equal(result.envelope.outcome, "violation");
     assert.ok(
       result.envelope.diagnostics.some(({ruleId}) =>
-        ruleId === "document.catalog.metadata-invalid"
+        ruleId === "document.catalog.owner-unknown"
       ),
       JSON.stringify(result.envelope.diagnostics)
     );
@@ -207,20 +209,5 @@ test("fails closed for a stale code anchor", async () => {
     assert.ok(result.envelope.diagnostics.some(({ruleId}) =>
       ruleId.includes("anchor")
     ));
-  });
-});
-
-test("keeps non-authorable Platform document types unavailable", async () => {
-  await disposableRepository(async (root) => {
-    const disabled = docs(root, "new",
-      "--type", "bounded-context",
-      "--id", "domain.contexts.disposable",
-      "--title", "Disposable Context",
-      "--owner", "product/project-management",
-      "--summary", "Must remain unavailable to the generic writer.",
-      "--destination", "docs/domain/contexts/disposable/README.md",
-      "--dry-run");
-    assert.notEqual(disabled.status, 0);
-    assert.equal(disabled.envelope.outcome, "invalid-input");
   });
 });

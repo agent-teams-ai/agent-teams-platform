@@ -7,6 +7,9 @@ summary: Canonical split-control model for managed customer installations.
 related:
   - ADR-0001
   - ADR-0005
+code_anchors:
+  - pattern: architecture/managed-installation/managed-installation-policy.yaml
+    enforcement: required
 ---
 
 # Managed Installation Control
