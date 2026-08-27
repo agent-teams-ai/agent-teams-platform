@@ -18,28 +18,7 @@
   ],
   "$defs": {
     "id": {"type": "string", "minLength": 1, "maxLength": 214, "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$"},
-    "owner": {
-      "enum": [
-        "architecture",
-        "architecture/authority",
-        "architecture/deployment",
-        "architecture/domain",
-        "architecture/integration",
-        "architecture/provisioning",
-        "product-owner",
-        "product/access-authority",
-        "product/authority",
-        "product/commercial-access",
-        "product/customer-ownership",
-        "product/deployment-management",
-        "product/platform-identity",
-        "product/project-lifecycle",
-        "product/project-management",
-        "product/tenancy",
-        "project-management",
-        "security/operations"
-      ]
-    },
+    "owner": {"$ref": "#/$defs/reference"},
     "summary": {"type": "string", "minLength": 1, "maxLength": 1000, "pattern": "[^\\s]"},
     "reference": {"type": "string", "minLength": 1, "maxLength": 214, "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$"},
     "references": {"type": "array", "maxItems": 256, "uniqueItems": true, "items": {"$ref": "#/$defs/reference"}},

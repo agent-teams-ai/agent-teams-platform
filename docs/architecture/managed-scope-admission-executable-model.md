@@ -4,6 +4,9 @@ type: architecture
 status: active
 owner: project-management
 summary: Define the internal executable model and its authority limits.
+code_anchors:
+  - pattern: architecture/project-management/managed-scope-admission-process.json
+    enforcement: required
 ---
 
 # Managed Scope-Admission Executable Model

@@ -6,6 +6,9 @@ owner: architecture/deployment
 summary: Evidence-based deployment profile lifecycle, v1 qualification scope, and profile-independent core rules.
 related:
   - ADR-0001
+code_anchors:
+  - pattern: architecture/deployment-profiles/deployment-profiles.yaml
+    enforcement: required
 ---
 
 # Deployment Profiles
