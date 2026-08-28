@@ -21,16 +21,23 @@ const protocolPackage = fileURLToPath(
 );
 const protocolCli = join(dirname(protocolPackage), "dist/cli.js");
 const protocolProfile = "architecture/foundation/docs-protocol.yaml";
-test("qualification authority is staged without mutating stable3 integration", async () => {
-  const [qualification, integration, rollout] = await Promise.all([
+test("qualification v2 authority is active in the stable8 integration", async () => {
+  const [qualification, integration, protocol, authoring] = await Promise.all([
     readFile(join(repositoryRoot, "architecture/foundation/docs-protocol-qualification.json"), "utf8").then(JSON.parse),
     readFile(join(repositoryRoot, "architecture/foundation/docs-consumer-integration.json"), "utf8").then(JSON.parse),
-    readFile(join(repositoryRoot, "architecture/foundation/docs-protocol-rollout.yaml"), "utf8")
+    readFile(join(repositoryRoot, "architecture/foundation/docs-protocol.yaml"), "utf8").then(parseYaml),
+    readFile(join(repositoryRoot, "architecture/foundation/document-authoring.yaml"), "utf8").then(parseYaml)
   ]);
-  assert.equal(integration.schemaVersion, 1);
-  assert.match(rollout, /^status: stable3-current-v2-staged$/mu);
-  assert.match(rollout, /^  integrationSchemaVersion: 2$/mu);
-  assert.match(rollout, /^  qualificationContractSchemaVersion: 2$/mu);
+  assert.equal(integration.schemaVersion, 2);
+  assert.equal(integration.cohort.cohortId, "docs-2026-08-28-stable8");
+  assert.deepEqual(integration.qualification, {
+    contractPath: "architecture/foundation/docs-protocol-qualification.json",
+    gateCommand: "pnpm docs:protocol:check"
+  });
+  assert.equal(protocol.schemaVersion, 2);
+  assert.equal(protocol.foundationProfile.schemaVersion, 3);
+  assert.equal(protocol.foundationProfile.path, "architecture/foundation/document-authoring.yaml");
+  assert.equal(authoring.schemaVersion, 3);
   assert.equal(qualification.schemaVersion, 2);
   assert.deepEqual(Object.keys(qualification).toSorted(), ["scenarios", "schemaVersion"]);
 });
@@ -94,6 +101,10 @@ test("keeps protocol and Platform semantics in every repository gate", async () 
     manifest.scripts["docs:validators"],
     "pnpm docs:validate:platform-architecture && pnpm docs:validate:domain-materialization"
   );
+  assert.equal(
+    manifest.scripts["docs:qualification"],
+    "agent-teams-docs qualify --consumer . && node --test scripts/docs/docs-protocol-adoption.test.mjs"
+  );
   assert.match(
     manifest.scripts["docs:validate:platform-architecture"],
     /validate-platform-orchestrator-review\.mjs/u
@@ -104,8 +115,7 @@ test("keeps protocol and Platform semantics in every repository gate", async () 
   );
   assert.deepEqual(protocol.semanticValidatorIds, [
     "platform.architecture",
-    "platform.domain-materialization",
-    "platform.documentation-markdown"
+    "platform.domain-materialization"
   ]);
   for (const gate of ["check", "check:fast"]) {
     assert.match(manifest.scripts[gate], /pnpm docs:protocol:check/u);
@@ -113,14 +123,14 @@ test("keeps protocol and Platform semantics in every repository gate", async () 
   assert.equal(manifest.scripts["check:changed"], "agent-teams-foundation agent-workflow changed --consumer .");
 });
 
-test("stages every declared Platform authoring type as data-only scenarios", async () => {
+test("qualifies every active Platform authoring type with data-only scenarios", async () => {
   const [qualification, authoringProfile] = await Promise.all([
     readFile(
       join(repositoryRoot, "architecture/foundation/docs-protocol-qualification.json"),
       "utf8"
     ).then(JSON.parse),
     readFile(
-      join(repositoryRoot, "architecture/foundation/rollouts/docs-protocol-v2/document-authoring.yaml"),
+      join(repositoryRoot, "architecture/foundation/document-authoring.yaml"),
       "utf8"
     ).then(parseYaml)
   ]);
