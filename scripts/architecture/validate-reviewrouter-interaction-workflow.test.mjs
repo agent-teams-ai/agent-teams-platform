@@ -1,75 +1,81 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import YAML from "yaml";
-
 import {
-  validateReviewRouterInteractionDocument,
+  validateReviewRouterInteractionSource,
   validateReviewRouterInteractionWorkflow,
 } from "./validate-reviewrouter-interaction-workflow.mjs";
 
-const runtimeRef = "c7b7d5c5da0587c9fecdc2b7ec65be3df8e4acf4";
-const document = YAML.parse(
-  await readFile(
-    new URL("../../.github/workflows/reviewrouter-interaction.yml", import.meta.url),
-    "utf8",
-  ),
+const source = await readFile(
+  new URL("../../.github/workflows/reviewrouter-interaction.yml", import.meta.url),
+  "utf8",
 );
+const canonicalSha256 =
+  "0997a60c648fcb66e341d011a94ea2721585af9b1611c7e07445c372f0ac5008";
 
-test("accepts the exact pinned ReviewRouter interaction caller", async () => {
+test("accepts only the exact canonical ReviewRouter interaction V2 source", async () => {
+  assert.equal(createHash("sha256").update(source).digest("hex"), canonicalSha256);
   assert.deepEqual(await validateReviewRouterInteractionWorkflow(), []);
+  assert.deepEqual(validateReviewRouterInteractionSource(source), []);
 });
 
-test("rejects reusable workflow and runtime ref drift independently", () => {
-  const wrongWorkflow = structuredClone(document);
-  wrongWorkflow.jobs.interaction.uses =
-    `777genius/review-router/.github/workflows/reviewrouter-interaction-reusable.yml@${"a".repeat(40)}`;
-  assert.match(
-    validateReviewRouterInteractionDocument(wrongWorkflow).join("\n"),
-    /RR-INTERACTION-REF-001/u,
-  );
-
-  const wrongRuntime = structuredClone(document);
-  wrongRuntime.jobs.interaction.with.runtime_ref = "b".repeat(40);
-  const errors = validateReviewRouterInteractionDocument(wrongRuntime).join("\n");
-  assert.match(errors, /RR-INTERACTION-REF-002/u);
-  assert.doesNotMatch(errors, /RR-INTERACTION-REF-001/u);
-  assert.equal(document.jobs.interaction.with.runtime_ref, runtimeRef);
-});
-
-test("rejects copied checkout, auth, and runtime implementation", () => {
-  for (const copiedStep of [
-    { uses: "actions/checkout@deadbeef" },
-    { run: "printf '%s' \"$CODEX_AUTH_JSON\" > \"$CODEX_HOME/auth.json\"" },
-    { run: "node .reviewrouter-runtime/dist/index.js" },
-  ]) {
-    const candidate = structuredClone(document);
-    candidate.jobs.interaction.steps = [copiedStep];
-    const errors = validateReviewRouterInteractionDocument(candidate).join("\n");
-    assert.match(errors, /RR-INTERACTION-THIN-002/u);
-    assert.match(errors, /RR-INTERACTION-IMPLEMENTATION-001/u);
-  }
-});
-
-test("rejects expanded permissions and caller contract drift", () => {
-  const candidate = structuredClone(document);
-  candidate.jobs.interaction.permissions.issues = "write";
-  candidate.jobs.interaction.with.discussion_mode = "off";
-  candidate.jobs.interaction.secrets.CODEX_AUTH_JSON = "invented";
-  const errors = validateReviewRouterInteractionDocument(candidate).join("\n");
-  assert.match(errors, /RR-INTERACTION-PERMISSIONS-002/u);
-  assert.match(errors, /RR-INTERACTION-INPUTS-001/u);
-  assert.match(errors, /RR-INTERACTION-SECRETS-001/u);
-});
-
-test("rejects trigger, interaction filter, and review workflow drift", () => {
-  const candidate = structuredClone(document);
-  candidate.on.issue_comment.types = ["created"];
-  candidate.jobs.interaction.if = "${{ always() }}";
-  candidate.jobs.interaction.with.review_workflow_file = "reviewrouter.yml";
-  const errors = validateReviewRouterInteractionDocument(candidate).join("\n");
-  assert.match(errors, /RR-INTERACTION-TRIGGERS-001/u);
-  assert.match(errors, /RR-INTERACTION-FILTER-001/u);
-  assert.match(errors, /RR-INTERACTION-INPUTS-001/u);
-});
+for (const [name, mutate] of [
+  [
+    "trigger drift",
+    (candidate) =>
+      candidate.replace("types: [created, edited]", "types: [created]"),
+  ],
+  [
+    "permission expansion",
+    (candidate) => candidate.replace("contents: read", "contents: write"),
+  ],
+  [
+    "runtime ref drift",
+    (candidate) =>
+      candidate.replace(
+        "75cbecab131d74021677fcd1fb21962994d306b8",
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      ),
+  ],
+  [
+    "GitHub token writeback",
+    (candidate) => candidate.replace("app-oidc", "github-token"),
+  ],
+  [
+    "unpinned checkout",
+    (candidate) =>
+      candidate.replace(
+        "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+        "actions/checkout@main",
+      ),
+  ],
+  [
+    "subscription auth forwarding drift",
+    (candidate) =>
+      candidate.replace(
+        "secrets.REVIEWROUTER_CODEX_AUTH_JSON",
+        "secrets.UNQUALIFIED_SECRET",
+      ),
+  ],
+  [
+    "Codex CLI version drift",
+    (candidate) =>
+      candidate.replace("@openai/codex@0.144.0", "@openai/codex@latest"),
+  ],
+  [
+    "unexpected job injection",
+    (candidate) =>
+      `${candidate}\n  unqualified:\n    runs-on: ubuntu-latest\n    steps:\n      - run: true\n`,
+  ],
+  ["format-only drift", (candidate) => candidate.replace("name:", "name: ")],
+]) {
+  test(`rejects ${name}`, () => {
+    const mutated = mutate(source);
+    assert.notEqual(mutated, source);
+    assert.deepEqual(validateReviewRouterInteractionSource(mutated), [
+      "RR-INTERACTION-CANONICAL-001 interaction workflow must match the exact qualified canonical V2 source",
+    ]);
+  });
+}

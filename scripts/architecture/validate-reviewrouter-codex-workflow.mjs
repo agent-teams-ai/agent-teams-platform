@@ -8,12 +8,12 @@ import YAML from "yaml";
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRepositoryRoot = path.resolve(scriptDirectory, "../..");
 const workflowPath = ".github/workflows/reviewrouter-codex.yml";
-const runtimeRef = "8a0a31ae1d92c89466c8a939272a1e333e88c5a0";
+const runtimeRef = "75cbecab131d74021677fcd1fb21962994d306b8";
 const providerInstanceId = "codex-rotating:1319378484";
 const secretName =
-  "REVIEWROUTER_CODEX_AUTH_JSON_R1319378484_P957ae0d5acd3f9b2_E1_6804cd1888266fee50c4bc184f07e9d7";
+  "REVIEWROUTER_CODEX_AUTH_JSON_R1319378484_P957ae0d5acd3f9b2_E3_be4e4c65943fd08df05a2e8d21b000f2";
 const expectedWorkflowName =
-  `ReviewRouter Codex OAuth [namespace=sns_6804cd1888266fee50c4bc184f07e9d7;epoch=1;secret=${secretName}]`;
+  `ReviewRouter Codex OAuth [namespace=sns_be4e4c65943fd08df05a2e8d21b000f2;epoch=3;secret=${secretName}]`;
 const expectedRunName =
   "${{ format('ReviewRouter review PR {0} at {1}', github.event.pull_request.number, github.event.pull_request.head.sha) }}";
 
