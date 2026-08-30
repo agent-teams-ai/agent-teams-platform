@@ -15,9 +15,25 @@ const document = YAML.parse(
     "utf8",
   ),
 );
+const runtimeRef = "75cbecab131d74021677fcd1fb21962994d306b8";
+const secretName =
+  "REVIEWROUTER_CODEX_AUTH_JSON_R1319378484_P957ae0d5acd3f9b2_E3_be4e4c65943fd08df05a2e8d21b000f2";
 
 test("accepts the exact privileged ReviewRouter Codex workflow", async () => {
   assert.deepEqual(await validateReviewRouterCodexWorkflow(), []);
+  assert.equal(
+    document.jobs["codex-review"].uses,
+    `777genius/review-router/.github/workflows/reviewrouter-t0-reusable.yml@${runtimeRef}`,
+  );
+  assert.equal(document.jobs["codex-review"].with.runtime_ref, runtimeRef);
+  assert.equal(
+    document.jobs["codex-review"].secrets.CODEX_AUTH_JSON,
+    `\${{ secrets.${secretName} }}`,
+  );
+  assert.equal(
+    document.jobs["codex-refresh"].steps[0].uses,
+    `777genius/review-router@${runtimeRef}`,
+  );
 });
 
 test("rejects privileged trigger and top-level permission drift", () => {
