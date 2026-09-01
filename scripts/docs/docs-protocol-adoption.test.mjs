@@ -21,7 +21,7 @@ const protocolPackage = fileURLToPath(
 );
 const protocolCli = join(dirname(protocolPackage), "dist/cli.js");
 const protocolProfile = "architecture/foundation/docs-protocol.yaml";
-test("qualification v2 authority is active in the stable8 integration", async () => {
+test("qualification v2 authority is active in the stable10 integration", async () => {
   const [qualification, integration, protocol, authoring] = await Promise.all([
     readFile(join(repositoryRoot, "architecture/foundation/docs-protocol-qualification.json"), "utf8").then(JSON.parse),
     readFile(join(repositoryRoot, "architecture/foundation/docs-consumer-integration.json"), "utf8").then(JSON.parse),
@@ -29,7 +29,7 @@ test("qualification v2 authority is active in the stable8 integration", async ()
     readFile(join(repositoryRoot, "architecture/foundation/document-authoring.yaml"), "utf8").then(parseYaml)
   ]);
   assert.equal(integration.schemaVersion, 2);
-  assert.equal(integration.cohort.cohortId, "docs-2026-08-28-stable8");
+  assert.equal(integration.cohort.cohortId, "docs-2026-08-31-stable10");
   assert.deepEqual(integration.qualification, {
     contractPath: "architecture/foundation/docs-protocol-qualification.json",
     gateCommand: "pnpm docs:protocol:check"
