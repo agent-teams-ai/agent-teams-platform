@@ -21,4 +21,5 @@ policies:
     - yaml
   exactRegistryDevelopmentOnlyPackages:
     - "@agent-teams/docs-protocol"
+    - "@agent-teams/docs-protocol-agent-teams"
     - "@agent-teams/engineering-foundation"

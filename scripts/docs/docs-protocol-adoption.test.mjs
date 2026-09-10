@@ -21,20 +21,21 @@ const protocolPackage = fileURLToPath(
 );
 const protocolCli = join(dirname(protocolPackage), "dist/cli.js");
 const protocolProfile = "architecture/foundation/docs-protocol.yaml";
-test("qualification v2 authority is active in the stable10 integration", async () => {
+test("qualification authority is active in the stable18 integration", async () => {
   const [qualification, integration, protocol, authoring] = await Promise.all([
     readFile(join(repositoryRoot, "architecture/foundation/docs-protocol-qualification.json"), "utf8").then(JSON.parse),
     readFile(join(repositoryRoot, "architecture/foundation/docs-consumer-integration.json"), "utf8").then(JSON.parse),
     readFile(join(repositoryRoot, "architecture/foundation/docs-protocol.yaml"), "utf8").then(parseYaml),
     readFile(join(repositoryRoot, "architecture/foundation/document-authoring.yaml"), "utf8").then(parseYaml)
   ]);
-  assert.equal(integration.schemaVersion, 2);
-  assert.equal(integration.cohort.cohortId, "docs-2026-08-31-stable10");
+  assert.equal(integration.schemaVersion, 3);
+  assert.equal(integration.cohort.cohortId, "docs-2026-09-10-stable18");
   assert.deepEqual(integration.qualification, {
     contractPath: "architecture/foundation/docs-protocol-qualification.json",
     gateCommand: "pnpm docs:protocol:check"
   });
-  assert.equal(protocol.schemaVersion, 2);
+  assert.equal(protocol.schemaVersion, 3);
+  assert.equal(protocol.agentWorkflow.adoption, "portable-v1");
   assert.equal(protocol.foundationProfile.schemaVersion, 3);
   assert.equal(protocol.foundationProfile.path, "architecture/foundation/document-authoring.yaml");
   assert.equal(authoring.schemaVersion, 3);
@@ -103,7 +104,7 @@ test("keeps protocol and Platform semantics in every repository gate", async () 
   );
   assert.equal(
     manifest.scripts["docs:qualification"],
-    "agent-teams-docs qualify --consumer . && node --test scripts/docs/docs-protocol-adoption.test.mjs"
+    "node --test scripts/docs/docs-protocol-adoption.test.mjs"
   );
   assert.match(
     manifest.scripts["docs:validate:platform-architecture"],
