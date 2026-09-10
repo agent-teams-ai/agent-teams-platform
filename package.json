@@ -25,7 +25,7 @@
     "docs:info": "agent-teams-docs info --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:new": "agent-teams-docs new --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:protocol:check": "pnpm docs:check && pnpm docs:semantic && pnpm docs:validators && pnpm docs:qualification",
-    "docs:qualification": "agent-teams-docs qualify --consumer . && node --test scripts/docs/docs-protocol-adoption.test.mjs",
+    "docs:qualification": "node --test scripts/docs/docs-protocol-adoption.test.mjs",
     "docs:recover": "agent-teams-docs recover --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:semantic": "markdownlint-cli2 README.md AGENTS.md 'docs/**/*.md'",
     "docs:validate:platform-architecture": "node scripts/architecture/validate-deployment-profiles.mjs --references-only && node scripts/architecture/validate-platform-orchestrator-review.mjs",
@@ -52,8 +52,8 @@
     "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"
   },
   "devDependencies": {
-    "@agent-teams/docs-protocol": "0.4.1",
-    "@agent-teams/engineering-foundation": "0.21.0",
+    "@agent-teams/docs-protocol": "0.6.0",
+    "@agent-teams/engineering-foundation": "1.1.1",
     "@ast-grep/napi": "catalog:",
     "@types/node": "catalog:",
     "@xstate/graph": "catalog:",
@@ -68,6 +68,7 @@
     "unified": "catalog:",
     "unist-util-visit": "catalog:",
     "xstate": "catalog:",
-    "yaml": "catalog:"
+    "yaml": "catalog:",
+    "@agent-teams/docs-protocol-agent-teams": "0.2.3"
   }
 }
