@@ -47,6 +47,26 @@ Start here:
 - Keep unresolved cross-system design in proposed documents until the required
   matrices, state machines, and failure traces have been reviewed.
 
+## Foundation source policy
+
+Foundation `architecture.source-dependencies` is schema v3: `rootPackage: true`
+and `packageRoots` for every workspace package. Required CI runs
+`agent-teams-foundation check` on the installed registry package. When that
+gate reports a boundary violation, fix the source rather than shrinking scope
+or adding a baseline:
+
+- forbidden domain/tooling dependency -> introduce a consumer-owned port and
+  adapter; do not import filesystem, environment, network SDK, or a concrete
+  adapter into Project Management domain/application;
+- deep import -> use the public entrypoint listed for that boundary;
+- cross-package relative import -> package export or a dynamic repo-root load
+  of compiled dist from a development boundary;
+- new root or package -> owner, `packageRoots`/`rootPackage`, and a
+  non-overlapping boundary, never an exclusion;
+- `includeRootPackage` in YAML is invalid; public v3 uses `rootPackage: true`;
+- CI greening by dropping a governed root, pending a root silently, or adding
+  an unbounded suppression is forbidden.
+
 ## Verification
 
 Run `pnpm check:changed` during implementation, then `pnpm check:fast` before

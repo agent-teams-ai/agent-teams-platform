@@ -23,12 +23,13 @@ enables a capability implicitly. `latest`, ranges, Git refs, local links,
 tarballs, lockfile overrides, and unpublished release branches are forbidden in
 committed or CI state.
 
-Foundation-owned configuration and scaffolding contracts use the sole current
-`schemaVersion: 1`. Platform updates that contract and all known consumers in
-one coordinated change while independent compatibility is not required. A
-parallel Foundation-owned v2 requires a new accepted Foundation ADR proving a
-real non-atomic migration boundary. External formats retain their upstream
-versions.
+Foundation-owned capability configuration uses the current contract for that
+capability. Source dependencies use schema v3 with `rootPackage: true` and
+`packageRoots` for every workspace package. Other Foundation-owned contracts
+remain on their current versions until a coordinated consumer update. A
+parallel Foundation-owned replacement schema requires a new accepted Foundation
+ADR proving a real non-atomic migration boundary. External formats retain their
+upstream versions.
 
 ## Capability registry
 
@@ -40,7 +41,7 @@ versions.
 | `governance.architecture-decisions` | Yes | Yes | Seven accepted ADRs have a committed immutable baseline |
 | `quality.suppression-governance` | Yes | Yes | Package, architecture-script, and executable-specification source roots are governed; no waiver currently exists |
 | `quality.executable-specifications` | Yes | Yes | The Project Management model, property, mutation, and production-conformance bindings are blocking |
-| `architecture.source-dependencies` | Yes | Yes | ADR-0007 authorizes the first Project Management package; source boundaries become blocking in the same materializing change |
+| `architecture.source-dependencies` | Yes | Yes | Schema v3 covers Project Management, executable specifications, and root `scripts` with `rootPackage: true` |
 | `contract.json-schema-releases` | Later | No | Current schemas are repository-internal architecture policy; no published release contract, release baseline, or consumer fixture set exists |
 | `package.public-api-compatibility` | No | No | Platform publishes no versioned TypeScript API or SDK |
 | `repository.security-baseline` | No | No | The repository currently publishes no package |
