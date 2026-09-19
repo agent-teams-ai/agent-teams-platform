@@ -6,8 +6,8 @@ import {
   observeScopeAdmissionReceipt,
   requestScopeAdmissionCancellation,
   requireReconciliation,
-} from "../domain/managed-scope-admission-process.js";
-import { ids } from "../domain/value-objects.js";
+} from "../../domain/managed-scope-admission-process.js";
+import { ids } from "../../domain/value-objects.js";
 import {
   authorityBasis,
   blockedTrace,

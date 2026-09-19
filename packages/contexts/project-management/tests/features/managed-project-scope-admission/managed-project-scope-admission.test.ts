@@ -5,7 +5,7 @@ import {
   type AuthorityDecision,
   ids,
   type ProjectManagementDependencies,
-} from "../composition.js";
+} from "../../../src/features/managed-project-scope-admission/composition.js";
 import {
   NOW,
   acceptedProject,

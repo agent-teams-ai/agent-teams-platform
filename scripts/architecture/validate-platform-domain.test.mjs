@@ -221,12 +221,18 @@ async function materializeProjectManagement(root) {
   };
   manifest.exports["./testing/model-conformance"] = {
     types:
-      "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.d.ts",
+      "./dist/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.d.ts",
     import:
-      "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.js",
+      "./dist/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.js",
   };
   manifest.scripts.test =
-    "node --test --test-concurrency=1 'dist/**/*.test.js'";
+    "pnpm run test:compile && pnpm run test:unit && pnpm run test:package";
+  manifest.scripts["test:compile"] =
+    "tsc --project tsconfig.test.json --pretty false";
+  manifest.scripts["test:unit"] =
+    "node --test --test-concurrency=1 '.cache/tests/tests/**/*.test.js'";
+  manifest.scripts["test:package"] =
+    "node --test --test-concurrency=1 tests/package-boundary.test.mjs";
   await writeFile(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`);
   for (const [surface, featureSurface] of [
     ["index", "public"],
@@ -255,10 +261,19 @@ async function materializeProjectManagement(root) {
     path.join(root, featurePath, "admit-project-scope.ts"),
     "export const admitProjectScope = () => 'accepted';\n",
   );
+  const testFeaturePath = `${packagePath}/tests/features/managed-project-scope-admission`;
+  await mkdir(path.join(root, testFeaturePath), { recursive: true });
   await writeFile(
-    path.join(root, featurePath, "admit-project-scope.test.ts"),
+    path.join(root, testFeaturePath, "admit-project-scope.test.ts"),
     `import assert from "node:assert/strict";\nimport test from "node:test";\n\ntest("admits a project scope", () => {\n  assert.equal("accepted", "accepted");\n});\n`,
   );
+  for (const relativePath of [
+    `${packagePath}/tsconfig.test.json`,
+    `${packagePath}/tests/package-boundary.test.mjs`,
+  ]) {
+    await mkdir(path.dirname(path.join(root, relativePath)), { recursive: true });
+    await cp(path.join(repositoryRoot, relativePath), path.join(root, relativePath));
+  }
   return plan;
 }
 
@@ -391,9 +406,9 @@ test("accepts an ADR-bound Foundation materialization with a real feature", asyn
     );
     assert.deepEqual(manifest.exports["./testing/model-conformance"], {
       types:
-        "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.d.ts",
+        "./dist/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.d.ts",
       import:
-        "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.js",
+        "./dist/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.js",
     });
     assert.deepEqual(await validatePlatformDomain(root), []);
   });
@@ -416,6 +431,32 @@ test("rejects an accepted but empty package directory", async () => {
     await acceptProjectManagement(root);
     await mkdir(path.join(root, packagePath), { recursive: true });
     assert.match(await validationText(root), /DOMAIN-PACKAGE-001/u);
+  });
+});
+
+test("requires the Project Management test compiler configuration", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    const relativePath = `${packagePath}/tsconfig.test.json`;
+    await rm(path.join(root, relativePath));
+    assert.match(
+      await validationText(root),
+      new RegExp(`DOMAIN-PACKAGE-001 required regular file: ${relativePath}`, "u"),
+    );
+  });
+});
+
+test("requires the Project Management package-boundary test", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    const relativePath = `${packagePath}/tests/package-boundary.test.mjs`;
+    await rm(path.join(root, relativePath));
+    assert.match(
+      await validationText(root),
+      new RegExp(`DOMAIN-PACKAGE-001 required regular file: ${relativePath}`, "u"),
+    );
   });
 });
 
@@ -446,7 +487,11 @@ test("rejects empty implementation and test files in the first feature", async (
     await materializeProjectManagement(root);
     const featurePath = `${packagePath}/src/features/managed-project-scope-admission`;
     await writeFile(path.join(root, featurePath, "admit-project-scope.ts"), "");
-    await writeFile(path.join(root, featurePath, "admit-project-scope.test.ts"), "");
+    await writeFile(path.join(
+      root,
+      packagePath,
+      "tests/features/managed-project-scope-admission/admit-project-scope.test.ts",
+    ), "");
     assert.match(await validationText(root), /DOMAIN-PACKAGE-006/u);
   });
 });
@@ -578,6 +623,23 @@ test("requires every accepted context package to be dependency-governed", async 
   });
 });
 
+test("rejects an executable test inside the production source root", async () => {
+  await withFixture(async (root) => {
+    await acceptProjectManagement(root);
+    await materializeProjectManagement(root);
+    const testFile = path.join(
+      root,
+      packagePath,
+      "src/features/managed-project-scope-admission/misplaced.test.ts",
+    );
+    await writeFile(
+      testFile,
+      `import test from "node:test";\n\ntest("misplaced", () => {});\n`,
+    );
+    assert.match(await validationText(root), /DOMAIN-PACKAGE-010/u);
+  });
+});
+
 test("rejects a test-named file without an executable test registration", async () => {
   await withFixture(async (root) => {
     await acceptProjectManagement(root);
@@ -585,7 +647,7 @@ test("rejects a test-named file without an executable test registration", async 
     const testFile = path.join(
       root,
       packagePath,
-      "src/features/managed-project-scope-admission/admit-project-scope.test.ts",
+      "tests/features/managed-project-scope-admission/admit-project-scope.test.ts",
     );
     await writeFile(testFile, "export const expectedAdmission = 'accepted';\n");
     assert.match(await validationText(root), /DOMAIN-PACKAGE-006/u);

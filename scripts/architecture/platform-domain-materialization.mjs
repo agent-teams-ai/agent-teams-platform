@@ -207,9 +207,9 @@ async function validatePackageManifest(repositoryRoot, target, errors) {
       ? {
           "./testing/model-conformance": {
             types:
-              "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.d.ts",
+              "./dist/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.d.ts",
             import:
-              "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.js",
+              "./dist/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.js",
           },
         }
       : {}),
@@ -219,7 +219,13 @@ async function validatePackageManifest(repositoryRoot, target, errors) {
     manifest.private !== true ||
     manifest.type !== "module" ||
     manifest.scripts?.test !==
-      "node --test --test-concurrency=1 'dist/**/*.test.js'" ||
+      "pnpm run test:compile && pnpm run test:unit && pnpm run test:package" ||
+    manifest.scripts?.["test:compile"] !==
+      "tsc --project tsconfig.test.json --pretty false" ||
+    manifest.scripts?.["test:unit"] !==
+      "node --test --test-concurrency=1 '.cache/tests/tests/**/*.test.js'" ||
+    manifest.scripts?.["test:package"] !==
+      "node --test --test-concurrency=1 tests/package-boundary.test.mjs" ||
     manifest.scripts?.check !==
       "pnpm run clean && pnpm run typecheck && pnpm run build && pnpm run test" ||
     !isDeepStrictEqual(manifest.agentTeamsArchitecture, expectedArchitecture) ||
@@ -416,18 +422,23 @@ async function validateFirstFeature(
     errors.push(`DOMAIN-PACKAGE-005 missing first feature: ${featureRoot}`);
     return;
   }
-  const files = packageFiles.filter((file) => file.startsWith(`${featureRoot}/`));
+  const sourceFiles = packageFiles.filter((file) => file.startsWith(`${featureRoot}/`));
+  const testRoot = `${target.path}/tests/features/${firstFeature}`;
+  const testFiles = packageFiles.filter((file) => file.startsWith(`${testRoot}/`));
   const hasSource = await hasNonEmptyFile(
     repositoryRoot,
-    files,
+    sourceFiles,
     (file) => /\.(?:[cm]?ts|tsx)$/u.test(file) && !/\.(?:test|spec)\./u.test(file),
     errors,
   );
-  const hasTest = await hasExecutableTest(repositoryRoot, files, errors);
+  const hasTest = await hasExecutableTest(repositoryRoot, testFiles, errors);
   if (!hasSource || !hasTest) {
     errors.push(
-      `DOMAIN-PACKAGE-006 ${featureRoot} requires implementation and test`,
+      `DOMAIN-PACKAGE-006 ${featureRoot} requires implementation and package-root test`,
     );
+  }
+  if (sourceFiles.some((file) => /\.(?:test|spec)\.(?:[cm]?ts|tsx)$/u.test(file))) {
+    errors.push(`DOMAIN-PACKAGE-010 executable test inside production root: ${featureRoot}`);
   }
   await validateFeaturePublicSurface(
     repositoryRoot,
@@ -446,6 +457,8 @@ async function validateAcceptedPackage(repositoryRoot, target, dossier, errors) 
   for (const relativePath of [
     `${target.path}/package.json`,
     `${target.path}/tsconfig.json`,
+    `${target.path}/tsconfig.test.json`,
+    `${target.path}/tests/package-boundary.test.mjs`,
     `${target.path}/src/index.ts`,
     `${target.path}/src/composition.ts`,
     `${target.path}/src/worker.ts`,

@@ -1,6 +1,6 @@
-import type { CreationAuthorityBasisSnapshot } from "../domain/creation-authority-basis.js";
-import { requestManagedScopeAdmission } from "../domain/managed-scope-admission-process.js";
-import { ids } from "../domain/value-objects.js";
+import type { CreationAuthorityBasisSnapshot } from "../../domain/creation-authority-basis.js";
+import { requestManagedScopeAdmission } from "../../domain/managed-scope-admission-process.js";
+import { ids } from "../../domain/value-objects.js";
 
 export const authorityBasis: CreationAuthorityBasisSnapshot = Object.freeze({
   checkedAt: 1_800_000_000_000,

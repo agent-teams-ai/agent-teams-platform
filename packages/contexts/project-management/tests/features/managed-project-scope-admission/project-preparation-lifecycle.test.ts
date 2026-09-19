@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { ids } from "../composition.js";
+import { ids } from "../../../src/features/managed-project-scope-admission/composition.js";
 import {
   NOW,
   acceptedProject,

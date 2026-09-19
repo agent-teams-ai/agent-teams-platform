@@ -4,9 +4,9 @@ import {
   fixture,
   NOW,
   resumeCommand,
-} from "./test-fixture.js";
-import { ids } from "../domain/value-objects.js";
-import { claimDispatch } from "../domain/managed-scope-admission-process.js";
+} from "./model-conformance-subject.js";
+import { ids } from "../../domain/value-objects.js";
+import { claimDispatch } from "../../domain/managed-scope-admission-process.js";
 import { initialProcess } from "./model-conformance-base-fixture.js";
 
 export function productionProcessProjection(

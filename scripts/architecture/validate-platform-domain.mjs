@@ -245,7 +245,7 @@ function validateSourceDependencyCoverage(config, catalog, dossiers, errors) {
       .filter(
         (target) => dossierById.get(target.owner_document)?.metadata?.status === "accepted",
       )
-      .map((target) => `${target.path}/src`),
+      .flatMap((target) => [`${target.path}/src`, `${target.path}/tests`]),
   );
   for (const root of acceptedRoots) {
     if (!governedRoots.has(root)) {

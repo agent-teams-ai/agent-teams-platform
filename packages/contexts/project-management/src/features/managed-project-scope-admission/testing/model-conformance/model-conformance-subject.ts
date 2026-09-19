@@ -1,6 +1,4 @@
-import assert from "node:assert/strict";
-
-import { InMemoryProjectManagementStore } from "../adapters/in-memory/in-memory-project-management-store.js";
+import { InMemoryProjectManagementStore } from "../../adapters/in-memory/in-memory-project-management-store.js";
 import {
   createProjectManagementModule,
   ids,
@@ -10,11 +8,11 @@ import {
   type ScopeAdmissionIntent,
   type ScopeAdmissionRecovery,
   type ScopeAdmissionSubmission,
-} from "../composition.js";
+} from "../../composition.js";
 import type {
   CreateProductProjectCommand,
   ProjectPreparationCommand,
-} from "../public.js";
+} from "../../public.js";
 
 export const NOW = 1_800_000_000_000;
 
@@ -178,27 +176,12 @@ export function fixture(options: {
   };
 }
 
-export async function readiness(
-  subject: ReturnType<typeof fixture>,
-  operationRef: ReturnType<typeof ids.operation>,
-) {
-  const result = await subject.application.getScopeAdmissionReadiness({
-    operationRef,
-    requesterRef: ids.requester("user-1"),
-    tenantRef: ids.tenant("tenant-1"),
-  });
-  assert.equal(result.kind, "found");
-  if (result.kind !== "found") {
-    throw new Error("Expected scope-admission readiness.");
-  }
-  return result.readiness;
-}
-
 export async function acceptedProject(subject: ReturnType<typeof fixture>) {
   const result = await subject.application.createProductProject(command());
-  assert.equal(result.kind, "accepted");
   if (result.kind !== "accepted") {
     throw new Error("Expected Project creation to be accepted.");
   }
   return result;
 }
+
+export type ModelConformanceSubject = ReturnType<typeof fixture>;

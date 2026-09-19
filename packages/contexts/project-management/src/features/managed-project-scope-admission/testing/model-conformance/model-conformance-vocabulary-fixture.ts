@@ -1,4 +1,4 @@
-import type { CreationAuthorityBasisSnapshot } from "../domain/creation-authority-basis.js";
+import type { CreationAuthorityBasisSnapshot } from "../../domain/creation-authority-basis.js";
 import {
   authorizeDispatch,
   blockDispatchForAuthority,
@@ -11,8 +11,8 @@ import {
   requestScopeAdmissionCancellation,
   type ScopeAdmissionBlockReason,
   type ScopeAdmissionReceipt,
-} from "../domain/managed-scope-admission-process.js";
-import { ids } from "../domain/value-objects.js";
+} from "../../domain/managed-scope-admission-process.js";
+import { ids } from "../../domain/value-objects.js";
 
 const basis: CreationAuthorityBasisSnapshot = Object.freeze({
   checkedAt: 1_800_000_000_000,

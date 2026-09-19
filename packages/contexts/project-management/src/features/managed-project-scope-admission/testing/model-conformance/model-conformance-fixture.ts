@@ -13,13 +13,13 @@ import {
   requireReconciliation,
   resumeManagedScopeAdmission,
   type ScopeAdmissionBlockReason,
-} from "../domain/managed-scope-admission-process.js";
-import { ids } from "../domain/value-objects.js";
-import { dispatchManagedScopeAdmissionUseCase } from "../application/dispatch-scope-admission.js";
-import { applyScopeAdmissionReceipt } from "../application/apply-scope-admission-receipt.js";
-import type { ProjectManagementDependencies } from "../application/contracts.js";
-import type { ScopeAdmissionDispatchClaim } from "../application/ports/project-management-store.js";
-import { denyProjectAdmission } from "../domain/project-admission-authority.js";
+} from "../../domain/managed-scope-admission-process.js";
+import { ids } from "../../domain/value-objects.js";
+import { dispatchManagedScopeAdmissionUseCase } from "../../application/dispatch-scope-admission.js";
+import { applyScopeAdmissionReceipt } from "../../application/apply-scope-admission-receipt.js";
+import type { ProjectManagementDependencies } from "../../application/contracts.js";
+import type { ScopeAdmissionDispatchClaim } from "../../application/ports/project-management-store.js";
+import { denyProjectAdmission } from "../../domain/project-admission-authority.js";
 import {
   authorityBasis,
   blockedTrace,

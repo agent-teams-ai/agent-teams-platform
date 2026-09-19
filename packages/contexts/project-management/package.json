@@ -8,8 +8,11 @@
     "check": "pnpm run clean && pnpm run typecheck && pnpm run build && pnpm run test",
     "clean": "node -e \"const fs=require('node:fs'); for (const path of ['dist','.cache']) fs.rmSync(path, { recursive: true, force: true })\"",
     "prepack": "pnpm run clean && pnpm run build",
-    "test": "node --test --test-concurrency=1 'dist/**/*.test.js'",
-    "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"
+    "test": "pnpm run test:compile && pnpm run test:unit && pnpm run test:package",
+    "typecheck": "tsc --project tsconfig.json --noEmit --pretty false",
+    "test:compile": "tsc --project tsconfig.test.json --pretty false",
+    "test:unit": "node --test --test-concurrency=1 '.cache/tests/tests/**/*.test.js'",
+    "test:package": "node --test --test-concurrency=1 tests/package-boundary.test.mjs"
   },
   "agentTeamsArchitecture": {
     "role": "bounded-context",
@@ -32,8 +35,8 @@
       "import": "./dist/worker.js"
     },
     "./testing/model-conformance": {
-      "types": "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.d.ts",
-      "import": "./dist/features/managed-project-scope-admission/__tests__/model-conformance-fixture.js"
+      "types": "./dist/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.d.ts",
+      "import": "./dist/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.js"
     }
   }
 }

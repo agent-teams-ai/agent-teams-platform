@@ -1,5 +1,5 @@
-import { safeRetryExhausted } from "../application/safe-retry-policy.js";
-import { preparationGenerationExhausted } from "../domain/scope-admission-readiness.js";
+import { safeRetryExhausted } from "../../application/safe-retry-policy.js";
+import { preparationGenerationExhausted } from "../../domain/scope-admission-readiness.js";
 
 export function domainPolicyBoundary(input: {
   maxAttempts: number;

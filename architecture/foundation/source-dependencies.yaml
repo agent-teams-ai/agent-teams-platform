@@ -8,6 +8,7 @@ packageRoots:
 rootPackage: true
 governedRoots:
   - packages/contexts/project-management/src
+  - packages/contexts/project-management/tests
   - scripts/architecture
   - scripts/docs
   - tooling/executable-specifications/scripts
@@ -189,12 +190,12 @@ boundaries:
       packages: []
       builtins: []
       runtimeReferences: []
-  - id: context.project-management.tests
-    dependencyMode: development
+  - id: context.project-management.testing-surface
     roots:
-      - packages/contexts/project-management/src/features/managed-project-scope-admission/__tests__
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/testing
     entrypoints:
-      - packages/contexts/project-management/src/features/managed-project-scope-admission/__tests__/model-conformance-fixture.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.ts
+      - packages/contexts/project-management/src/features/managed-project-scope-admission/testing/model-conformance/model-conformance-subject.ts
     allow:
       boundaries:
         - context.project-management.application
@@ -204,7 +205,32 @@ boundaries:
         - context.project-management.domain
         - context.project-management.worker-surface
       packages: []
+      builtins: []
+      runtimeReferences: []
+  - id: context.project-management.tests
+    dependencyMode: development
+    roots:
+      - packages/contexts/project-management/tests
+    entrypoints:
+      - packages/contexts/project-management/tests/features/managed-project-scope-admission/managed-project-scope-admission.test.ts
+      - packages/contexts/project-management/tests/features/managed-project-scope-admission/project-preparation-lifecycle.test.ts
+      - packages/contexts/project-management/tests/package-boundary.test.mjs
+    allow:
+      boundaries:
+        - context.project-management.application
+        - context.project-management.in-memory-adapter
+        - context.project-management.public-surface
+        - context.project-management.composition-surface
+        - context.project-management.domain
+        - context.project-management.testing-surface
+        - context.project-management.worker-surface
+      packages: []
       builtins:
         - node:assert/strict
+        - node:child_process
+        - node:fs/promises
+        - node:path
         - node:test
+        - node:url
+        - node:util
       runtimeReferences: []

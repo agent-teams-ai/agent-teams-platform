@@ -1,11 +1,11 @@
-import { ids } from "../domain/value-objects.js";
+import { ids } from "../../domain/value-objects.js";
 import {
   acceptedProject,
   cancelCommand,
   fixture,
   NOW,
   resumeCommand,
-} from "./test-fixture.js";
+} from "./model-conformance-subject.js";
 import {
   productionProcessProjection,
   requireProductionSnapshot,
