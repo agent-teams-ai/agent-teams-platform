@@ -22,16 +22,18 @@ const protocolPackage = fileURLToPath(
 const protocolCli = join(dirname(protocolPackage), "dist/cli.js");
 const protocolProfile = "architecture/foundation/docs-protocol.yaml";
 test("qualification authority is active in the selected managed integration", async () => {
-  const [qualification, integration, protocol, authoring] = await Promise.all([
+  const [qualification, integration, protocol, authoring, manifest] = await Promise.all([
     readFile(join(repositoryRoot, "architecture/foundation/docs-protocol-qualification.json"), "utf8").then(JSON.parse),
     readFile(join(repositoryRoot, "architecture/foundation/docs-consumer-integration.json"), "utf8").then(JSON.parse),
     readFile(join(repositoryRoot, "architecture/foundation/docs-protocol.yaml"), "utf8").then(parseYaml),
-    readFile(join(repositoryRoot, "architecture/foundation/document-authoring.yaml"), "utf8").then(parseYaml)
+    readFile(join(repositoryRoot, "architecture/foundation/document-authoring.yaml"), "utf8").then(parseYaml),
+    readFile(join(repositoryRoot, "package.json"), "utf8").then(JSON.parse)
   ]);
   assert.equal(integration.schemaVersion, 3);
   assert.match(integration.cohort.cohortId, /^docs-\d{4}-\d{2}-\d{2}-stable\d+$/u);
   assert.equal(integration.cohort.packages.docsProtocol.version, "0.6.0");
-  assert.equal(integration.cohort.packages.engineeringFoundation.version, integration.cohort.packages.engineeringFoundation.version);
+  assert.equal(manifest.devDependencies["@agent-teams/engineering-foundation"], integration.cohort.packages.engineeringFoundation.version);
+  assert.equal(manifest.devDependencies["@agent-teams/docs-protocol-agent-teams"], integration.cohort.packages.docsProtocolAgentTeams.version);
   assert.deepEqual(integration.qualification, {
     contractPath: "architecture/foundation/docs-protocol-qualification.json",
     gateCommand: "pnpm docs:protocol:check"
