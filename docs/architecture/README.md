@@ -16,6 +16,8 @@ summary: Navigation for current and proposed Platform architecture.
 - [Engineering Foundation adoption](engineering-foundation-adoption.md) records
   exact-version automation, active capabilities, and parity gates before local
   tooling can be replaced.
+- [Feature module standard](feature-module-standard.md) records the accepted
+  feature ownership boundaries and their deterministic architecture gate.
 - [Managed scope-admission executable model](managed-scope-admission-executable-model.md)
   defines its internal test authority, modeled axes, and explicit evidence
   limits.
