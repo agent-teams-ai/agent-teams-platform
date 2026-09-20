@@ -23,9 +23,6 @@ catalog:
   xstate: 5.32.5
   yaml: 2.9.0
 
-minimumReleaseAge: 1440
-minimumReleaseAgeStrict: true
-
 minimumReleaseAgeExclude:
   - "@agent-teams/engineering-foundation@1.2.0"
   - "@agent-teams/docs-protocol@0.6.0"
