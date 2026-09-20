@@ -1,0 +1,8 @@
+contract: foundation.document-metadata-sidecar/v1
+documents:
+  docs/architecture/feature-module-standard-v1.md:
+    id: architecture.feature-module-standard-v1
+    type: architecture
+    status: active
+    owner: architecture
+    summary: Retained immutable organization Feature Module Standard v1; local metadata does not alter its authority.

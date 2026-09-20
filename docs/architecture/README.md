@@ -8,6 +8,9 @@ summary: Navigation for current and proposed Platform architecture.
 
 # Architecture
 
+- [Feature module standard adoption](feature-module-standard.md) maps Platform
+  ownership and enforcement to the [immutable v1 standard](feature-module-standard-v1.md).
+
 - [Deployment profiles](deployment-profiles.md) defines accepted profile status
   semantics, v1 scope, composition boundaries, and qualification evidence.
 - [Managed installation control](managed-installation-control.md) defines the

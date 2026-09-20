@@ -2,6 +2,9 @@ schemaVersion: 3
 projectId: agent-teams-platform
 catalog:
   metadataSchemaPath: docs/metadata.schema.json
+  metadataSidecar:
+    kind: path-metadata-map
+    path: architecture/foundation/document-metadata.yaml
   ownerCatalog:
     path: docs/owners.yaml
     contract: foundation.owner-map/v1

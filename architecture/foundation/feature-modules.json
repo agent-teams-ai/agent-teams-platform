@@ -54,7 +54,7 @@
           "id": "managed-project-scope-admission",
           "role": "platform",
           "testRoots": [
-            "packages/contexts/project-management/tests"
+            "packages/contexts/project-management/tests/features/managed-project-scope-admission"
           ],
           "layers": [
             {

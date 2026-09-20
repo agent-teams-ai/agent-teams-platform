@@ -39,6 +39,7 @@ upstream versions.
 | `repository.agent-workflow` | Yes | Yes | Canonical instructions and changed, fast, and full checks are declared |
 | `documentation.local-references` | Yes | Yes | `docs` is checked with GitHub-compatible anchors and containment |
 | `governance.architecture-decisions` | Yes | Yes | Seven accepted ADRs have a committed immutable baseline |
+| `quality.source-coverage` | Yes | Yes | `quality-source-coverage.yaml` binds source classification, feature ownership, suppression policy, compiler projects and typed lint; `quality:scope` checks scope and `lint:typed` runs typed checks |
 | `quality.suppression-governance` | Yes | Yes | Package, architecture-script, and executable-specification source roots are governed; no waiver currently exists |
 | `quality.executable-specifications` | Yes | Yes | The Project Management model, property, mutation, and production-conformance bindings are blocking |
 | `architecture.source-dependencies` | Yes | Yes | Schema v3 covers Project Management, executable specifications, and root `scripts` with `rootPackage: true` |
