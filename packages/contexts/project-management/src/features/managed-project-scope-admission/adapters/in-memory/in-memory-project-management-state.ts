@@ -367,9 +367,6 @@ function replayedResumeCommit(
   if (prior.outcome.kind !== "resume") {
     throw new Error("Preparation command receipt kind is internally inconsistent.");
   }
-  if (prior.outcome.result !== "accepted") {
-    return { kind: "stale" };
-  }
   return {
     kind: "applied",
     generation: prior.outcome.generation,

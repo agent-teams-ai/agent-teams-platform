@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "standard": {
+    "id": "agent-teams.feature-module-standard",
+    "version": "v1",
+    "path": "docs/architecture/feature-module-standard-v1.md",
+    "digest": "sha256:851653f96643cf0466b67ab22963661976b00de44840fa3144a48a8c054f95fa"
+  },
+  "architectureDocument": "docs/architecture/feature-module-standard.md",
+  "decision": "docs/decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md",
+  "topology": {
+    "packageInventory": "packages/contexts/project-management/package.json",
+    "sourcePolicy": "architecture/foundation/source-dependencies.yaml"
+  },
+  "enforcementCommands": [
+    "pnpm architecture:features:check",
+    "pnpm lint:typed",
+    "pnpm check"
+  ],
+  "productionRoots": [
+    "packages/contexts/project-management"
+  ],
+  "applicationRoots": [],
+  "excludedRoots": [
+    "packages/contexts/project-management/tests",
+    "tooling/executable-specifications"
+  ],
+  "deviations": {
+    "featureDependencyCycles": []
+  },
+  "modules": [
+    {
+      "id": "project-management",
+      "packageName": "@agent-teams/platform-project-management",
+      "root": "packages/contexts/project-management",
+      "sourceRoot": "packages/contexts/project-management/src",
+      "role": "platform",
+      "preferredFeatureRoot": "packages/contexts/project-management/src/features",
+      "publicEntrypoints": [
+        "packages/contexts/project-management/src/index.ts",
+        "packages/contexts/project-management/src/composition.ts",
+        "packages/contexts/project-management/src/worker.ts",
+        "packages/contexts/project-management/src/features/managed-project-scope-admission/public.ts"
+      ],
+      "moduleAssembly": [
+        "packages/contexts/project-management/src/index.ts",
+        "packages/contexts/project-management/src/composition.ts",
+        "packages/contexts/project-management/src/worker.ts"
+      ],
+      "generatedRoots": [],
+      "exceptions": [],
+      "features": [
+        {
+          "id": "managed-project-scope-admission",
+          "role": "platform",
+          "testRoots": [
+            "packages/contexts/project-management/tests"
+          ],
+          "layers": [
+            {
+              "role": "domain",
+              "roots": [
+                "packages/contexts/project-management/src/features/managed-project-scope-admission/domain"
+              ]
+            },
+            {
+              "role": "application",
+              "roots": [
+                "packages/contexts/project-management/src/features/managed-project-scope-admission/application"
+              ]
+            },
+            {
+              "role": "adapters",
+              "roots": [
+                "packages/contexts/project-management/src/features/managed-project-scope-admission/adapters"
+              ]
+            },
+            {
+              "role": "composition",
+              "roots": [
+                "packages/contexts/project-management/src/features/managed-project-scope-admission/composition.ts"
+              ]
+            },
+            {
+              "role": "testing",
+              "roots": [
+                "packages/contexts/project-management/src/features/managed-project-scope-admission/testing"
+              ]
+            }
+          ]
+        }
+      ],
+      "testRoots": [
+        "packages/contexts/project-management/tests"
+      ]
+    },
+    {
+      "id": "executable-specifications",
+      "packageName": "@agent-teams/platform-executable-specifications",
+      "root": "tooling/executable-specifications",
+      "sourceRoot": "tooling/executable-specifications/fixtures",
+      "role": "testing",
+      "preferredFeatureRoot": "tooling/executable-specifications/scripts",
+      "publicEntrypoints": [
+        "tooling/executable-specifications/scripts/managed-scope-admission-model.mjs"
+      ],
+      "moduleAssembly": [],
+      "generatedRoots": [],
+      "exceptions": [],
+      "testRoots": [
+        "tooling/executable-specifications/scripts"
+      ],
+      "features": [
+        {
+          "id": "managed-scope-admission-specifications",
+          "role": "testing",
+          "testRoots": [
+            "tooling/executable-specifications/scripts"
+          ],
+          "layers": [
+            {
+              "role": "testing",
+              "roots": [
+                "tooling/executable-specifications/fixtures"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

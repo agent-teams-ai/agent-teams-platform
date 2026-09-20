@@ -12,6 +12,7 @@ Start with:
 - [Agent guidance](AGENTS.md)
 - [Technical documentation](docs/README.md)
 - [Deployment profiles](docs/architecture/deployment-profiles.md)
+- [Feature module standard adoption](docs/architecture/feature-module-standard.md)
 - [Managed installation control](docs/architecture/managed-installation-control.md)
 - [Platform-Orchestrator boundary direction](docs/architecture/platform-orchestrator-boundary.md)
 

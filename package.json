@@ -16,9 +16,9 @@
     "architecture:immutability": "node scripts/architecture/validate-qualification-record-history.mjs",
     "architecture:review": "node scripts/architecture/validate-deployment-profiles.mjs --references-only && node scripts/architecture/validate-platform-orchestrator-review.mjs && pnpm architecture:domain",
     "architecture:test": "node --test --test-concurrency=1 scripts/architecture/*.test.mjs",
-    "check": "pnpm foundation:check && pnpm docs:protocol:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm lint && pnpm typecheck && pnpm packages:check",
+    "check": "pnpm foundation:check && pnpm quality:scope && pnpm docs:protocol:check && pnpm architecture:features:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm lint && pnpm lint:typed && pnpm typecheck && pnpm packages:check",
     "check:changed": "agent-teams-foundation agent-workflow changed --consumer .",
-    "check:fast": "pnpm foundation:check && pnpm docs:protocol:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm lint && pnpm typecheck && pnpm packages:check:fast",
+    "check:fast": "pnpm foundation:check && pnpm quality:scope && pnpm docs:protocol:check && pnpm architecture:features:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm lint && pnpm typecheck && pnpm packages:check:fast",
     "docs:check": "agent-teams-docs check --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:doctor": "agent-teams-docs doctor --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:find": "agent-teams-docs find --consumer . --profile architecture/foundation/docs-protocol.yaml",
@@ -49,7 +49,11 @@
     "spec:production-conformance": "pnpm --filter @agent-teams/platform-executable-specifications spec:production-conformance",
     "spec:property": "pnpm --filter @agent-teams/platform-executable-specifications spec:property",
     "spec:clean-checkout": "node tooling/executable-specifications/scripts/verify-clean-spec-gates.mjs",
-    "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"
+    "typecheck": "tsc --project tsconfig.json --noEmit --pretty false",
+    "architecture:features:check": "node scripts/architecture/check-feature-modules.mjs",
+    "quality:scope": "agent-teams-foundation quality check --consumer . --scope-only",
+    "lint:typed": "agent-teams-foundation quality check --consumer .",
+    "quality:scope:check": "agent-teams-foundation quality check --consumer . --scope-only"
   },
   "devDependencies": {
     "@agent-teams/docs-protocol": "0.6.0",
@@ -69,6 +73,7 @@
     "unist-util-visit": "catalog:",
     "xstate": "catalog:",
     "yaml": "catalog:",
-    "@agent-teams/docs-protocol-agent-teams": "0.2.9"
+    "@agent-teams/docs-protocol-agent-teams": "0.2.9",
+    "oxlint-tsgolint": "catalog:"
   }
 }
