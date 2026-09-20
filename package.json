@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@agent-teams/docs-protocol": "0.6.0",
-    "@agent-teams/engineering-foundation": "1.2.0",
+    "@agent-teams/engineering-foundation": "1.4.0",
     "@ast-grep/napi": "catalog:",
     "@types/node": "catalog:",
     "@xstate/graph": "catalog:",
@@ -69,6 +69,6 @@
     "unist-util-visit": "catalog:",
     "xstate": "catalog:",
     "yaml": "catalog:",
-    "@agent-teams/docs-protocol-agent-teams": "0.2.7"
+    "@agent-teams/docs-protocol-agent-teams": "0.2.9"
   }
 }
