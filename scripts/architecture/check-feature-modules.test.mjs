@@ -64,6 +64,13 @@ for (const [name, mutate, message] of [
     await put(`${slice}/domain/README.md`, "Documentation only");
   }, /Layer has no source artifacts/],
   ["duplicate feature", async ({ module }) => { module.features.push(module.features[0]); }, /duplicate feature/],
+  ["overlapping feature roots", async ({ module }) => {
+    module.features.push({
+      id: "admission/nested",
+      testRoots: [`${root}/tests`],
+      layers: [{ role: "domain", roots: [`${slice}/nested/domain`] }],
+    });
+  }, /Overlapping feature roots/],
   ["duplicate layer", async ({ module }) => { module.features[0].layers.push(module.features[0].layers[0]); }, /Duplicate layer role/],
   ["unknown topology root", async ({ put }) => { await put("policy.json", JSON.stringify({ packageRoots: [root, "packages/unknown"] })); }, /package topology/],
   ["changed standard bytes", async ({ put }) => { await put("docs/architecture/feature-module-standard-v1.md", "changed"); }, /digest mismatch/],

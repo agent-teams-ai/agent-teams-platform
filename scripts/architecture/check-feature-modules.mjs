@@ -84,6 +84,9 @@ for (const module of profile.modules) {
     const featureRoot = module.role === "testing" ? module.sourceRoot :
       `${module.preferredFeatureRoot}/${feature.id}`;
     ownedPath(featureRoot, module.sourceRoot);
+    if (featureRoots.some((other) => within(featureRoot, other) || within(other, featureRoot))) {
+      throw new Error(`Overlapping feature roots: ${featureRoot}`);
+    }
     featureRoots.push(featureRoot);
     for (const root of feature.testRoots) {await filesAt(ownedPath(root, module.root));}
     await validateLayers(module, feature, featureRoot);

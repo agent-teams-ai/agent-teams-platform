@@ -26,6 +26,7 @@ policy owns dependency direction and public import boundaries; Platform's domain
 materialization gate owns accepted package topology. Run all of these gates:
 the feature checker alone does not establish full standard conformance.
 
-Feature tests map to `tests/features/managed-project-scope-admission`; package
+Feature tests map to the package-relative path
+`tests/features/managed-project-scope-admission`; package
 boundary tests remain module-owned under `tests`. No production composition or
 Consumer Module Standard adoption is introduced by this profile.
