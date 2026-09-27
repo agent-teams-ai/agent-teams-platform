@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "contract": "platform.node-runtime-compatibility/v1",
+  "migration": {
+    "productionDefault": "Node 24 remains production/default until Node 26 officially enters LTS and the owner authorizes cutover.",
+    "node25Policy": "SKIPPED",
+    "cutover": {
+      "status": "NOT_AUTHORIZED",
+      "requiresOfficialLts": true,
+      "requiresOwnerAuthorization": true
+    }
+  },
+  "platform": {
+    "engine": ">=24.18.0 <25 || >=26.10.0 <27",
+    "productionVersion": "24.18.0",
+    "candidateVersion": "26.10.0",
+    "skippedVersion": "25.0.0"
+  },
+  "qualification": {
+    "targetVersion": "26.10.0",
+    "status": "PENDING_UPSTREAM_ENGINE_COMPATIBILITY",
+    "strictInstall": "BLOCKED_BY_UPSTREAM_ENGINE",
+    "apiAudit": "IMPLEMENTED",
+    "focusedCi": "IMPLEMENTED"
+  },
+  "nodeApis": [
+    "node:assert/strict",
+    "node:child_process",
+    "node:crypto",
+    "node:fs",
+    "node:fs/promises",
+    "node:os",
+    "node:path",
+    "node:test",
+    "node:url",
+    "node:util"
+  ],
+  "upstreamDependencies": {
+    "foundation": [
+      {
+        "name": "@agent-teams/engineering-foundation",
+        "version": "1.4.0",
+        "relationship": "DIRECT",
+        "nodeEngine": ">=24.18.0 <25",
+        "node26StrictInstall": "BLOCKED_BY_UPSTREAM_ENGINE"
+      },
+      {
+        "name": "@agent-teams/docs-protocol",
+        "version": "0.6.0",
+        "relationship": "DIRECT",
+        "nodeEngine": ">=24.18.0 <25",
+        "node26StrictInstall": "BLOCKED_BY_UPSTREAM_ENGINE"
+      },
+      {
+        "name": "@agent-teams/docs-protocol-agent-teams",
+        "version": "0.2.9",
+        "relationship": "DIRECT",
+        "nodeEngine": ">=24.18.0 <25",
+        "node26StrictInstall": "BLOCKED_BY_UPSTREAM_ENGINE"
+      },
+      {
+        "name": "@agent-teams/document-authoring",
+        "version": "0.3.0",
+        "relationship": "TRANSITIVE",
+        "nodeEngine": ">=24.18.0 <25",
+        "node26StrictInstall": "BLOCKED_BY_UPSTREAM_ENGINE"
+      },
+      {
+        "name": "@agent-teams/repository-mutation",
+        "version": "0.2.0",
+        "relationship": "TRANSITIVE",
+        "nodeEngine": ">=24.18.0 <25",
+        "node26StrictInstall": "BLOCKED_BY_UPSTREAM_ENGINE"
+      }
+    ],
+    "runtime": []
+  },
+  "publishedArtifacts": [
+    {
+      "name": "@agent-teams/platform-project-management",
+      "version": "0.0.0",
+      "runtimeDependencies": []
+    }
+  ]
+}

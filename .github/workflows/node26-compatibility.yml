@@ -1,0 +1,46 @@
+name: Node 26 Compatibility
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: node26-compatibility-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node26-focused:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@008330803749db0355799c700092d9a85fd074e9 # v6.0.9
+        with:
+          version: 11.18.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26.10.0
+      - name: Confirm clean Node 26 toolchain
+        run: |
+          test ! -d node_modules
+          node --version
+          node scripts/compatibility/assert-node26-toolchain.mjs
+      - name: Audit strict-install readiness
+        id: compatibility
+        run: node scripts/compatibility/validate-node-compatibility.mjs
+      - name: Strict frozen install
+        run: pnpm install --frozen-lockfile --config.engine-strict=false
+      - name: Run focused Node 26 checks
+        run: pnpm run check:node26
+      - name: Require upstream Node engine compatibility
+        run: node scripts/compatibility/validate-node-compatibility.mjs --require-node26-strict
