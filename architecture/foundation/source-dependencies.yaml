@@ -50,7 +50,8 @@ boundaries:
     entrypoints: []
     allow:
       boundaries: []
-      packages: []
+      packages:
+        - ajv
       builtins:
         - node:assert/strict
         - node:child_process

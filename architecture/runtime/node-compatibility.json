@@ -75,7 +75,7 @@
     ],
     "runtime": []
   },
-  "publishedArtifacts": [
+  "privatePackages": [
     {
       "name": "@agent-teams/platform-project-management",
       "version": "0.0.0",

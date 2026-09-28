@@ -2,10 +2,20 @@ import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import Ajv2020 from "ajv/dist/2020.js";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const requireNode26Strict = process.argv.includes("--require-node26-strict");
 const sourceRoots = ["packages", "scripts", "tooling"];
+const digestRoots = [...sourceRoots, "architecture"];
+const digestFiles = [
+  ".github/workflows/node26-compatibility.yml",
+  ".node-version",
+  ".npmrc",
+  "package.json",
+  "pnpm-lock.yaml",
+  "pnpm-workspace.yaml",
+];
 const ignoredDirectories = new Set(["node_modules", "dist", ".cache"]);
 
 function fail(message) {
@@ -70,6 +80,36 @@ async function collectSourceFiles(directory, files = []) {
     }
   }
   return files;
+}
+
+async function collectDigestFiles(directory, files = []) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    if (ignoredDirectories.has(entry.name)) {
+      continue;
+    }
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      await collectDigestFiles(entryPath, files);
+    } else if (entry.isFile()) {
+      files.push(entryPath);
+    }
+  }
+  return files;
+}
+
+export async function candidateInputDigest(root = repositoryRoot) {
+  const files = digestFiles.map((file) => path.join(root, file));
+  for (const sourceRoot of digestRoots) {
+    await collectDigestFiles(path.join(root, sourceRoot), files);
+  }
+  const hash = createHash("sha256");
+  for (const file of files.toSorted()) {
+    const relativePath = path.relative(root, file);
+    const content = await readFile(file);
+    hash.update(`${relativePath}\0${content.length}\0`);
+    hash.update(content);
+  }
+  return hash.digest("hex");
 }
 
 async function collectNodeApis() {
@@ -147,24 +187,24 @@ function validateUpstreamDependencies(compatibility, lockedPackages) {
   return dependencies;
 }
 
-async function validatePublishedArtifacts(compatibility) {
-  for (const artifact of compatibility.publishedArtifacts) {
+async function validatePrivatePackages(compatibility) {
+  for (const artifact of compatibility.privatePackages) {
     const manifestPath = path.join(
       repositoryRoot,
       "packages/contexts/project-management/package.json",
     );
     const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-    if (manifest.name !== artifact.name || manifest.version !== artifact.version) {
-      fail(`Published artifact identity drift: ${artifact.name}@${artifact.version}`);
+    if (!manifest.private || manifest.name !== artifact.name || manifest.version !== artifact.version) {
+      fail(`Private package identity drift: ${artifact.name}@${artifact.version}`);
     }
     const runtimeDependencies = Object.keys(manifest.dependencies ?? {}).toSorted();
     if (JSON.stringify(runtimeDependencies) !== JSON.stringify(artifact.runtimeDependencies)) {
-      fail(`Published artifact runtime dependency drift: ${artifact.name}`);
+      fail(`Private package runtime dependency drift: ${artifact.name}`);
     }
   }
 }
 
-async function readCompatibilityState() {
+export async function readCompatibilityState() {
   const [
     compatibility,
     schema,
@@ -183,10 +223,18 @@ async function readCompatibilityState() {
   return { compatibility, schema, packageManifest, lockfile, nodeVersion, npmrc };
 }
 
-function validatePolicyState(state) {
+export function validatePolicyState(state) {
   const { compatibility, schema, packageManifest, nodeVersion, npmrc } = state;
   if (schema.title !== "Platform Node runtime compatibility record") {
     fail("Node compatibility schema identity drift");
+  }
+  const ajv = new Ajv2020({ allErrors: true, strict: true });
+  const validate = ajv.compile(schema);
+  if (!validate(compatibility)) {
+    fail(`Node compatibility schema violation: ${ajv.errorsText(validate.errors)}`);
+  }
+  if (compatibility.qualification.targetVersion !== compatibility.platform.candidateVersion) {
+    fail("Qualification target must equal the Node candidate version");
   }
   if (packageManifest.engines.node !== compatibility.platform.engine) {
     fail("Root Node engine drift");
@@ -214,11 +262,11 @@ function validatePolicyState(state) {
   }
 }
 
-async function createCompatibilityReport(state) {
+export async function createCompatibilityReport(state) {
   const { compatibility, lockfile } = state;
   const lockedPackages = parseLockedAgentTeamsPackages(lockfile);
   const upstreamDependencies = validateUpstreamDependencies(compatibility, lockedPackages);
-  await validatePublishedArtifacts(compatibility);
+  await validatePrivatePackages(compatibility);
 
   const actualNodeApis = await collectNodeApis();
   if (JSON.stringify(actualNodeApis) !== JSON.stringify(compatibility.nodeApis)) {
@@ -232,8 +280,12 @@ async function createCompatibilityReport(state) {
       package: `${dependency.name}@${dependency.version}`,
       nodeEngine: dependency.nodeEngine,
     }));
-  const expectedQualificationStatus = blockers.length === 0 ? "QUALIFIED" : "PENDING_UPSTREAM_ENGINE_COMPATIBILITY";
-  const expectedStrictInstallStatus = blockers.length === 0 ? "QUALIFIED" : "BLOCKED_BY_UPSTREAM_ENGINE";
+  const expectedQualificationStatus = blockers.length === 0
+    ? "IMPLEMENTED_PENDING_QUALIFICATION"
+    : "PENDING_UPSTREAM_ENGINE_COMPATIBILITY";
+  const expectedStrictInstallStatus = blockers.length === 0
+    ? "READY_FOR_STRICT_INSTALL"
+    : "BLOCKED_BY_UPSTREAM_ENGINE";
   if (compatibility.qualification.status !== expectedQualificationStatus) {
     fail(`Qualification status drift: ${compatibility.qualification.status} != ${expectedQualificationStatus}`);
   }
@@ -253,9 +305,10 @@ async function createCompatibilityReport(state) {
       nodeEngine,
       node26StrictInstall,
     })),
-    publishedArtifacts: compatibility.publishedArtifacts,
+    privatePackages: compatibility.privatePackages,
     blockers,
-    sourceDigest: createHash("sha256").update(JSON.stringify(compatibility)).digest("hex"),
+    candidateInputDigest: await candidateInputDigest(),
+    qualificationEvidence: "NOT_RECORDED",
   };
 }
 
@@ -269,4 +322,6 @@ async function main() {
   }
 }
 
-await main();
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await main();
+}

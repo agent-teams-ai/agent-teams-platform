@@ -29,18 +29,39 @@ jobs:
           version: 11.18.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
+          node-version: 24.18.0
+      - name: Install pinned dependencies under the production Node engine
+        run: pnpm install --frozen-lockfile
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
           node-version: 26.10.0
-      - name: Confirm clean Node 26 toolchain
+      - name: Confirm Node 26 toolchain
         run: |
-          test ! -d node_modules
           node --version
           node scripts/compatibility/assert-node26-toolchain.mjs
-      - name: Audit strict-install readiness
-        id: compatibility
+      - name: Audit Node 26 compatibility policy
         run: node scripts/compatibility/validate-node-compatibility.mjs
-      - name: Strict frozen install
-        run: pnpm install --frozen-lockfile --config.engine-strict=false
       - name: Run focused Node 26 checks
         run: pnpm run check:node26
       - name: Require upstream Node engine compatibility
         run: node scripts/compatibility/validate-node-compatibility.mjs --require-node26-strict
+
+  node26-strict-install:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@008330803749db0355799c700092d9a85fd074e9 # v6.0.9
+        with:
+          version: 11.18.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 26.10.0
+      - name: Require strict frozen Node 26 install
+        run: |
+          test ! -d node_modules
+          node scripts/compatibility/assert-node26-toolchain.mjs
+          pnpm install --frozen-lockfile
