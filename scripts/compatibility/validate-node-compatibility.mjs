@@ -84,7 +84,7 @@ async function collectNodeApis() {
       nodeApis.add(match[1]);
     }
   }
-  return [...nodeApis].sort();
+  return [...nodeApis].toSorted();
 }
 
 function parseLockedAgentTeamsPackages(lockfile) {
@@ -157,7 +157,7 @@ async function validatePublishedArtifacts(compatibility) {
     if (manifest.name !== artifact.name || manifest.version !== artifact.version) {
       fail(`Published artifact identity drift: ${artifact.name}@${artifact.version}`);
     }
-    const runtimeDependencies = Object.keys(manifest.dependencies ?? {}).sort();
+    const runtimeDependencies = Object.keys(manifest.dependencies ?? {}).toSorted();
     if (JSON.stringify(runtimeDependencies) !== JSON.stringify(artifact.runtimeDependencies)) {
       fail(`Published artifact runtime dependency drift: ${artifact.name}`);
     }
