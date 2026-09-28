@@ -3,6 +3,7 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
+import YAML from "yaml";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const requireNode26Strict = process.argv.includes("--require-node26-strict");
@@ -10,11 +11,16 @@ const sourceRoots = ["packages", "scripts", "tooling"];
 const digestRoots = [...sourceRoots, "architecture"];
 const digestFiles = [
   ".github/workflows/node26-compatibility.yml",
+  ".markdownlint-cli2.mjs",
   ".node-version",
   ".npmrc",
+  ".oxlintrc.json",
+  ".oxlintrc.type-aware.json",
+  "foundation.config.yaml",
   "package.json",
   "pnpm-lock.yaml",
   "pnpm-workspace.yaml",
+  "tsconfig.json",
 ];
 const ignoredDirectories = new Set(["node_modules", "dist", ".cache"]);
 
@@ -212,6 +218,7 @@ export async function readCompatibilityState() {
     lockfile,
     nodeVersion,
     npmrc,
+    workspace,
   ] = await Promise.all([
     readFile(path.join(repositoryRoot, "architecture/runtime/node-compatibility.json"), "utf8").then(JSON.parse),
     readFile(path.join(repositoryRoot, "architecture/runtime/node-compatibility.schema.json"), "utf8").then(JSON.parse),
@@ -219,12 +226,13 @@ export async function readCompatibilityState() {
     readFile(path.join(repositoryRoot, "pnpm-lock.yaml"), "utf8"),
     readFile(path.join(repositoryRoot, ".node-version"), "utf8"),
     readFile(path.join(repositoryRoot, ".npmrc"), "utf8"),
+    readFile(path.join(repositoryRoot, "pnpm-workspace.yaml"), "utf8"),
   ]);
-  return { compatibility, schema, packageManifest, lockfile, nodeVersion, npmrc };
+  return { compatibility, schema, packageManifest, lockfile, nodeVersion, npmrc, workspace };
 }
 
 export function validatePolicyState(state) {
-  const { compatibility, schema, packageManifest, nodeVersion, npmrc } = state;
+  const { compatibility, schema, packageManifest, nodeVersion, npmrc, workspace } = state;
   if (schema.title !== "Platform Node runtime compatibility record") {
     fail("Node compatibility schema identity drift");
   }
@@ -258,6 +266,16 @@ export function validatePolicyState(state) {
   ]) {
     if (!npmrc.split(/\r?\n/u).includes(requiredSetting)) {
       fail(`Strict install setting drift: ${requiredSetting}`);
+    }
+  }
+  const workspaceDocument = YAML.parseDocument(workspace, { uniqueKeys: true });
+  if (workspaceDocument.errors.length > 0) {
+    fail(`Invalid pnpm workspace configuration: ${workspaceDocument.errors[0].message}`);
+  }
+  const workspaceSettings = workspaceDocument.toJS();
+  for (const key of ["engineStrict", "strictPeerDependencies", "saveExact"]) {
+    if (workspaceSettings?.[key] !== true) {
+      fail(`Effective pnpm workspace setting drift: ${key}`);
     }
   }
 }

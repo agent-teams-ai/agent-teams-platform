@@ -52,6 +52,7 @@ boundaries:
       boundaries: []
       packages:
         - ajv
+        - yaml
       builtins:
         - node:assert/strict
         - node:child_process

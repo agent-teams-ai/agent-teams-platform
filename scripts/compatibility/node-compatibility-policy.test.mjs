@@ -26,6 +26,14 @@ test("policy rejects unauthorized cutover, disabled LTS gate, and wrong target",
     mutate(changed.compatibility);
     assert.throws(() => validatePolicyState(changed), expected);
   }
+
+  const disabledInstallPolicy = clone(state);
+  disabledInstallPolicy.workspace = disabledInstallPolicy.workspace.replace("strictPeerDependencies: true", "strictPeerDependencies: false");
+  assert.throws(() => validatePolicyState(disabledInstallPolicy), /Effective pnpm workspace setting drift: strictPeerDependencies/u);
+
+  const duplicateSetting = clone(state);
+  duplicateSetting.workspace += "\nstrictPeerDependencies: false\n";
+  assert.throws(() => validatePolicyState(duplicateSetting), /Invalid pnpm workspace configuration/u);
 });
 
 test("upstream engine readiness cannot certify Node 26 qualification", async () => {
@@ -50,8 +58,9 @@ test("upstream engine readiness cannot certify Node 26 qualification", async () 
 test("candidate input digest changes with source, lockfile, and workflow", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "platform-node26-policy-"));
   const files = [
-    ".github/workflows/node26-compatibility.yml",
-    ".node-version", ".npmrc", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml",
+    ".github/workflows/node26-compatibility.yml", ".markdownlint-cli2.mjs",
+    ".node-version", ".npmrc", ".oxlintrc.json", ".oxlintrc.type-aware.json",
+    "foundation.config.yaml", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "tsconfig.json",
     "architecture/runtime/policy.json", "packages/context/source.ts", "scripts/check.mjs", "tooling/helper.js",
   ];
   try {
@@ -61,7 +70,7 @@ test("candidate input digest changes with source, lockfile, and workflow", async
       await writeFile(target, "initial\n");
     }
     const initial = await candidateInputDigest(root);
-    for (const file of ["packages/context/source.ts", "pnpm-lock.yaml", ".github/workflows/node26-compatibility.yml"]) {
+    for (const file of ["packages/context/source.ts", "pnpm-lock.yaml", ".github/workflows/node26-compatibility.yml", "tsconfig.json", "foundation.config.yaml"]) {
       await writeFile(path.join(root, file), "changed\n");
       assert.notEqual(await candidateInputDigest(root), initial, `${file} must affect candidate digest`);
       await writeFile(path.join(root, file), "initial\n");
