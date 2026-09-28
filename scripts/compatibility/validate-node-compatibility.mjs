@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile, readdir } from "node:fs/promises";
+import { lstat, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
@@ -8,15 +8,22 @@ import YAML from "yaml";
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const requireNode26Strict = process.argv.includes("--require-node26-strict");
 const sourceRoots = ["packages", "scripts", "tooling"];
-const digestRoots = [...sourceRoots, "architecture"];
+// These roots and the files below cover the checked-in inputs to the required
+// Platform gates, including their workflow definitions and documentation authority.
+const digestRoots = [...sourceRoots, "architecture", "docs", ".github", ".agents"];
 const digestFiles = [
-  ".github/workflows/node26-compatibility.yml",
+  ".gitattributes",
+  ".gitignore",
   ".markdownlint-cli2.mjs",
   ".node-version",
   ".npmrc",
   ".oxlintrc.json",
   ".oxlintrc.type-aware.json",
   "foundation.config.yaml",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "GEMINI.md",
+  "README.md",
   "package.json",
   "pnpm-lock.yaml",
   "pnpm-workspace.yaml",
@@ -89,6 +96,9 @@ async function collectSourceFiles(directory, files = []) {
 }
 
 async function collectDigestFiles(directory, files = []) {
+  if (!(await lstat(directory)).isDirectory()) {
+    fail(`Candidate input root must be a directory: ${directory}`);
+  }
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (ignoredDirectories.has(entry.name)) {
       continue;
@@ -98,12 +108,17 @@ async function collectDigestFiles(directory, files = []) {
       await collectDigestFiles(entryPath, files);
     } else if (entry.isFile()) {
       files.push(entryPath);
+    } else {
+      fail(`Unsupported candidate input entry: ${entryPath}`);
     }
   }
   return files;
 }
 
 export async function candidateInputDigest(root = repositoryRoot) {
+  if (!(await lstat(root)).isDirectory()) {
+    fail(`Candidate input root must be a directory: ${root}`);
+  }
   const files = digestFiles.map((file) => path.join(root, file));
   for (const sourceRoot of digestRoots) {
     await collectDigestFiles(path.join(root, sourceRoot), files);
@@ -111,6 +126,9 @@ export async function candidateInputDigest(root = repositoryRoot) {
   const hash = createHash("sha256");
   for (const file of files.toSorted()) {
     const relativePath = path.relative(root, file);
+    if (!(await lstat(file)).isFile()) {
+      fail(`Candidate input must be a regular file: ${relativePath}`);
+    }
     const content = await readFile(file);
     hash.update(`${relativePath}\0${content.length}\0`);
     hash.update(content);

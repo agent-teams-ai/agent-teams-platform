@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -55,13 +55,18 @@ test("upstream engine readiness cannot certify Node 26 qualification", async () 
   await assert.rejects(createCompatibilityReport(changed), /Qualification status drift/u);
 });
 
-test("candidate input digest changes with source, lockfile, and workflow", async () => {
+test("candidate input digest binds every checked-in gate input family", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "platform-node26-policy-"));
   const files = [
-    ".github/workflows/node26-compatibility.yml", ".markdownlint-cli2.mjs",
-    ".node-version", ".npmrc", ".oxlintrc.json", ".oxlintrc.type-aware.json",
-    "foundation.config.yaml", "package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "tsconfig.json",
-    "architecture/runtime/policy.json", "packages/context/source.ts", "scripts/check.mjs", "tooling/helper.js",
+    ".gitattributes", ".gitignore", ".markdownlint-cli2.mjs", ".node-version", ".npmrc",
+    ".oxlintrc.json", ".oxlintrc.type-aware.json", "AGENTS.md", "CLAUDE.md", "GEMINI.md",
+    "README.md", "foundation.config.yaml", "package.json", "pnpm-lock.yaml",
+    "pnpm-workspace.yaml", "tsconfig.json", ".agents/skills/docs-authoring/SKILL.md",
+    ".github/copilot-instructions.md", ".github/workflows/architecture.yml",
+    ".github/workflows/node26-compatibility.yml", ".github/workflows/docs-protocol.yml",
+    "architecture/runtime/policy.json", "docs/architecture/feature-module-standard-v1.md",
+    "docs/architecture/feature-module-standard.md", "packages/context/source.ts",
+    "scripts/check.mjs", "tooling/helper.js",
   ];
   try {
     for (const file of files) {
@@ -70,12 +75,41 @@ test("candidate input digest changes with source, lockfile, and workflow", async
       await writeFile(target, "initial\n");
     }
     const initial = await candidateInputDigest(root);
-    for (const file of ["packages/context/source.ts", "pnpm-lock.yaml", ".github/workflows/node26-compatibility.yml", "tsconfig.json", "foundation.config.yaml"]) {
+    for (const file of [
+      "packages/context/source.ts", "scripts/check.mjs", "tooling/helper.js",
+      "architecture/runtime/policy.json", "docs/architecture/feature-module-standard-v1.md",
+      ".github/workflows/architecture.yml", ".github/workflows/node26-compatibility.yml",
+      ".github/workflows/docs-protocol.yml", ".agents/skills/docs-authoring/SKILL.md",
+      "README.md", "AGENTS.md", ".gitignore", "pnpm-lock.yaml", "tsconfig.json",
+      "foundation.config.yaml",
+    ]) {
       await writeFile(path.join(root, file), "changed\n");
       assert.notEqual(await candidateInputDigest(root), initial, `${file} must affect candidate digest`);
       await writeFile(path.join(root, file), "initial\n");
     }
+    const added = path.join(root, "docs/architecture/new-authority.md");
+    await writeFile(added, "new\n");
+    assert.notEqual(await candidateInputDigest(root), initial, "new gate input must affect candidate digest");
+    await rm(added);
+    assert.equal(await candidateInputDigest(root), initial);
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("candidate input digest rejects symlinked roots and entries", async () => {
+  const parent = await mkdtemp(path.join(tmpdir(), "platform-node26-policy-link-"));
+  const root = path.join(parent, "candidate");
+  try {
+    await mkdir(root);
+    await symlink(root, path.join(parent, "linked-candidate"));
+    await assert.rejects(candidateInputDigest(path.join(parent, "linked-candidate")), /Candidate input root must be a directory/u);
+    for (const directory of ["packages", "scripts", "tooling", "architecture", "docs", ".github", ".agents"]) {
+      await mkdir(path.join(root, directory));
+    }
+    await symlink(path.join(parent, "outside"), path.join(root, "docs", "escaped.md"));
+    await assert.rejects(candidateInputDigest(root), /Unsupported candidate input entry/u);
+  } finally {
+    await rm(parent, { recursive: true, force: true });
   }
 });
