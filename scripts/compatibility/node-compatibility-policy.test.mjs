@@ -108,6 +108,75 @@ test("missing, malformed or drifted published evidence fails closed", async () =
   await assert.rejects(createCompatibilityReport(duplicate), /Invalid pnpm lockfile/u);
 });
 
+for (const [nodeEngine, supported] of [
+  ["^26.0.0 || unknown", true],
+  [">=99 unknown", false],
+]) {
+  test(`published engine rejects hidden unsupported comparator: ${nodeEngine}`, async () => {
+    const changed = clone(await readCompatibilityState());
+    const lock = YAML.parse(changed.lockfile);
+    const dependency = changed.compatibility.upstreamDependencies.foundation[0];
+    dependency.nodeEngine = nodeEngine;
+    // Align status with the valid prefix so short-circuiting would accept the
+    // entire fixture rather than fail later on an unrelated status mismatch.
+    dependency.node26StrictInstall = supported ? "SUPPORTED" : "BLOCKED_BY_UPSTREAM_ENGINE";
+    if (!supported) {
+      changed.compatibility.qualification.status = "PENDING_UPSTREAM_ENGINE_COMPATIBILITY";
+      changed.compatibility.qualification.strictInstall = "BLOCKED_BY_UPSTREAM_ENGINE";
+    }
+    lock.packages[`${dependency.name}@${dependency.version}`].engines.node = nodeEngine;
+    changed.lockfile = YAML.stringify(lock);
+    validatePolicyState(changed);
+    await assert.rejects(createCompatibilityReport(changed), /Unsupported engine comparator: unknown/u);
+  });
+}
+
+test("resolved importer version drift rejects unchanged manifest and published evidence", async () => {
+  const state = await readCompatibilityState();
+  const changed = clone(state);
+  const lock = YAML.parse(changed.lockfile);
+  const dependency = changed.compatibility.upstreamDependencies.foundation[0];
+  const direct = lock.importers["."].devDependencies[dependency.name];
+  direct.version = "99.0.0";
+  changed.lockfile = YAML.stringify(lock);
+  assert.equal(direct.specifier, dependency.version);
+  assert.deepEqual(changed.packageManifest, state.packageManifest);
+  assert.deepEqual(changed.compatibility, state.compatibility);
+  assert.deepEqual(lock.packages, YAML.parse(state.lockfile).packages);
+  await assert.rejects(createCompatibilityReport(changed), /exact root pin drift/u);
+});
+
+for (const [nodeEngine, lower, lastInMajor, upper] of [
+  ["^24.18.0", "24.18.0", "24.999.999", "25.0.0"],
+  ["^26.0.0", "26.0.0", "26.999.999", "27.0.0"],
+]) {
+  test(`published caret ${nodeEngine} excludes upper boundary ${upper}`, async () => {
+    const state = await readCompatibilityState();
+    for (const candidateVersion of [lower, lastInMajor, upper]) {
+      const changed = clone(state);
+      const lock = YAML.parse(changed.lockfile);
+      const supported = candidateVersion !== upper;
+      // Probe the report's actual engine evaluator without changing production
+      // policy or adding a test-only export for its private range parser.
+      changed.compatibility.platform.candidateVersion = candidateVersion;
+      changed.compatibility.qualification.targetVersion = candidateVersion;
+      for (const dependency of changed.compatibility.upstreamDependencies.foundation) {
+        dependency.nodeEngine = nodeEngine;
+        dependency.node26StrictInstall = supported ? "SUPPORTED" : "BLOCKED_BY_UPSTREAM_ENGINE";
+        lock.packages[`${dependency.name}@${dependency.version}`].engines.node = nodeEngine;
+      }
+      changed.lockfile = YAML.stringify(lock);
+      changed.compatibility.qualification.status = supported
+        ? "IMPLEMENTED_PENDING_QUALIFICATION" : "PENDING_UPSTREAM_ENGINE_COMPATIBILITY";
+      changed.compatibility.qualification.strictInstall = supported
+        ? "READY_FOR_STRICT_INSTALL" : "BLOCKED_BY_UPSTREAM_ENGINE";
+      const report = await createCompatibilityReport(changed);
+      assert.equal(report.status, supported ? "NODE26_STRICT_INSTALL_READY" : "NODE26_STRICT_INSTALL_BLOCKED", candidateVersion);
+      assert.equal(report.blockers.length, supported ? 0 : state.compatibility.upstreamDependencies.foundation.length, candidateVersion);
+    }
+  });
+}
+
 test("strict install readiness preserves central Cohort and Node 24 managed runtime authority", async () => {
   const state = await readCompatibilityState();
   const report = await createCompatibilityReport(state);
