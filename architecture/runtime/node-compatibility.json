@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "contract": "platform.node-runtime-compatibility/v1",
+  "schemaVersion": 2,
+  "contract": "platform.node-runtime-compatibility/v2",
   "migration": {
     "productionDefault": "Node 24 remains production/default until Node 26 officially enters LTS and the owner authorizes cutover.",
     "node25Policy": "SKIPPED",
@@ -18,8 +18,8 @@
   },
   "qualification": {
     "targetVersion": "26.10.0",
-    "status": "PENDING_UPSTREAM_ENGINE_COMPATIBILITY",
-    "strictInstall": "BLOCKED_BY_UPSTREAM_ENGINE",
+    "status": "IMPLEMENTED_PENDING_QUALIFICATION",
+    "strictInstall": "READY_FOR_STRICT_INSTALL",
     "apiAudit": "IMPLEMENTED",
     "focusedCi": "IMPLEMENTED"
   },
@@ -39,38 +39,48 @@
     "foundation": [
       {
         "name": "@agent-teams/engineering-foundation",
-        "version": "1.4.0",
+        "version": "1.7.0",
         "relationship": "DIRECT",
-        "nodeEngine": ">=24.18.0 <25",
-        "node26StrictInstall": "BLOCKED_BY_UPSTREAM_ENGINE"
+        "nodeEngine": "^24.18.0 || ^26.0.0",
+        "node26StrictInstall": "SUPPORTED",
+        "role": "DEVELOPMENT_TOOLING",
+        "integrity": "sha512-gc9ImQJa/6vgKz+kWda7qg0YCzFUy+5WmMiV01I98scOlUjs2dQQsPUlQ4JpzjUhpVfNip4kndakAj9cudHn4g=="
       },
       {
         "name": "@agent-teams/docs-protocol",
-        "version": "0.6.0",
+        "version": "0.6.2",
         "relationship": "DIRECT",
-        "nodeEngine": ">=24.18.0 <25",
-        "node26StrictInstall": "BLOCKED_BY_UPSTREAM_ENGINE"
+        "nodeEngine": "^24.18.0 || ^26.0.0",
+        "node26StrictInstall": "SUPPORTED",
+        "role": "DEVELOPMENT_TOOLING",
+        "integrity": "sha512-kqE4pA9/V/MgbOm2nTyfRWU+CuwtAX6pB6WGQauKvvozwS4CzFfJwARTgd91R3yCf6bi5l/kU+mcAe6WVID7aA=="
       },
       {
         "name": "@agent-teams/docs-protocol-agent-teams",
-        "version": "0.2.9",
+        "version": "0.2.13",
         "relationship": "DIRECT",
-        "nodeEngine": ">=24.18.0 <25",
-        "node26StrictInstall": "BLOCKED_BY_UPSTREAM_ENGINE"
+        "nodeEngine": "^24.18.0 || ^26.0.0",
+        "node26StrictInstall": "SUPPORTED",
+        "role": "MANAGED_DOCS_ADAPTER",
+        "integrity": "sha512-M0yh7NhhTB+SizAN0a6mP65RRiJ6jbuzCQQYPMRo8MoP/ji/9V0i1ZdPYlSyYlydfx3/Qu6N5+sgcIvcm7tAqQ=="
       },
       {
         "name": "@agent-teams/document-authoring",
-        "version": "0.3.0",
+        "version": "0.3.2",
         "relationship": "TRANSITIVE",
-        "nodeEngine": ">=24.18.0 <25",
-        "node26StrictInstall": "BLOCKED_BY_UPSTREAM_ENGINE"
+        "nodeEngine": "^24.18.0 || ^26.0.0",
+        "node26StrictInstall": "SUPPORTED",
+        "role": "DEVELOPMENT_TOOLING_LIBRARY",
+        "integrity": "sha512-GzdetjP25KJfThxNk7UhtAZ28rOb6T/rTRrjYSrp2rYaEt0do5XF4pGjIVdeSzh+zXH0ULu58TZsuhOJi0Q0Mw=="
       },
       {
         "name": "@agent-teams/repository-mutation",
-        "version": "0.2.0",
+        "version": "0.2.2",
         "relationship": "TRANSITIVE",
-        "nodeEngine": ">=24.18.0 <25",
-        "node26StrictInstall": "BLOCKED_BY_UPSTREAM_ENGINE"
+        "nodeEngine": "^24.18.0 || ^26.0.0",
+        "node26StrictInstall": "SUPPORTED",
+        "role": "DEVELOPMENT_TOOLING_LIBRARY",
+        "integrity": "sha512-4G6kkQKA7ua4z9mxxn1XNrBUgngWeQ+UufDnQ34YdYv26DZi1/pUYwGoKajFluhUNDXhvqf4fMJQu0nI6m6jdg=="
       }
     ],
     "runtime": []
@@ -81,5 +91,14 @@
       "version": "0.0.0",
       "runtimeDependencies": []
     }
-  ]
+  ],
+  "managedDocsRuntime": {
+    "package": "@agent-teams/docs-protocol-agent-teams",
+    "policySource": "@agent-teams/docs-protocol-agent-teams/schemas/qualified-docs-cohort/v2.schema.json",
+    "authority": "CENTRAL_DOCS_COHORT",
+    "nodeEngine": ">=24.18.0 <25",
+    "pnpmEngine": ">=11.17.0 <12",
+    "node26Qualification": "NOT_QUALIFIED",
+    "cohortUpgrade": "NOT_AUTHORIZED_BY_PACKAGE_ENGINE"
+  }
 }

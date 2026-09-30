@@ -52,6 +52,14 @@ function compareVersions(left, right) {
 }
 
 function satisfiesComparator(version, comparator) {
+  const caret = /^\^(\d+)\.(\d+)\.(\d+)$/u.exec(comparator);
+  if (caret) {
+    const [, major, minor, patch] = caret.map(Number);
+    const upper = major > 0 ? `${major + 1}.0.0`
+      : minor > 0 ? `0.${minor + 1}.0` : `0.0.${patch + 1}`;
+    return compareVersions(version, `${major}.${minor}.${patch}`) >= 0 &&
+      compareVersions(version, upper) < 0;
+  }
   const match = /^(>=|>|<=|<|=)?(\d+(?:\.\d+){0,2})$/.exec(comparator.trim());
   if (!match) {
     fail(`Unsupported engine comparator: ${comparator}`);
@@ -72,12 +80,11 @@ function satisfiesComparator(version, comparator) {
 }
 
 function satisfiesRange(version, range) {
-  return range
-    .split("||")
-    .some((alternative) => alternative
-      .trim()
-      .split(/\s+/u)
-      .every((comparator) => satisfiesComparator(version, comparator)));
+  // Evaluate every comparator so an unsupported clause cannot hide behind a
+  // satisfied alternative or a failing lower bound.
+  const alternatives = range.split("||").map((alternative) => alternative
+    .trim().split(/\s+/u).map((comparator) => satisfiesComparator(version, comparator)));
+  return alternatives.some((results) => results.every(Boolean));
 }
 
 async function collectSourceFiles(directory, files = []) {
@@ -124,8 +131,12 @@ export async function candidateInputDigest(root = repositoryRoot) {
     await collectDigestFiles(path.join(root, sourceRoot), files);
   }
   const hash = createHash("sha256");
-  for (const file of files.toSorted()) {
-    const relativePath = path.relative(root, file);
+  const candidates = files.map((file) => ({
+    file,
+    relativePath: path.relative(root, file).split(path.sep).join("/"),
+  })).toSorted((left, right) => left.relativePath < right.relativePath ? -1
+    : left.relativePath > right.relativePath ? 1 : 0);
+  for (const { file, relativePath } of candidates) {
     if (!(await lstat(file)).isFile()) {
       fail(`Candidate input must be a regular file: ${relativePath}`);
     }
@@ -152,21 +163,31 @@ async function collectNodeApis() {
 }
 
 function parseLockedAgentTeamsPackages(lockfile) {
+  const document = YAML.parseDocument(lockfile, { uniqueKeys: true });
+  if (document.errors.length > 0) {
+    fail(`Invalid pnpm lockfile: ${document.errors[0].message}`);
+  }
+  const lock = document.toJS();
+  if (!lock?.packages || !lock.importers?.["."]) {
+    fail("pnpm lockfile must contain packages and the root importer");
+  }
   const packages = new Map();
-  const packagesStart = lockfile.indexOf("\npackages:\n");
-  const snapshotsStart = lockfile.indexOf("\nsnapshots:\n");
-  const packageSection = lockfile.slice(packagesStart, snapshotsStart);
-  const packagePattern = /^ {2}'(@agent-teams\/[^']+)':\n([\s\S]*?)(?=^ {2}[^ \n]|^snapshots:)/gmu;
-  for (const match of packageSection.matchAll(packagePattern)) {
-    const identity = match[1];
+  for (const [identity, evidence] of Object.entries(lock.packages)) {
+    if (!identity.startsWith("@agent-teams/")) {
+      continue;
+    }
     const versionSeparator = identity.lastIndexOf("@");
     const name = identity.slice(0, versionSeparator);
     const version = identity.slice(versionSeparator + 1);
-    const engineMatch = /engines: \{node: '([^']+)'/u.exec(match[2]);
+    if (typeof evidence.engines?.node !== "string" || typeof evidence.resolution?.integrity !== "string") {
+      fail(`Missing published package engine or integrity evidence: ${identity}`);
+    }
     packages.set(`${name}@${version}`, {
       name,
       version,
-      nodeEngine: engineMatch?.[1] ?? ">=0",
+      nodeEngine: evidence.engines.node,
+      integrity: evidence.resolution.integrity,
+      direct: lock.importers["."].devDependencies?.[name],
     });
   }
   return packages;
@@ -179,12 +200,34 @@ function recordedDependencyKeys(compatibility) {
   ].map((dependency) => `${dependency.name}@${dependency.version}`);
 }
 
-function validateUpstreamDependencies(compatibility, lockedPackages) {
+function validateDependencyEvidence(dependency, lockedDependency, packageManifest) {
+  const identity = `${dependency.name}@${dependency.version}`;
+  if (lockedDependency.integrity !== dependency.integrity) {
+    fail(`Published integrity drift for ${identity}`);
+  }
+  const direct = packageManifest.devDependencies?.[dependency.name];
+  const expectedRelationship = direct ? "DIRECT" : "TRANSITIVE";
+  if (dependency.relationship !== expectedRelationship || (direct &&
+    (direct !== dependency.version || lockedDependency.direct?.specifier !== direct ||
+      lockedDependency.direct?.version?.split("(")[0] !== direct))) {
+    fail(`Published dependency relationship or exact root pin drift for ${identity}`);
+  }
+  const expectedRole = dependency.name === "@agent-teams/docs-protocol-agent-teams"
+    ? "MANAGED_DOCS_ADAPTER" : direct ? "DEVELOPMENT_TOOLING" : "DEVELOPMENT_TOOLING_LIBRARY";
+  if (dependency.role !== expectedRole) {
+    fail(`Published dependency role drift for ${identity}`);
+  }
+}
+
+function validateUpstreamDependencies(compatibility, lockedPackages, packageManifest) {
   const dependencies = [
     ...compatibility.upstreamDependencies.foundation.map((dependency) => ({ ...dependency, owner: "foundation" })),
     ...compatibility.upstreamDependencies.runtime.map((dependency) => ({ ...dependency, owner: "runtime" })),
   ];
   const recordedKeys = new Set(recordedDependencyKeys(compatibility));
+  if (recordedKeys.size !== dependencies.length) {
+    fail("Duplicate published dependency record");
+  }
   for (const identity of lockedPackages.keys()) {
     if (!recordedKeys.has(identity)) {
       fail(`Published @agent-teams dependency is not recorded: ${identity}`);
@@ -199,6 +242,7 @@ function validateUpstreamDependencies(compatibility, lockedPackages) {
     if (lockedDependency.nodeEngine !== dependency.nodeEngine) {
       fail(`Node engine drift for ${identity}: ${lockedDependency.nodeEngine} != ${dependency.nodeEngine}`);
     }
+    validateDependencyEvidence(dependency, lockedDependency, packageManifest);
     const supported = satisfiesRange(compatibility.platform.candidateVersion, dependency.nodeEngine);
     const expectedStatus = supported ? "SUPPORTED" : "BLOCKED_BY_UPSTREAM_ENGINE";
     if (dependency.node26StrictInstall !== expectedStatus) {
@@ -299,9 +343,9 @@ export function validatePolicyState(state) {
 }
 
 export async function createCompatibilityReport(state) {
-  const { compatibility, lockfile } = state;
+  const { compatibility, lockfile, packageManifest } = state;
   const lockedPackages = parseLockedAgentTeamsPackages(lockfile);
-  const upstreamDependencies = validateUpstreamDependencies(compatibility, lockedPackages);
+  const upstreamDependencies = validateUpstreamDependencies(compatibility, lockedPackages, packageManifest);
   await validatePrivatePackages(compatibility);
 
   const actualNodeApis = await collectNodeApis();
@@ -335,13 +379,17 @@ export async function createCompatibilityReport(state) {
     candidateVersion: compatibility.platform.candidateVersion,
     skippedVersion: compatibility.platform.skippedVersion,
     auditedNodeApis: actualNodeApis,
-    upstreamDependencies: upstreamDependencies.map(({ owner, name, version, nodeEngine, node26StrictInstall }) => ({
+    upstreamDependencies: upstreamDependencies.map(({ owner, name, version, relationship, role, integrity, nodeEngine, node26StrictInstall }) => ({
       owner,
       package: `${name}@${version}`,
+      relationship,
+      role,
+      integrity,
       nodeEngine,
       node26StrictInstall,
     })),
     privatePackages: compatibility.privatePackages,
+    managedDocsRuntime: compatibility.managedDocsRuntime,
     blockers,
     candidateInputDigest: await candidateInputDigest(),
     qualificationEvidence: "NOT_RECORDED",

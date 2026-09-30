@@ -57,8 +57,8 @@
     "quality:scope:check": "agent-teams-foundation quality check --consumer . --scope-only"
   },
   "devDependencies": {
-    "@agent-teams/docs-protocol": "0.6.0",
-    "@agent-teams/engineering-foundation": "1.4.0",
+    "@agent-teams/docs-protocol": "0.6.2",
+    "@agent-teams/engineering-foundation": "1.7.0",
     "@ast-grep/napi": "catalog:",
     "@types/node": "catalog:",
     "@xstate/graph": "catalog:",
@@ -74,7 +74,7 @@
     "unist-util-visit": "catalog:",
     "xstate": "catalog:",
     "yaml": "catalog:",
-    "@agent-teams/docs-protocol-agent-teams": "0.2.9",
+    "@agent-teams/docs-protocol-agent-teams": "0.2.13",
     "oxlint-tsgolint": "catalog:"
   }
 }
