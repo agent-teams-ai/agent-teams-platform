@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import {
+  chmod,
   cp,
   mkdir,
   mkdtemp,
@@ -358,6 +359,7 @@ test("Foundation recovers a partially published Platform package transaction", a
       path.join(root, publishedOperation.path),
       Buffer.from(publishedOperation.after.contentBase64, "base64"),
     );
+    await chmod(path.join(root, publishedOperation.path), 0o644);
     await writeFile(
       journalFile,
       `${JSON.stringify({

@@ -45,8 +45,20 @@ async function safeDecision(
   }
 }
 
+function resolvedEvidence(item: NamedDecision): CreationAuthorityEvidence {
+  if (item.decision.kind !== "allowed") {
+    throw new Error("Authority classification lost an unresolved decision.");
+  }
+  return Object.freeze({
+    source: item.dependency,
+    evidenceRef: item.decision.evidenceRef,
+    revision: item.decision.revision,
+    validUntil: item.decision.validUntil,
+  });
+}
+
 function classify(
-  decisions: readonly NamedDecision[],
+  decisions: readonly [NamedDecision, NamedDecision, NamedDecision],
   checkedAt: number,
 ): CreationAuthorityEvaluation {
   for (const item of decisions) {
@@ -79,17 +91,11 @@ function classify(
         : {}),
     };
   }
-  const evidence = decisions.map((item) => {
-    if (item.decision.kind !== "allowed") {
-      throw new Error("Authority classification lost an unresolved decision.");
-    }
-    return Object.freeze({
-      source: item.dependency,
-      evidenceRef: item.decision.evidenceRef,
-      revision: item.decision.revision,
-      validUntil: item.decision.validUntil,
-    });
-  }) as unknown as CreationAuthorityBasisSnapshot["evidence"];
+  const evidence: CreationAuthorityBasisSnapshot["evidence"] = Object.freeze([
+    resolvedEvidence(decisions[0]),
+    resolvedEvidence(decisions[1]),
+    resolvedEvidence(decisions[2]),
+  ]);
   return {
     kind: "allowed",
     basis: Object.freeze({
