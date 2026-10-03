@@ -182,12 +182,16 @@ function parseLockedAgentTeamsPackages(lockfile) {
     if (typeof evidence.engines?.node !== "string" || typeof evidence.resolution?.integrity !== "string") {
       fail(`Missing published package engine or integrity evidence: ${identity}`);
     }
+    const direct = lock.importers["."].devDependencies?.[name];
+    const lockIdentity = `${name}@${direct?.version ?? version}`;
     packages.set(`${name}@${version}`, {
       name,
       version,
       nodeEngine: evidence.engines.node,
       integrity: evidence.resolution.integrity,
-      direct: lock.importers["."].devDependencies?.[name],
+      direct,
+      lockIdentity,
+      snapshotPresent: Object.hasOwn(lock.snapshots ?? {}, lockIdentity),
     });
   }
   return packages;
@@ -207,7 +211,8 @@ function validateDependencyEvidence(dependency, lockedDependency, packageManifes
   }
   const direct = packageManifest.devDependencies?.[dependency.name];
   const expectedRelationship = direct ? "DIRECT" : "TRANSITIVE";
-  if (dependency.relationship !== expectedRelationship || (direct &&
+  if (dependency.lockIdentity !== lockedDependency.lockIdentity || !lockedDependency.snapshotPresent ||
+    dependency.relationship !== expectedRelationship || (direct &&
     (direct !== dependency.version || lockedDependency.direct?.specifier !== direct ||
       lockedDependency.direct?.version?.split("(")[0] !== direct))) {
     fail(`Published dependency relationship or exact root pin drift for ${identity}`);
@@ -379,12 +384,13 @@ export async function createCompatibilityReport(state) {
     candidateVersion: compatibility.platform.candidateVersion,
     skippedVersion: compatibility.platform.skippedVersion,
     auditedNodeApis: actualNodeApis,
-    upstreamDependencies: upstreamDependencies.map(({ owner, name, version, relationship, role, integrity, nodeEngine, node26StrictInstall }) => ({
+    upstreamDependencies: upstreamDependencies.map(({ owner, name, version, relationship, role, integrity, lockIdentity, nodeEngine, node26StrictInstall }) => ({
       owner,
       package: `${name}@${version}`,
       relationship,
       role,
       integrity,
+      lockIdentity,
       nodeEngine,
       node26StrictInstall,
     })),

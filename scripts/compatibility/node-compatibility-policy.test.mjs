@@ -28,6 +28,14 @@ test("policy rejects unauthorized cutover, disabled LTS gate, and wrong target",
     assert.throws(() => validatePolicyState(changed), expected);
   }
 
+  // A coherent rollback to the former default must not bypass current Main policy.
+  const oldDefault = clone(state);
+  oldDefault.compatibility.platform.productionVersion = "24.18.0";
+  oldDefault.compatibility.platform.engine = ">=24.18.0 <25 || >=26.10.0 <27";
+  oldDefault.packageManifest.engines.node = oldDefault.compatibility.platform.engine;
+  oldDefault.nodeVersion = "24.18.0\n";
+  assert.throws(() => validatePolicyState(oldDefault), /Node compatibility schema violation/u);
+
   const disabledInstallPolicy = clone(state);
   disabledInstallPolicy.workspace = disabledInstallPolicy.workspace.replace("strictPeerDependencies: true", "strictPeerDependencies: false");
   assert.throws(() => validatePolicyState(disabledInstallPolicy), /Effective pnpm workspace setting drift: strictPeerDependencies/u);
@@ -63,6 +71,15 @@ test("published caret engines and exact package evidence are checked from YAML",
   const report = await createCompatibilityReport(state);
   assert.equal(report.status, "NODE26_STRICT_INSTALL_READY");
   assert.equal(report.upstreamDependencies.length, 5);
+  assert.equal(report.productionDefault, "24.21.0");
+  assert.equal(report.candidateVersion, "26.10.0");
+  assert.deepEqual(report.upstreamDependencies.map(({ lockIdentity }) => lockIdentity), [
+    "@agent-teams/engineering-foundation@1.7.2(@types/node@24.13.3)",
+    "@agent-teams/docs-protocol@0.6.2",
+    "@agent-teams/docs-protocol-agent-teams@0.3.2",
+    "@agent-teams/document-authoring@0.3.2",
+    "@agent-teams/repository-mutation@0.2.2",
+  ]);
   assert.ok(report.upstreamDependencies.every(({ nodeEngine }) => nodeEngine === "^24.18.0 || ^26.0.0"));
 
   for (const nodeEngine of ["^24.18.0", "^26.11.0", "^0.26.0", "^0.0.26"]) {
@@ -91,8 +108,8 @@ test("missing, malformed or drifted published evidence fails closed", async () =
     [(changed, lock) => { delete lock.packages[identity].resolution.integrity; }, /Missing published package engine or integrity/u],
     [(changed, lock) => { lock.packages[identity].resolution.integrity = "sha512-drift"; }, /Published integrity drift/u],
     [(changed, lock) => { lock.packages[identity].engines.node = "^24.18.0 || >=26.0.0 unknown"; changed.compatibility.upstreamDependencies.foundation[0].nodeEngine = lock.packages[identity].engines.node; }, /Unsupported engine comparator/u],
-    [(changed, lock) => { lock.importers["."].devDependencies[dependency.name].specifier = "^1.7.0"; }, /exact root pin drift/u],
-    [(changed) => { changed.packageManifest.devDependencies[dependency.name] = "^1.7.0"; }, /exact root pin drift/u],
+    [(changed, lock) => { lock.importers["."].devDependencies[dependency.name].specifier = "^1.7.2"; }, /exact root pin drift/u],
+    [(changed) => { changed.packageManifest.devDependencies[dependency.name] = "^1.7.2"; }, /exact root pin drift/u],
     [(changed) => { changed.compatibility.upstreamDependencies.foundation[0].relationship = "TRANSITIVE"; }, /relationship or exact root pin drift/u],
     [(changed) => { changed.compatibility.upstreamDependencies.foundation[0].role = "MANAGED_DOCS_ADAPTER"; }, /Published dependency role drift/u],
     [(changed) => { changed.compatibility.upstreamDependencies.foundation.push(clone(dependency)); }, /Duplicate published dependency record/u],
@@ -131,19 +148,21 @@ for (const [nodeEngine, supported] of [
   });
 }
 
-test("resolved importer version drift rejects unchanged manifest and published evidence", async () => {
+test("resolved importer version and peer identity drift reject unchanged published evidence", async () => {
   const state = await readCompatibilityState();
-  const changed = clone(state);
-  const lock = YAML.parse(changed.lockfile);
-  const dependency = changed.compatibility.upstreamDependencies.foundation[0];
-  const direct = lock.importers["."].devDependencies[dependency.name];
-  direct.version = "99.0.0";
-  changed.lockfile = YAML.stringify(lock);
-  assert.equal(direct.specifier, dependency.version);
-  assert.deepEqual(changed.packageManifest, state.packageManifest);
-  assert.deepEqual(changed.compatibility, state.compatibility);
-  assert.deepEqual(lock.packages, YAML.parse(state.lockfile).packages);
-  await assert.rejects(createCompatibilityReport(changed), /exact root pin drift/u);
+  const dependency = state.compatibility.upstreamDependencies.foundation[0];
+  for (const resolvedVersion of ["99.0.0", `${dependency.version}(@types/node@0.0.0)`]) {
+    const changed = clone(state);
+    const lock = YAML.parse(changed.lockfile);
+    const direct = lock.importers["."].devDependencies[dependency.name];
+    direct.version = resolvedVersion;
+    changed.lockfile = YAML.stringify(lock);
+    assert.equal(direct.specifier, dependency.version);
+    assert.deepEqual(changed.packageManifest, state.packageManifest);
+    assert.deepEqual(changed.compatibility, state.compatibility);
+    assert.deepEqual(lock.packages, YAML.parse(state.lockfile).packages);
+    await assert.rejects(createCompatibilityReport(changed), /exact root pin drift/u);
+  }
 });
 
 for (const [nodeEngine, lower, lastInMajor, upper] of [

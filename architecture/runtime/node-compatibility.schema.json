@@ -44,10 +44,10 @@
       "additionalProperties": false,
       "required": ["engine", "productionVersion", "candidateVersion", "skippedVersion"],
       "properties": {
-        "engine": { "type": "string" },
-        "productionVersion": { "type": "string" },
-        "candidateVersion": { "type": "string" },
-        "skippedVersion": { "type": "string" }
+        "engine": { "const": ">=24.21.0 <25 || >=26.10.0 <27" },
+        "productionVersion": { "const": "24.21.0" },
+        "candidateVersion": { "const": "26.10.0" },
+        "skippedVersion": { "const": "25.0.0" }
       }
     },
     "qualification": {
@@ -137,7 +137,8 @@
         "nodeEngine",
         "node26StrictInstall",
         "role",
-        "integrity"
+        "integrity",
+        "lockIdentity"
       ],
       "properties": {
         "name": { "type": "string" },
@@ -146,6 +147,7 @@
           "enum": ["DIRECT", "TRANSITIVE", "OPAQUE_EXTERNAL"]
         },
         "role": { "enum": ["DEVELOPMENT_TOOLING", "DEVELOPMENT_TOOLING_LIBRARY", "MANAGED_DOCS_ADAPTER"] },
+        "lockIdentity": { "type": "string" },
         "integrity": { "type": "string", "pattern": "^sha512-[A-Za-z0-9+/]{86}==$" },
         "nodeEngine": { "type": "string" },
         "node26StrictInstall": {

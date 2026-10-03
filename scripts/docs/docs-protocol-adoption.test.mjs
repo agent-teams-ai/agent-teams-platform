@@ -31,7 +31,7 @@ test("qualification authority is active in the selected managed integration", as
   ]);
   assert.equal(integration.schemaVersion, 3);
   assert.match(integration.cohort.cohortId, /^docs-\d{4}-\d{2}-\d{2}-stable\d+$/u);
-  assert.equal(integration.cohort.packages.docsProtocol.version, "0.6.0");
+  assert.equal(integration.cohort.packages.docsProtocol.version, "0.6.2");
   assert.equal(manifest.devDependencies["@agent-teams/engineering-foundation"], integration.cohort.packages.engineeringFoundation.version);
   assert.equal(manifest.devDependencies["@agent-teams/docs-protocol-agent-teams"], integration.cohort.packages.docsProtocolAgentTeams.version);
   assert.deepEqual(integration.qualification, {
