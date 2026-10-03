@@ -83,6 +83,44 @@ The retained upstream review adds an optional dynamic lifecycle candidate and
 Host custody requirements; this upgrade does not establish a Host wiring scope,
 plugin mechanism or SDK authority. Feature Module Standard v1 stays pinned.
 
+## Nondefault Node 26 compatibility
+
+The [compatibility record](../../architecture/runtime/node-compatibility.json)
+and its [schema](../../architecture/runtime/node-compatibility.schema.json)
+retain Node 24.21.0 as the default and admit Node 26.10.0 only as a compatibility
+candidate. Node 25 stays excluded. Cutover requires official Node 26 LTS and
+explicit owner authorization; strict engine and peer checks remain mandatory.
+Package engine support is install readiness, not managed runtime qualification.
+The managed Docs runtime retains its cohort-owned Node 24 range; Node 26 remains
+`NOT_QUALIFIED` for that runtime.
+
+This slice consumes current Main's stable31 generation 2 adoption, Foundation
+1.7.2, portable Docs 0.6.2 and adapter 0.3.2. Supplied Central revision
+`60de441b1420179f574604fbc7c47f9b5bf9637a` binds qualified Docs admission and a
+successful genuine Docs CI check to Main
+`2c8cf54a1ed28d9ef299e999b4d0bab2cea5ba28`. That evidence applies to those
+existing inputs; it cannot qualify this new compatibility candidate. Historical
+migration observations above remain historical evidence.
+
+Reuse Foundation's public development-dependency, registry, source and quality
+gates and Docs' existing portable validation/controller contracts. Platform
+owns only its default/candidate restrictions, public lock evidence inventory and
+Node API audit. Those shared mechanisms do not decide Platform Node cutover.
+The lock inventory includes exact peer-resolved identities and published SRIs;
+the current Main lock is retained without regeneration or a cohort upgrade.
+
+`tooling.node-compatibility` classifies passive development CLI/test source in
+schema v3. It is not a runtime graph module and introduces no Host composition,
+service registry, product port, provider adapter or package. Existing product
+composition and Feature Module Standard pins remain unchanged. No Consumer
+Module Standard adoption or pin is inferred from retained upstream navigation.
+
+`compatibility:check` runs in the default fast/full gates after the unchanged
+`architecture:test` command and its mandatory ten identities. `check:node26` asserts
+actual Node 26.10.0 and runs the focused lane after a fresh strict frozen install.
+Both Node 26 CI jobs install on Node 26 itself. These commands still require
+execution and independent review of the exact integrated candidate before merge.
+
 ## Capability registry
 
 | Capability | Applicable | Enabled | Platform evidence or gate |

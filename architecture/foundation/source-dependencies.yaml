@@ -10,6 +10,7 @@ governedRoots:
   - packages/contexts/project-management/src
   - packages/contexts/project-management/tests
   - scripts/architecture
+  - scripts/compatibility
   - scripts/docs
   - tooling/executable-specifications/scripts
 boundaries:
@@ -42,6 +43,27 @@ boundaries:
         - node:util
       runtimeReferences:
         - dynamic
+  - id: tooling.node-compatibility
+    dependencyMode: development
+    roots:
+      - scripts/compatibility
+    entrypoints: []
+    allow:
+      boundaries: []
+      packages:
+        - ajv
+        - yaml
+      builtins:
+        - node:assert/strict
+        - node:child_process
+        - node:crypto
+        - node:fs
+        - node:fs/promises
+        - node:os
+        - node:path
+        - node:test
+        - node:url
+      runtimeReferences: []
   - id: tooling.docs
     dependencyMode: development
     roots:

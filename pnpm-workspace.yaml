@@ -4,6 +4,9 @@ packages:
   - "tooling/*"
 
 catalogMode: strict
+engineStrict: true
+strictPeerDependencies: true
+saveExact: true
 
 catalog:
   "@xstate/graph": 3.0.4

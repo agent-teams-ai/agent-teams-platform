@@ -7,7 +7,7 @@
   "type": "module",
   "packageManager": "pnpm@11.18.0",
   "engines": {
-    "node": ">=24.21.0 <25",
+    "node": ">=24.21.0 <25 || >=26.10.0 <27",
     "pnpm": ">=11.18.0 <12"
   },
   "scripts": {
@@ -16,9 +16,9 @@
     "architecture:immutability": "node scripts/architecture/validate-qualification-record-history.mjs",
     "architecture:review": "node scripts/architecture/validate-deployment-profiles.mjs --references-only && node scripts/architecture/validate-platform-orchestrator-review.mjs && pnpm architecture:domain",
     "architecture:test": "pnpm architecture:test:required && node --test --test-concurrency=1 scripts/architecture/*.test.mjs",
-    "check": "pnpm foundation:check && pnpm quality:scope && pnpm docs:protocol:check && pnpm architecture:features:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm lint && pnpm lint:typed && pnpm typecheck && pnpm packages:check",
+    "check": "pnpm foundation:check && pnpm quality:scope && pnpm docs:protocol:check && pnpm architecture:features:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm compatibility:check && pnpm lint && pnpm lint:typed && pnpm typecheck && pnpm packages:check",
     "check:changed": "agent-teams-foundation agent-workflow changed --consumer .",
-    "check:fast": "pnpm foundation:check && pnpm quality:scope && pnpm docs:protocol:check && pnpm architecture:features:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm lint && pnpm typecheck && pnpm packages:check:fast",
+    "check:fast": "pnpm foundation:check && pnpm quality:scope && pnpm docs:protocol:check && pnpm architecture:features:check && pnpm architecture:check && pnpm architecture:immutability && pnpm architecture:test && pnpm compatibility:check && pnpm lint && pnpm typecheck && pnpm packages:check:fast",
     "docs:check": "agent-teams-docs check --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:doctor": "agent-teams-docs doctor --consumer . --profile architecture/foundation/docs-protocol.yaml",
     "docs:find": "agent-teams-docs find --consumer . --profile architecture/foundation/docs-protocol.yaml",
@@ -54,7 +54,9 @@
     "quality:scope": "agent-teams-foundation quality check --consumer . --scope-only",
     "lint:typed": "agent-teams-foundation quality check --consumer .",
     "quality:scope:check": "agent-teams-foundation quality check --consumer . --scope-only",
-    "architecture:test:required": "node scripts/architecture/check-required-node-tests.mjs && agent-teams-node-test --contract architecture/foundation/required-node-tests.json -- scripts/architecture/source-dependencies-v3.test.mjs scripts/architecture/foundation-upgrade.test.mjs scripts/architecture/required-node-tests.test.mjs"
+    "architecture:test:required": "node scripts/architecture/check-required-node-tests.mjs && agent-teams-node-test --contract architecture/foundation/required-node-tests.json -- scripts/architecture/source-dependencies-v3.test.mjs scripts/architecture/foundation-upgrade.test.mjs scripts/architecture/required-node-tests.test.mjs",
+    "compatibility:check": "node scripts/compatibility/validate-node-compatibility.mjs && node --test scripts/compatibility/*.test.mjs",
+    "check:node26": "node scripts/compatibility/assert-node26-toolchain.mjs && pnpm compatibility:check && pnpm --filter @agent-teams/platform-project-management run clean && pnpm --filter @agent-teams/platform-project-management run build && pnpm --filter @agent-teams/platform-project-management test && pnpm spec:property"
   },
   "devDependencies": {
     "@agent-teams/docs-protocol": "0.6.2",

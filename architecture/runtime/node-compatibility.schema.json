@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-teams.ai/schemas/platform/node-compatibility.schema.json",
+  "title": "Platform Node runtime compatibility record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "migration",
+    "platform",
+    "qualification",
+    "nodeApis",
+    "upstreamDependencies",
+    "privatePackages",
+    "managedDocsRuntime"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "contract": { "const": "platform.node-runtime-compatibility/v2" },
+    "migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["productionDefault", "node25Policy", "cutover"],
+      "properties": {
+        "productionDefault": {
+          "const": "Node 24 remains production/default until Node 26 officially enters LTS and the owner authorizes cutover."
+        },
+        "node25Policy": { "const": "SKIPPED" },
+        "cutover": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "requiresOfficialLts", "requiresOwnerAuthorization"],
+          "properties": {
+            "status": { "const": "NOT_AUTHORIZED" },
+            "requiresOfficialLts": { "const": true },
+            "requiresOwnerAuthorization": { "const": true }
+          }
+        }
+      }
+    },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine", "productionVersion", "candidateVersion", "skippedVersion"],
+      "properties": {
+        "engine": { "const": ">=24.21.0 <25 || >=26.10.0 <27" },
+        "productionVersion": { "const": "24.21.0" },
+        "candidateVersion": { "const": "26.10.0" },
+        "skippedVersion": { "const": "25.0.0" }
+      }
+    },
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetVersion", "status", "strictInstall", "apiAudit", "focusedCi"],
+      "properties": {
+        "targetVersion": { "type": "string" },
+        "status": {
+          "enum": [
+            "IMPLEMENTED_PENDING_QUALIFICATION",
+            "PENDING_UPSTREAM_ENGINE_COMPATIBILITY",
+            "QUALIFIED"
+          ]
+        },
+        "strictInstall": {
+          "enum": [
+            "IMPLEMENTED_PENDING_UPSTREAM",
+            "BLOCKED_BY_UPSTREAM_ENGINE",
+            "READY_FOR_STRICT_INSTALL"
+          ]
+        },
+        "apiAudit": { "const": "IMPLEMENTED" },
+        "focusedCi": { "const": "IMPLEMENTED" }
+      }
+    },
+    "managedDocsRuntime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["package", "policySource", "authority", "nodeEngine", "pnpmEngine", "node26Qualification", "cohortUpgrade"],
+      "properties": {
+        "package": { "const": "@agent-teams/docs-protocol-agent-teams" },
+        "policySource": { "const": "@agent-teams/docs-protocol-agent-teams/schemas/qualified-docs-cohort/v2.schema.json" },
+        "authority": { "const": "CENTRAL_DOCS_COHORT" },
+        "nodeEngine": { "const": ">=24.18.0 <25" },
+        "pnpmEngine": { "const": ">=11.17.0 <12" },
+        "node26Qualification": { "const": "NOT_QUALIFIED" },
+        "cohortUpgrade": { "const": "NOT_AUTHORIZED_BY_PACKAGE_ENGINE" }
+      }
+    },
+    "nodeApis": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^node:" }
+    },
+    "upstreamDependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["foundation", "runtime"],
+      "properties": {
+        "foundation": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/upstreamDependency" }
+        },
+        "runtime": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/upstreamDependency" }
+        }
+      }
+    },
+    "privatePackages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version", "runtimeDependencies"],
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "runtimeDependencies": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "upstreamDependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version",
+        "relationship",
+        "nodeEngine",
+        "node26StrictInstall",
+        "role",
+        "integrity",
+        "lockIdentity"
+      ],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "relationship": {
+          "enum": ["DIRECT", "TRANSITIVE", "OPAQUE_EXTERNAL"]
+        },
+        "role": { "enum": ["DEVELOPMENT_TOOLING", "DEVELOPMENT_TOOLING_LIBRARY", "MANAGED_DOCS_ADAPTER"] },
+        "lockIdentity": { "type": "string" },
+        "integrity": { "type": "string", "pattern": "^sha512-[A-Za-z0-9+/]{86}==$" },
+        "nodeEngine": { "type": "string" },
+        "node26StrictInstall": {
+          "enum": ["SUPPORTED", "BLOCKED_BY_UPSTREAM_ENGINE"]
+        }
+      }
+    }
+  }
+}
