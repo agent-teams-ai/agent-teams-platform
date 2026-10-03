@@ -31,6 +31,58 @@ parallel Foundation-owned replacement schema requires a new accepted Foundation
 ADR proving a real non-atomic migration boundary. External formats retain their
 upstream versions.
 
+## Foundation 1.7.2 migration
+
+The exact root development pin and regenerated frozen registry lock select
+Foundation 1.7.2 after official stable31 migration. Installed Docs qualification
+passed 7/7; changed/fast and the full local repository gate passed. Final GitHub
+CI and ordinary observed admission remain pending. Repository tooling
+uses Node 24.21.0 from `.node-version` and pnpm 11.18.0; required-test execution
+needs Node >=24.21.0 <25. The architecture workflow consumes that tooling pin.
+Product deployment qualifications and the Node 24 production family retain their
+existing authority and evidence.
+
+The shared nested `NODE_TEST_CONTEXT` CLI defect (Foundation#363) was fixed and
+released in Foundation 1.7.2 by
+[Foundation#365](https://github.com/agent-teams-ai/engineering-foundation/pull/365).
+Publication and the public Docs adapter 0.3.2 audit are operator-supplied evidence;
+this source change does not independently repeat them.
+
+`lint:typed` also runs Foundation's default explicit-unknown assertion gate.
+Creation authority now constructs its three-element evidence tuple with checked,
+typed elements. Commercial routing conformance uses the existing complete
+in-memory subject and observes its real store transitions. No bridge admission
+or suppression is needed for these former assertion chains.
+
+`pnpm architecture:test:required` binds an exact critical file selection before
+calling the installed `agent-teams-node-test --contract ... -- ...` command.
+The consumer contract lists exact entry-file, ancestry and test-kind identities
+for source boundaries, quality coverage and runner regressions. Completion,
+omission, skipped identities, OS exception scope and whole-file selection drift
+were verified through real installed Foundation 1.7.2 commands in disposable
+fixtures. All ten required identities completed successfully; this portable
+critical scope has no OS exceptions. The existing comprehensive Node runner is
+retained alongside this small mandatory subset in fast and full gates.
+
+The public Docs adapter 0.3.2 migrated the authentic stable25 origin to
+`docs-2026-10-03-stable31` against protected Central revision
+`2b9bc7397b2548b933532b9861d0fcc2d54c1901`. Its after-check returned current,
+and the regenerated lock passes frozen install. The current exact development
+pins are Foundation 1.7.2, Docs 0.6.2 and adapter 0.3.2. Historical receipts retain
+their original Foundation 1.4.0 authority; they do not qualify this migration.
+The `DOCS_CONSUMER_LOCKFILE_COHORT_MISMATCH` rejecting gate remains active.
+Installed Docs, critical execution, changed/fast and the full local repository
+gate passed. Final GitHub CI and ordinary observed binding remain pending.
+The clean-checkout specification gate snapshots current tracked and intended new
+source bytes, including the candidate lock, and reuses the installed pnpm store
+for four separate frozen offline installs. It can qualify an uncommitted candidate
+without substituting HEAD's earlier dependency or source bytes.
+
+Consumer Module Standard is not adopted by Platform's current feature profile.
+The retained upstream review adds an optional dynamic lifecycle candidate and
+Host custody requirements; this upgrade does not establish a Host wiring scope,
+plugin mechanism or SDK authority. Feature Module Standard v1 stays pinned.
+
 ## Capability registry
 
 | Capability | Applicable | Enabled | Platform evidence or gate |
@@ -43,6 +95,9 @@ upstream versions.
 | `quality.suppression-governance` | Yes | Yes | Package, architecture-script, and executable-specification source roots are governed; no waiver currently exists |
 | `quality.executable-specifications` | Yes | Yes | The Project Management model, property, mutation, and production-conformance bindings are blocking |
 | `architecture.source-dependencies` | Yes | Yes | Schema v3 covers Project Management, executable specifications, and root `scripts` with `rootPackage: true` |
+| Mandatory Node execution | Yes | Yes | `architecture:test:required` uses the public installed CLI and exact consumer contract; gate DAG orchestration is not enabled |
+| Native checks | No | No | Current declared production roots contain TypeScript; `quality:scope` rejects an unsupported or unrouted new language |
+| Dynamic plugins and SDK growth authority | No | No | No accepted dynamic Host or published SDK scope; release eligibility remains false |
 | `contract.json-schema-releases` | Later | No | Current schemas are repository-internal architecture policy; no published release contract, release baseline, or consumer fixture set exists |
 | `package.public-api-compatibility` | No | No | Platform publishes no versioned TypeScript API or SDK |
 | `repository.security-baseline` | No | No | The repository currently publishes no package |

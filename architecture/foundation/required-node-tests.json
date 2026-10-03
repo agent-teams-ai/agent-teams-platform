@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "required": [
+    {
+      "file": "scripts/architecture/source-dependencies-v3.test.mjs",
+      "names": [
+        "live source policy is schema v3 with root package and workspace package roots"
+      ],
+      "kind": "test"
+    },
+    {
+      "file": "scripts/architecture/source-dependencies-v3.test.mjs",
+      "names": [
+        "source v3 rejects includeRootPackage as an unknown public field"
+      ],
+      "kind": "test"
+    },
+    {
+      "file": "scripts/architecture/source-dependencies-v3.test.mjs",
+      "names": [
+        "source v3 rejects a filesystem builtin inside Project Management domain"
+      ],
+      "kind": "test"
+    },
+    {
+      "file": "scripts/architecture/foundation-upgrade.test.mjs",
+      "names": [
+        "installed quality gate rejects an unadmitted unknown assertion"
+      ],
+      "kind": "test"
+    },
+    {
+      "file": "scripts/architecture/foundation-upgrade.test.mjs",
+      "names": [
+        "installed source gate rejects a missing declared governed root"
+      ],
+      "kind": "test"
+    },
+    {
+      "file": "scripts/architecture/foundation-upgrade.test.mjs",
+      "names": [
+        "installed quality gate rejects an unreadable declared compiler input"
+      ],
+      "kind": "test"
+    },
+    {
+      "file": "scripts/architecture/foundation-upgrade.test.mjs",
+      "names": [
+        "installed quality gate rejects governed dist hidden by lint exclusions"
+      ],
+      "kind": "test"
+    },
+    {
+      "file": "scripts/architecture/required-node-tests.test.mjs",
+      "names": [
+        "installed mandatory runner accepts completion and rejects omitted or skipped identities"
+      ],
+      "kind": "test"
+    },
+    {
+      "file": "scripts/architecture/required-node-tests.test.mjs",
+      "names": [
+        "installed mandatory runner admits only an exact justified OS exception"
+      ],
+      "kind": "test"
+    },
+    {
+      "file": "scripts/architecture/required-node-tests.test.mjs",
+      "names": [
+        "consumer gate rejects dropping a whole mandatory entry file"
+      ],
+      "kind": "test"
+    }
+  ],
+  "exceptions": []
+}
