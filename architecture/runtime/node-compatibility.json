@@ -2,22 +2,22 @@
   "schemaVersion": 2,
   "contract": "platform.node-runtime-compatibility/v2",
   "migration": {
-    "productionDefault": "Node 24 remains production/default until Node 26 officially enters LTS and the owner authorizes cutover.",
+    "productionDefault": "Node 26.11.1 is the owner-authorized repository default; Node 24 remains an explicit compatibility lane.",
     "node25Policy": "SKIPPED",
     "cutover": {
-      "status": "NOT_AUTHORIZED",
-      "requiresOfficialLts": true,
+      "status": "AUTHORIZED",
+      "requiresOfficialLts": false,
       "requiresOwnerAuthorization": true
     }
   },
   "platform": {
-    "engine": ">=24.21.0 <25 || >=26.10.0 <27",
-    "productionVersion": "24.21.0",
-    "candidateVersion": "26.10.0",
+    "engine": ">=24.21.0 <25 || >=26.11.1 <27",
+    "productionVersion": "26.11.1",
+    "candidateVersion": "26.11.1",
     "skippedVersion": "25.0.0"
   },
   "qualification": {
-    "targetVersion": "26.10.0",
+    "targetVersion": "26.11.1",
     "status": "IMPLEMENTED_PENDING_QUALIFICATION",
     "strictInstall": "READY_FOR_STRICT_INSTALL",
     "apiAudit": "IMPLEMENTED",
