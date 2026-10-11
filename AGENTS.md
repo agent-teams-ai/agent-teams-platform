@@ -73,7 +73,8 @@ Run `pnpm check:changed` during implementation, then `pnpm check:fast` before
 handoff. Run the authoritative `pnpm check` before opening or merging a pull
 request. A passing changed-file or fast check never replaces the complete gate.
 Repository tooling uses the Node patch in `.node-version`; mandatory Node test
-execution requires 24.21.0 or later in the Node 24 family. Keep
+execution uses the owner-authorized Node 26.11.1 default or the explicit
+Node 24 compatibility lane at 24.21.0 or later in that family. Keep
 `architecture:test:required` and its exact selected file binding in fast and full
 gates. Typed production checks reject unadmitted assertion chains through unknown.
 The deployment profile validator is blocking and scans future `domain/` and

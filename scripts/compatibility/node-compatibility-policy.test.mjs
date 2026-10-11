@@ -14,13 +14,13 @@ import {
 
 const clone = (value) => structuredClone(value);
 
-test("policy rejects unauthorized cutover, disabled LTS gate, and wrong target", async () => {
+test("policy rejects unauthorized rollback, revoked owner authorization, and wrong target", async () => {
   const state = await readCompatibilityState();
   validatePolicyState(state);
 
   for (const [mutate, expected] of [
-    [ (record) => { record.migration.cutover.status = "AUTHORIZED"; }, /Node compatibility schema violation/u ],
-    [ (record) => { record.migration.cutover.requiresOfficialLts = false; }, /Node compatibility schema violation/u ],
+    [ (record) => { record.migration.cutover.status = "NOT_AUTHORIZED"; }, /Node compatibility schema violation/u ],
+    [ (record) => { record.migration.cutover.requiresOwnerAuthorization = false; }, /Node compatibility schema violation/u ],
     [ (record) => { record.qualification.targetVersion = "25.0.0"; }, /Qualification target must equal/u ],
   ]) {
     const changed = clone(state);
@@ -71,8 +71,8 @@ test("published caret engines and exact package evidence are checked from YAML",
   const report = await createCompatibilityReport(state);
   assert.equal(report.status, "NODE26_STRICT_INSTALL_READY");
   assert.equal(report.upstreamDependencies.length, 5);
-  assert.equal(report.productionDefault, "24.21.0");
-  assert.equal(report.candidateVersion, "26.10.0");
+  assert.equal(report.productionDefault, "26.11.1");
+  assert.equal(report.candidateVersion, "26.11.1");
   assert.deepEqual(report.upstreamDependencies.map(({ lockIdentity }) => lockIdentity), [
     "@agent-teams/engineering-foundation@1.7.2(@types/node@24.13.3)",
     "@agent-teams/docs-protocol@0.6.2",
@@ -82,7 +82,7 @@ test("published caret engines and exact package evidence are checked from YAML",
   ]);
   assert.ok(report.upstreamDependencies.every(({ nodeEngine }) => nodeEngine === "^24.18.0 || ^26.0.0"));
 
-  for (const nodeEngine of ["^24.18.0", "^26.11.0", "^0.26.0", "^0.0.26"]) {
+  for (const nodeEngine of ["^24.18.0", "^26.12.0", "^0.26.0", "^0.0.26"]) {
     const changed = clone(state);
     const lock = YAML.parse(changed.lockfile);
     for (const dependency of changed.compatibility.upstreamDependencies.foundation) {

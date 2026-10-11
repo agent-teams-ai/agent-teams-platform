@@ -24,7 +24,7 @@
       "required": ["productionDefault", "node25Policy", "cutover"],
       "properties": {
         "productionDefault": {
-          "const": "Node 24 remains production/default until Node 26 officially enters LTS and the owner authorizes cutover."
+          "const": "Node 26.11.1 is the owner-authorized repository default; Node 24 remains an explicit compatibility lane."
         },
         "node25Policy": { "const": "SKIPPED" },
         "cutover": {
@@ -32,8 +32,8 @@
           "additionalProperties": false,
           "required": ["status", "requiresOfficialLts", "requiresOwnerAuthorization"],
           "properties": {
-            "status": { "const": "NOT_AUTHORIZED" },
-            "requiresOfficialLts": { "const": true },
+            "status": { "const": "AUTHORIZED" },
+            "requiresOfficialLts": { "const": false },
             "requiresOwnerAuthorization": { "const": true }
           }
         }
@@ -44,9 +44,9 @@
       "additionalProperties": false,
       "required": ["engine", "productionVersion", "candidateVersion", "skippedVersion"],
       "properties": {
-        "engine": { "const": ">=24.21.0 <25 || >=26.10.0 <27" },
-        "productionVersion": { "const": "24.21.0" },
-        "candidateVersion": { "const": "26.10.0" },
+        "engine": { "const": ">=24.21.0 <25 || >=26.11.1 <27" },
+        "productionVersion": { "const": "26.11.1" },
+        "candidateVersion": { "const": "26.11.1" },
         "skippedVersion": { "const": "25.0.0" }
       }
     },

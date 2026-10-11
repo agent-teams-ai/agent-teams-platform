@@ -37,10 +37,10 @@ The exact root development pin and regenerated frozen registry lock select
 Foundation 1.7.2 after official stable31 migration. Installed Docs qualification
 passed 7/7; changed/fast and the full local repository gate passed. Final GitHub
 CI and ordinary observed admission remain pending. Repository tooling
-uses Node 24.21.0 from `.node-version` and pnpm 11.18.0; required-test execution
-needs Node >=24.21.0 <25. The architecture workflow consumes that tooling pin.
-Product deployment qualifications and the Node 24 production family retain their
-existing authority and evidence.
+uses the owner-authorized Node 26.11.1 default from `.node-version` and
+pnpm 11.18.0. Required-test execution retains an explicit Node 24.21.0
+compatibility lane alongside the default. Product deployment qualifications
+retain their existing authority and evidence.
 
 The shared nested `NODE_TEST_CONTEXT` CLI defect (Foundation#363) was fixed and
 released in Foundation 1.7.2 by
@@ -83,13 +83,14 @@ The retained upstream review adds an optional dynamic lifecycle candidate and
 Host custody requirements; this upgrade does not establish a Host wiring scope,
 plugin mechanism or SDK authority. Feature Module Standard v1 stays pinned.
 
-## Nondefault Node 26 compatibility
+## Default Node 26 toolchain and Node 24 compatibility
 
 The [compatibility record](../../architecture/runtime/node-compatibility.json)
 and its [schema](../../architecture/runtime/node-compatibility.schema.json)
-retain Node 24.21.0 as the default and admit Node 26.10.0 only as a compatibility
-candidate. Node 25 stays excluded. Cutover requires official Node 26 LTS and
-explicit owner authorization; strict engine and peer checks remain mandatory.
+select Node 26.11.1 as the repository default under the owner authorization
+of 2026-10-11, which supersedes the former official-LTS prerequisite. Node
+24.21.0 remains an explicit full-gate compatibility lane. Node 25 stays excluded;
+strict engine and peer checks remain mandatory.
 Package engine support is install readiness, not managed runtime qualification.
 The managed Docs runtime retains its cohort-owned Node 24 range; Node 26 remains
 `NOT_QUALIFIED` for that runtime.
@@ -117,7 +118,7 @@ Module Standard adoption or pin is inferred from retained upstream navigation.
 
 `compatibility:check` runs in the default fast/full gates after the unchanged
 `architecture:test` command and its mandatory ten identities. `check:node26` asserts
-actual Node 26.10.0 and runs the focused lane after a fresh strict frozen install.
+actual Node 26.11.1 and runs the focused lane after a fresh strict frozen install.
 Both Node 26 CI jobs install on Node 26 itself. These commands still require
 execution and independent review of the exact integrated candidate before merge.
 
