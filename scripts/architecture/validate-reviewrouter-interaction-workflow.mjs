@@ -7,7 +7,7 @@ const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRepositoryRoot = path.resolve(scriptDirectory, "../..");
 const workflowPath = ".github/workflows/reviewrouter-interaction.yml";
 const expectedSourceSha256 =
-  "0997a60c648fcb66e341d011a94ea2721585af9b1611c7e07445c372f0ac5008";
+  "336a904791d2e84164b44b2342aa5acc6d63cff36aac71cbce80a8c6fc8b8843";
 
 export function validateReviewRouterInteractionSource(source) {
   if (
