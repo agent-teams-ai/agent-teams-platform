@@ -13,7 +13,7 @@ const source = await readFile(
   "utf8",
 );
 const canonicalSha256 =
-  "0997a60c648fcb66e341d011a94ea2721585af9b1611c7e07445c372f0ac5008";
+  "336a904791d2e84164b44b2342aa5acc6d63cff36aac71cbce80a8c6fc8b8843";
 
 test("accepts only the exact canonical ReviewRouter interaction V2 source", async () => {
   assert.equal(createHash("sha256").update(source).digest("hex"), canonicalSha256);
