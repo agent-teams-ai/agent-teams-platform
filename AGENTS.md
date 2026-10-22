@@ -17,6 +17,11 @@ Start here:
 
 ## Hard rules
 
+When comparing architecture or technology options, include confidence,
+complexity, and expected reliability scores out of 10, plus a scoped estimate
+of manually written production TypeScript lines. State assumptions and
+exclusions; scores and line ranges are engineering judgments, not measurements.
+
 - Keep Platform, Orchestrator, and Agent Runtime identities and domain models
   separate. Cross-system references are opaque and mapped by ACLs.
 - Do not create empty bounded-context, feature, adapter, or application packages.

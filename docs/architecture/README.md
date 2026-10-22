@@ -22,10 +22,11 @@ summary: Navigation for current and proposed Platform architecture.
 - [Managed scope-admission executable model](managed-scope-admission-executable-model.md)
   defines its internal test authority, modeled axes, and explicit evidence
   limits.
-- [Platform-Orchestrator boundary direction](platform-orchestrator-boundary.md)
-  records the proposed exact cross-system contracts. ADR-0007 accepts the
-  Platform-side strategic ownership, but not those external compatibility
-  surfaces.
+- [Platform-Orchestrator product relationship and boundary](platform-orchestrator-boundary.md)
+  records the independent products, hosted relationship, growth direction,
+  integration and reuse constraints, research navigation, and proposed exact
+  cross-system contracts. ADR-0007 accepts the Platform-side strategic
+  ownership, but not those external compatibility surfaces.
 - [Platform-Orchestrator design review](platform-orchestrator-review/README.md)
   contains the eight proposed matrices, models, and state machines required by
   that review gate.
