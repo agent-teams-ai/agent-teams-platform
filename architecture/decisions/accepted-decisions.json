@@ -36,6 +36,11 @@
       "id": "ADR-0008",
       "path": "docs/decisions/0008-composite-managed-project-scope-readiness.md",
       "immutableDigest": "sha256:a19fa50c9ce3653d144e06ad3587e9b811687d7cae8e96c956bffb2803fb7733"
+    },
+    {
+      "id": "ADR-0009",
+      "path": "docs/decisions/0009-shared-backend-reference-and-public-api-hosting.md",
+      "immutableDigest": "sha256:b95a7fc9844400512776c998e180c6ae6aa53052088d2071700f65f7be8dd616"
     }
   ]
 }

@@ -9,6 +9,7 @@ Use [.agents/skills/docs-authoring/SKILL.md](.agents/skills/docs-authoring/SKILL
 Start here:
 
 - [Documentation index](docs/README.md)
+- [Shared backend reference and Platform applicability](docs/decisions/0009-shared-backend-reference-and-public-api-hosting.md)
 - [Deployment profile architecture](docs/architecture/deployment-profiles.md)
 - [Managed installation control](docs/architecture/managed-installation-control.md)
 - [Accepted decisions](docs/decisions/README.md)

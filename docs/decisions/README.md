@@ -21,6 +21,7 @@ summary: Index of immutable Platform architecture decisions.
 - [ADR-0005: Managed Customer Installation Control](0005-managed-customer-installation-control.md)
 - [ADR-0007: Platform Strategic Context Map and First Project Management Slice](0007-platform-strategic-context-map-and-first-project-management-slice.md)
 - [ADR-0008: Composite Managed Project Scope Readiness](0008-composite-managed-project-scope-readiness.md)
+- [ADR-0009: Shared Backend Reference and Public API Hosting](0009-shared-backend-reference-and-public-api-hosting.md)
 
 ## Superseded Decisions
 

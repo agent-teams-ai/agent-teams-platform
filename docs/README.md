@@ -39,6 +39,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 | Concern | Canonical source |
 | --- | --- |
 | Decision rationale | Accepted ADR |
+| Shared backend selection and Platform applicability | The exact central reference and local scope in [ADR-0009](decisions/0009-shared-backend-reference-and-public-api-hosting.md); frontend choices remain separate |
 | Current profile status and evidence | `architecture/deployment-profiles/deployment-profiles.yaml` |
 | Exact manifest shape | `architecture/deployment-profiles/deployment-profiles.schema.json` |
 | Managed BYOC installation invariants | `architecture/managed-installation/managed-installation-policy.yaml` |
