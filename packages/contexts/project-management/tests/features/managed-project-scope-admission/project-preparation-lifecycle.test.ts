@@ -185,21 +185,21 @@ test("bounds retained process generations and outbox growth", async () => {
   const created = await acceptedProject(subject);
   for (const generation of [1, 2]) {
     await subject.application.cancelProjectPreparation(
-      cancelCommand(created.operationRef, generation),
+      cancelCommand(created.operationRef, generation, `cancel-${generation}`, generation - 1),
     );
     assert.equal(
       (await subject.application.resumeProjectPreparation(
-        resumeCommand(created.operationRef, generation),
+        resumeCommand(created.operationRef, generation, `resume-${generation}`, generation - 1),
       )).kind,
       "accepted",
     );
   }
   await subject.application.cancelProjectPreparation(
-    cancelCommand(created.operationRef, 3),
+    cancelCommand(created.operationRef, 3, "cancel-3", 2),
   );
   assert.deepEqual(
     await subject.application.resumeProjectPreparation(
-      resumeCommand(created.operationRef, 3),
+      resumeCommand(created.operationRef, 3, "resume-3", 2),
     ),
     { kind: "not-resumable" },
   );
@@ -456,6 +456,108 @@ test("resume rechecks an admitted receipt without creating a successor command",
   );
 });
 
+test("same-generation resume fences delayed lifecycle commands while preserving receipt replay", async () => {
+  const subject = fixture();
+  const created = await acceptedProject(subject);
+  subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
+  await subject.worker.dispatchManagedScopeAdmission();
+  await subject.application.cancelProjectPreparation(cancelCommand(created.operationRef));
+  subject.orchestration.recovery = (intent) => ({
+    kind: "receipt",
+    receipt: {
+      kind: "admitted",
+      receiptRef: ids.orchestratorReceipt("cancelled-admitted-receipt"),
+      receiptDigest: intent.commandDigest,
+    },
+  });
+  await subject.worker.reconcileManagedScopeAdmission(created.operationRef);
+  const noOpCancel = cancelCommand(created.operationRef, 1, "no-op-cancel");
+  const delayedResume = resumeCommand(created.operationRef, 1, "delayed-resume");
+  assert.deepEqual(await subject.application.cancelProjectPreparation(noOpCancel), {
+    kind: "cancelled",
+    replayed: false,
+  });
+  assert.equal(subject.store.inspectPreparationCommandReceiptCount(), 1);
+
+  const firstResume = resumeCommand(created.operationRef, 1, "first-resume");
+  assert.deepEqual(await subject.application.resumeProjectPreparation(firstResume), {
+    kind: "accepted",
+    generation: 1,
+    predecessorReceiptRetained: true,
+    replayed: false,
+  });
+  const resumed = await subject.store.loadByOperation(created.operationRef);
+  assert.equal(resumed?.process.state, "receipt-observed");
+  assert.equal(resumed?.process.resumptionCount, 1);
+  assert.deepEqual(await subject.application.cancelProjectPreparation(noOpCancel), {
+    kind: "stale",
+  });
+  assert.deepEqual(await subject.store.loadByOperation(created.operationRef), resumed);
+  assert.equal(subject.store.inspectPreparationCommandReceiptCount(), 2);
+  assert.deepEqual(
+    await subject.application.resumeProjectPreparation({
+      ...firstResume,
+      expectedResumptionCount: 1,
+    }),
+    { kind: "conflict", reason: "COMMAND_DIGEST_MISMATCH" },
+  );
+
+  subject.tenantAuthority.decision = { kind: "denied", reason: "TENANT_ACCESS_REVOKED" };
+  assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), { kind: "blocked" });
+  const blocked = await subject.store.loadByOperation(created.operationRef);
+  assert.deepEqual(await subject.application.resumeProjectPreparation(delayedResume), {
+    kind: "not-resumable",
+  });
+  assert.deepEqual(await subject.store.loadByOperation(created.operationRef), blocked);
+  subject.tenantAuthority.decision = {
+    kind: "allowed",
+    evidenceRef: ids.authorityEvidence("resume-current-authority"),
+    revision: ids.authorityRevision("resume-current-authority"),
+    validUntil: NOW + 60_000,
+  };
+  const readinessQuery = {
+    operationRef: created.operationRef,
+    requesterRef: ids.requester("user-1"),
+    tenantRef: ids.tenant("tenant-1"),
+  };
+  assert.deepEqual(await subject.application.getScopeAdmissionReadiness({
+    ...readinessQuery,
+    tenantRef: ids.tenant("tenant-2"),
+  }), { kind: "not-found" });
+  const preparationAuthority = subject.preparationAuthority.decision;
+  subject.preparationAuthority.decision = { kind: "denied", reason: "READ_NOT_AUTHORIZED" };
+  assert.deepEqual(await subject.application.getScopeAdmissionReadiness(readinessQuery), {
+    kind: "denied",
+    dependency: "project-preparation-authority",
+    reason: "READ_NOT_AUTHORIZED",
+  });
+  subject.preparationAuthority.decision = preparationAuthority;
+  const observed = await subject.application.getScopeAdmissionReadiness(readinessQuery);
+  assert.ok(observed.kind === "found");
+  assert.equal(observed.generation, 1);
+  assert.equal(observed.resumptionCount, 1);
+  assert.equal(
+    (await subject.application.resumeProjectPreparation(
+      resumeCommand(created.operationRef, observed.generation, "current-resume", observed.resumptionCount),
+    )).kind,
+    "accepted",
+  );
+  const current = await subject.store.loadByOperation(created.operationRef);
+  assert.deepEqual(await subject.application.resumeProjectPreparation(firstResume), {
+    kind: "accepted",
+    generation: 1,
+    predecessorReceiptRetained: true,
+    replayed: true,
+  });
+  assert.deepEqual(await subject.store.loadByOperation(created.operationRef), current);
+  assert.equal(current?.process.resumptionCount, 2);
+  assert.equal(current?.process.stepCommandId, resumed?.process.stepCommandId);
+  assert.deepEqual(current?.process.receipt, resumed?.process.receipt);
+  assert.equal(subject.orchestration.submissions.length, 1);
+  assert.equal(subject.store.inspectPreparationCommandReceiptCount(), 3);
+  assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), { kind: "ready" });
+});
+
 test("bounds repeated admitted-receipt reauthorization receipts", async () => {
   const subject = fixture({ maxPreparationGenerations: 3 });
   const created = await acceptedProject(subject);
@@ -485,7 +587,7 @@ test("bounds repeated admitted-receipt reauthorization receipts", async () => {
     };
     assert.equal(
       (await subject.application.resumeProjectPreparation(
-        resumeCommand(created.operationRef, 1, `reauthorize-${attempt}`),
+        resumeCommand(created.operationRef, 1, `reauthorize-${attempt}`, attempt - 1),
       )).kind,
       "accepted",
     );
@@ -505,7 +607,7 @@ test("bounds repeated admitted-receipt reauthorization receipts", async () => {
   };
   assert.deepEqual(
     await subject.application.resumeProjectPreparation(
-      resumeCommand(created.operationRef, 1, "reauthorize-exhausted"),
+      resumeCommand(created.operationRef, 1, "reauthorize-exhausted", 3),
     ),
     { kind: "not-resumable" },
   );

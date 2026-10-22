@@ -4,6 +4,7 @@ suppressionPolicyPath: architecture/foundation/suppression-governance.yaml
 featureProfilePath: architecture/foundation/feature-modules.json
 lintConfigPath: .oxlintrc.type-aware.json
 compilerProjects:
+  - scripts/architecture/tsconfig.json
   - packages/contexts/project-management/tsconfig.json
   - packages/contexts/project-management/tsconfig.test.json
 scripts:

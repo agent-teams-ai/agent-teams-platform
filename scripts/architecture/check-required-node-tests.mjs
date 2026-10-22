@@ -23,7 +23,7 @@ assert.deepEqual([...new Set(contract.required.map(({ file }) => file))].toSorte
   "Every selected critical entry file must have required identities.");
 assert.deepEqual(contract.exceptions, [], "This portable critical scope has no OS exceptions.");
 assert.equal(manifest.scripts["architecture:test"],
-  "pnpm architecture:test:required && node --test --test-concurrency=1 scripts/architecture/*.test.mjs");
+  "pnpm architecture:test:required && node --test --test-concurrency=1 scripts/architecture/*.test.mjs scripts/architecture/*.test.ts");
 for (const gate of ["check:fast", "check"]) {
   assert.ok(manifest.scripts[gate].split(" && ").includes("pnpm architecture:test"), `${gate} must reach mandatory execution`);
 }

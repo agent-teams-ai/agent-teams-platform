@@ -43,6 +43,7 @@ function isResumable(
     process.process.blockReason !== "DATA_INTEGRITY_CONFLICT" &&
     process.process.blockReason !== "DOWNSTREAM_CONFLICT" &&
     process.process.generation === command.expectedGeneration &&
+    process.process.resumptionCount === command.expectedResumptionCount &&
     !preparationGenerationExhausted({
       generation: process.process.generation,
       resumptionCount: process.process.resumptionCount,

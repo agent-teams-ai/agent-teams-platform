@@ -215,6 +215,7 @@ export interface ScopeAdmissionUnitOfWork {
       identity: PreparationCommandIdentity;
       operationRef: ProjectPreparationOperationRef;
       expectedGeneration: number;
+      expectedResumptionCount: number;
       authorityValidUntil: Instant;
     }>,
   ): Promise<CancelScopeAdmissionMutationResult>;

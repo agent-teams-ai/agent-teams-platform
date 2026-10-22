@@ -92,7 +92,9 @@ external evidence referenced opaquely.
   do not create unbounded idempotency rows.
 - Canonical command preimages and their versions belong to Project Management;
   composition supplies only the cryptographic digest primitive.
-- Cancel and resume identities are generation-bound. Resume creates generation
+- Cancel and resume compare the expected generation and resumption count; each new
+  resumption advances that count to fence delayed lifecycle commands, including no-ops.
+  Readiness exposes both preconditions. Resume creates generation
   N+1 only when a new downstream dispatch is required; an admitted receipt is
   re-authorized in generation N. Delayed predecessor evidence cannot mutate a
   successor generation.
