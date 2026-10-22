@@ -96,12 +96,14 @@ export function cancelCommand(
   operationRef: ReturnType<typeof ids.operation>,
   expectedGeneration = 1,
   commandId = `cancel-${expectedGeneration}`,
+  expectedResumptionCount = 0,
 ): ProjectPreparationCommand {
   return {
     commandScope: ids.commandScope("tenant-1:user-1"),
     commandId: ids.preparationCommand(commandId),
     operationRef,
     expectedGeneration,
+    expectedResumptionCount,
     requesterRef: ids.requester("user-1"),
     tenantRef: ids.tenant("tenant-1"),
   };
@@ -111,12 +113,14 @@ export function resumeCommand(
   operationRef: ReturnType<typeof ids.operation>,
   expectedGeneration = 1,
   commandId = `resume-${expectedGeneration}`,
+  expectedResumptionCount = 0,
 ): ProjectPreparationCommand {
   return {
     commandScope: ids.commandScope("tenant-1:user-1"),
     commandId: ids.preparationCommand(commandId),
     operationRef,
     expectedGeneration,
+    expectedResumptionCount,
     requesterRef: ids.requester("user-1"),
     tenantRef: ids.tenant("tenant-1"),
   };

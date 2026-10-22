@@ -29,6 +29,8 @@ export function getScopeAdmissionReadinessUseCase(
     }
     return {
       kind: "found",
+      generation: snapshot.process.generation,
+      resumptionCount: snapshot.process.resumptionCount,
       readiness: scopeAdmissionReadiness({
         ...snapshot,
         maxPreparationGenerations: dependencies.maxPreparationGenerations,

@@ -40,11 +40,12 @@ export function digestPreparationCommand(
   command: ProjectPreparationCommand,
 ): CanonicalCommandDigest {
   return port.digest(canonicalBytes([
-    `agent-teams.platform.project-management.${kind}-project-preparation.v1`,
+    `agent-teams.platform.project-management.${kind}-project-preparation.v2`,
     command.commandScope,
     command.commandId,
     command.operationRef,
     command.expectedGeneration,
+    command.expectedResumptionCount,
     command.requesterRef,
     command.tenantRef,
   ]));

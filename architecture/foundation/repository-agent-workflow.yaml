@@ -30,7 +30,7 @@ changedChecks:
     passPaths: false
   - id: architecture-tests
     script: architecture:test
-    extensions: [.mjs]
+    extensions: [.mjs, .ts]
     passPaths: false
 fullScanPaths:
   - .agents/skills/docs-authoring/SKILL.md

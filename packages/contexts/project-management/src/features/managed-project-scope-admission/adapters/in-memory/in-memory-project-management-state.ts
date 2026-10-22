@@ -163,6 +163,7 @@ export function cancelPreparationInMemory(
     identity: PreparationCommandIdentity;
     operationRef: ProjectPreparationOperationRef;
     expectedGeneration: number;
+    expectedResumptionCount: number;
     authorityValidUntil: number;
   }>,
 ): CancelScopeAdmissionMutationResult {
@@ -181,7 +182,10 @@ export function cancelPreparationInMemory(
   if (snapshot === null) {
     return { kind: "not-found" };
   }
-  if (snapshot.process.generation !== input.expectedGeneration) {
+  if (
+    snapshot.process.generation !== input.expectedGeneration ||
+    snapshot.process.resumptionCount !== input.expectedResumptionCount
+  ) {
     return { kind: "stale" };
   }
   if (now >= input.authorityValidUntil) {
@@ -346,6 +350,7 @@ function matchesResumeSnapshot(
   return current !== null &&
     current.process.revision === expected.process.revision &&
     current.process.generation === expected.process.generation &&
+    current.process.resumptionCount === expected.process.resumptionCount &&
     current.project.incarnation === expected.project.incarnation &&
     current.project.revision === expected.project.revision &&
     current.project.lifecycle === "open" &&
