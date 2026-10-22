@@ -51,11 +51,25 @@ recovery, and isolation limits before claiming support at that scale.
 People and AI agents collaborate in the same visible Teams and Task system.
 Tasks admit multiple views; Kanban is one presentation rather than the domain
 model. Orchestrator owns Team, Work, and Run semantics. Human membership
-cardinality, assignment acceptance, and successor contracts for the currently
+in several Teams, one authorized personal-work query, and several equal
+executors on one Task are selected in [Orchestrator ADR-0111][collaboration-decision].
+Assignment takes effect through an authorized command without a mandatory
+offer, coordinator, or all-executor completion quorum. Work Coordination retains
+one Task lifecycle and completion authority. Platform consumes these owner
+contracts; it does not keep a second assignment or completion model.
+Exact identities, persistence and successor contracts for the currently
 Agent-specific roster remain open in [Orchestrator OD-048][mixed-participation].
 Units or departments are possible structures for growth. This direction does
 not accept a new human organization aggregate or automatic authorization
 hierarchy, or replace existing Orchestrator Agent Organization decisions.
+
+Task assignment neither grants access nor approves a dangerous action. Such
+actions will need product approvals; approver eligibility, exact action binding,
+expiry, revocation and dispatch enforcement remain deferred research under
+[Orchestrator OD-032][dangerous-action-approvals]. Product authorization, approval,
+AR technical permission and Work completion retain separate owners. The exact
+Platform authority and delegation mapping remains subject to the cross-repository
+review below.
 
 ## Integration and reuse
 
@@ -110,9 +124,13 @@ qualification gaps. Neither establishes an accepted provider integration,
 product hierarchy, or proof of revocation and provisioning behavior.
 
 A shared visible Workspace may present authorized collaboration without owning
-another Task or membership authority. Its distinction from the existing
-technical execution Workspace, including naming, remains open in Orchestrator.
-No resource rename or public identity change follows from this direction.
+another Task or membership authority. **Execution Directory** is the selected
+name for the managed filesystem resource used during agent execution, including
+remote materializations; **Workspace** remains the UI collaboration and navigation
+term. [Orchestrator ADR-0111][collaboration-decision] records this distinction
+while preserving ADR-0062's registration, allocation and runtime-isolation
+boundaries. Existing resource IDs and public contract names are unchanged;
+exact contract spelling and any migration remain open in Orchestrator OD-019.
 
 Cooperation between customers or independent installations is future work.
 Accepted guest-access semantics require explicit membership, Tenant access,
@@ -132,8 +150,11 @@ Their owning accepted decisions and explicit open questions retain their status.
 - [Identity-provider comparison and source review][identity-research].
 - [Get Modular adoption and scale review][modular-research].
 - [Collaboration, hierarchy, and Workspace review][collaboration-research].
+- [Human collaboration and Execution Directory decision][collaboration-decision].
 
 [mixed-participation]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/open-decisions/OD-048-mixed-human-and-ai-team-participation.md
+[collaboration-decision]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/decisions/0111-human-collaboration-and-execution-directory-terminology.md
+[dangerous-action-approvals]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/open-decisions/OD-032-last-mile-side-effect-safety.md#deferred-dangerous-action-approval-research
 [modular-foundation]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/decisions/0110-mandatory-get-modular-and-nested-feature-foundation.md
 [identity-decision]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/open-decisions/OD-012-identity-authorization-tenant-isolation.md
 [identity-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/research/identity-provider-comparison-2026-10-21.md
