@@ -11,6 +11,9 @@ summary: Navigation for current and proposed Platform architecture.
 - [Shared backend reference and Platform applicability](../decisions/0009-shared-backend-reference-and-public-api-hosting.md)
   records the reviewed central stack, public/private API boundary and capability
   scope without changing product ownership or release qualification.
+- [Fully Local V1 and shared backend profiles](../decisions/0010-fully-local-v1-and-shared-backend-profiles.md)
+  resolves the local V1 scope and preserves common owner code with separate
+  composition, lifecycle and qualification responsibilities.
 - [Feature module standard adoption](feature-module-standard.md) maps Platform
   ownership and enforcement to the [immutable v1 standard](feature-module-standard-v1.md).
 

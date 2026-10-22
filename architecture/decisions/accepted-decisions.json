@@ -41,6 +41,11 @@
       "id": "ADR-0009",
       "path": "docs/decisions/0009-shared-backend-reference-and-public-api-hosting.md",
       "immutableDigest": "sha256:b95a7fc9844400512776c998e180c6ae6aa53052088d2071700f65f7be8dd616"
+    },
+    {
+      "id": "ADR-0010",
+      "path": "docs/decisions/0010-fully-local-v1-and-shared-backend-profiles.md",
+      "immutableDigest": "sha256:4e54fdf76854d0f82be04185641d5fb795826fbc87d36ed91d498925c8636644"
     }
   ]
 }

@@ -33,6 +33,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 - [ADR-0006: Authority-reducing break-glass (Proposed)](decisions/0006-authority-reducing-break-glass.md)
 - [ADR-0007: Platform strategic context map and first Project Management slice](decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md)
 - [ADR-0008: Composite managed Project scope readiness](decisions/0008-composite-managed-project-scope-readiness.md)
+- [ADR-0010: Fully Local V1 and shared backend profiles](decisions/0010-fully-local-v1-and-shared-backend-profiles.md)
 
 ## Sources of truth
 
@@ -40,6 +41,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 | --- | --- |
 | Decision rationale | Accepted ADR |
 | Shared backend selection and Platform applicability | The exact central reference and local scope in [ADR-0009](decisions/0009-shared-backend-reference-and-public-api-hosting.md); frontend choices remain separate |
+| Fully Local V1 and shared implementation boundary | [ADR-0010](decisions/0010-fully-local-v1-and-shared-backend-profiles.md) resolves the historical local release-scope note in ADR-0009; profile readiness still comes from the deployment manifest |
 | Current profile status and evidence | `architecture/deployment-profiles/deployment-profiles.yaml` |
 | Exact manifest shape | `architecture/deployment-profiles/deployment-profiles.schema.json` |
 | Managed BYOC installation invariants | `architecture/managed-installation/managed-installation-policy.yaml` |
