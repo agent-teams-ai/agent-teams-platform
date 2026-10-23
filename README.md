@@ -14,7 +14,7 @@ Start with:
 - [Deployment profiles](docs/architecture/deployment-profiles.md)
 - [Feature module standard adoption](docs/architecture/feature-module-standard.md)
 - [Managed installation control](docs/architecture/managed-installation-control.md)
-- [Platform-Orchestrator boundary direction](docs/architecture/platform-orchestrator-boundary.md)
+- [Platform-Orchestrator product relationship and boundary](docs/architecture/platform-orchestrator-boundary.md)
 
 Run all current deterministic checks with:
 

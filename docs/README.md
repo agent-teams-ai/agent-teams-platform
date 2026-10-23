@@ -19,7 +19,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 - [Managed installation control](architecture/managed-installation-control.md)
 - [Engineering Foundation adoption](architecture/engineering-foundation-adoption.md)
 - [Managed scope-admission executable model](architecture/managed-scope-admission-executable-model.md)
-- [Platform-Orchestrator boundary direction](architecture/platform-orchestrator-boundary.md)
+- [Platform-Orchestrator product relationship and boundary](architecture/platform-orchestrator-boundary.md)
 - [Platform-Orchestrator design review](architecture/platform-orchestrator-review/README.md)
 
 ## Decisions
@@ -51,6 +51,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 | Tactical context design and materialization status | Bounded-context dossiers and their owning ADRs |
 | Reserved package identities | `architecture/package-catalog.yaml` |
 | Current architecture rules | Architecture documents |
+| Product relationship, growth direction, and research navigation | `architecture/platform-orchestrator-boundary.md` |
 | Exact cross-system contracts under review | Proposed boundary document and its eight review artifacts |
 
 The manifest is operational truth. A roadmap target in an ADR never upgrades a

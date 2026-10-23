@@ -3,7 +3,7 @@ id: architecture.platform-orchestrator-boundary
 type: architecture
 status: proposed
 owner: architecture/integration
-summary: Proposed authority, identity, provisioning, and binding boundary between Platform and Orchestrator.
+summary: Product relationship, growth direction, and proposed integration boundary between Platform and Orchestrator.
 related:
   - ADR-0001
   - ADR-0002
@@ -20,6 +20,147 @@ compatibility surfaces. ADR-0007 accepts Platform-side strategic ownership and
 the seven product decisions, but it does not accept provider protocols, ACL
 topology, wire schemas, or Orchestrator-owned models. Those rows still require
 joint review and an owning cross-repository boundary decision.
+
+## Product relationship and growth direction
+
+Orchestrator is an open-source product designed for independent releases.
+It can be self-hosted without the commercial Platform. It owns collaboration and
+orchestration capabilities for standalone and managed customers. Platform is
+the commercial hosted control plane around those capabilities: customer
+administration, commercial access, managed delivery intent, and coordination of
+managed Orchestrator deployments through explicit contracts. The broader
+commercial product includes billing, but ADR-0007 leaves accounting, invoicing,
+payments, and their future context boundaries unreserved.
+
+The managed hosted product is intended to run agents on the service operator's
+servers. This does not prescribe one dedicated Orchestrator instance per
+customer. Customer ownership, semantic organizations, logical tenancy,
+deployment boundaries, placement, and
+physical isolation are separate dimensions. The
+[deployment profiles](deployment-profiles.md) retain their own scope and
+evidence requirements; Managed Shared SaaS is a v1 qualification target, while
+Dedicated, BYOC, and Hybrid remain design-only scope.
+
+The product should support a small human-and-AI team growing into a corporation,
+with multiple semantic organizations, people and roles, collaborative Teams and
+Tasks, and flexible organizational structures. Thousands of concurrently active
+agents are a future scale objective, not a qualified capacity claim. Each
+release and topology must establish measured admission, overload, cancellation,
+recovery, and isolation limits before claiming support at that scale.
+
+People and AI agents collaborate in the same visible Teams and Task system.
+Tasks admit multiple views; Kanban is one presentation rather than the domain
+model. Orchestrator owns Team, Work, and Run semantics. Human membership
+in several Teams, one authorized personal-work query, and several equal
+executors on one Task are selected in [Orchestrator ADR-0111][collaboration-decision].
+Assignment takes effect through an authorized command without a mandatory
+offer, coordinator, or all-executor completion quorum. Work Coordination retains
+one Task lifecycle and completion authority. Platform consumes these owner
+contracts; it does not keep a second assignment or completion model.
+Exact identities, persistence and successor contracts for the currently
+Agent-specific roster remain open in [Orchestrator OD-048][mixed-participation].
+Units or departments are possible structures for growth. This direction does
+not accept a new human organization aggregate or automatic authorization
+hierarchy, or replace existing Orchestrator Agent Organization decisions.
+
+Task assignment neither grants access nor approves a dangerous action. Such
+actions will need product approvals; approver eligibility, exact action binding,
+expiry, revocation and dispatch enforcement remain deferred research under
+[Orchestrator OD-032][dangerous-action-approvals]. Product authorization, approval,
+AR technical permission and Work completion retain separate owners. The exact
+Platform authority and delegation mapping remains subject to the cross-repository
+review below.
+
+## Integration and reuse
+
+Platform must consume Orchestrator-owned API and SDK contracts as they are
+accepted and published. It must not implement a duplicate Task or orchestration
+engine. Orchestrator owns those contracts and their semantic conformance;
+Platform adapters map them into consumer-owned ports and local references.
+Neither product imports the other's domain entities, accesses its database
+directly, or joins the other's transaction.
+
+The products are designed for independent releases. Managed delivery binds
+compatible release and capability versions explicitly. Standalone Orchestrator core has no
+mandatory commercial Platform or cloud-service dependency.
+
+Concrete authentication, provider, transport, or relationship-projection
+mechanisms needed by both products should have one deliberate library owner
+and explicit contracts. A second real consumer or concrete repeated need must
+justify the shared mechanism. Share technical implementation behind narrow
+ports and module contracts without merging product membership policy,
+commercial decisions, Team composition, Task lifecycle, authorization authority,
+or owner-local persistence.
+
+Get Modular is the owner's mandatory TypeScript module composition foundation;
+another homemade module framework is not the target. Each repository owns its
+reviewed adoption, exact artifact pins, composition-seam inventory, nested
+feature enforcement, and activation evidence. Orchestrator records its
+foundation decision in [ADR-0110][modular-foundation]. Platform's
+[local adoption record](feature-module-standard.md) distinguishes this required
+direction from its current v1 profile. This document neither claims a completed
+migration nor activates a new source topology.
+
+## Open mappings and future cooperation
+
+An identity-provider organization, group, or project is an external
+representation. It is not automatically a CustomerOrganization, product Tenant,
+semantic AgentOrganization, Team, ProductProject, Orchestrator scope, or
+deployment. Their bindings and lifecycle consequences require explicit owners.
+
+Existing accepted constraints remain in force: a CustomerOrganization or
+PersonalSpace may own multiple Tenant; each active Tenant has one owner binding;
+each ProductProject belongs to one Tenant; and v1 has at most one active primary
+managed orchestration-scope binding per ProductProject incarnation. These
+constraints do not determine the complete organization-to-scope-to-deployment
+mapping or physical isolation model. The
+[resource identity and binding matrix](platform-orchestrator-review/02-resource-identity-binding-matrix.md)
+retains the exact accepted and proposed distinctions.
+
+Keycloak plus OpenFGA remains the owner's provisional IAM direction.
+[Orchestrator OD-012][identity-decision] owns the provider decision; the
+[identity-provider comparison][identity-research] archives the research and
+qualification gaps. Neither establishes an accepted provider integration,
+product hierarchy, or proof of revocation and provisioning behavior.
+
+A shared visible Workspace may present authorized collaboration without owning
+another Task or membership authority. **Execution Directory** is the selected
+name for the managed filesystem resource used during agent execution, including
+remote materializations; **Workspace** remains the UI collaboration and navigation
+term. [Orchestrator ADR-0111][collaboration-decision] records this distinction
+while preserving ADR-0062's registration, allocation and runtime-isolation
+boundaries. Existing resource IDs and public contract names are unchanged;
+exact contract spelling and any migration remain open in Orchestrator OD-019.
+
+Cooperation between customers or independent installations is future work.
+Accepted guest-access semantics require explicit membership, Tenant access,
+delegation where applicable, scope, and current authorization under the owning
+product's policy. Organization structure, shared hosting, a common identity
+provider, or a shared view never grants inherited access to another customer.
+Cross-installation work requires separately reviewed identity, trust,
+authorization, data-sharing, lifecycle, and recovery contracts.
+
+## Cross-repository source records
+
+The following records are on the branch for
+[Orchestrator draft PR #86][orchestrator-pr]. They are pending work, not merged
+main-branch authority, implementation evidence, or deployment qualification.
+Their owning accepted decisions and explicit open questions retain their status.
+
+- [Identity-provider comparison and source review][identity-research].
+- [Get Modular adoption and scale review][modular-research].
+- [Collaboration, hierarchy, and Workspace review][collaboration-research].
+- [Human collaboration and Execution Directory decision][collaboration-decision].
+
+[mixed-participation]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/open-decisions/OD-048-mixed-human-and-ai-team-participation.md
+[collaboration-decision]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/decisions/0111-human-collaboration-and-execution-directory-terminology.md
+[dangerous-action-approvals]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/open-decisions/OD-032-last-mile-side-effect-safety.md#deferred-dangerous-action-approval-research
+[modular-foundation]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/decisions/0110-mandatory-get-modular-and-nested-feature-foundation.md
+[identity-decision]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/open-decisions/OD-012-identity-authorization-tenant-isolation.md
+[identity-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/research/identity-provider-comparison-2026-10-21.md
+[modular-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/research/get-modular-adoption-and-scale-review-2026-10-21.md
+[collaboration-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/research/collaboration-hierarchy-and-workspace-review-2026-10-22.md
+[orchestrator-pr]: https://github.com/agent-teams-ai/agent-teams-orchestrator/pull/86
 
 ## Agreed direction
 
