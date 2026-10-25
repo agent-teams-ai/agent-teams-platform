@@ -156,9 +156,7 @@ export type ProjectManagementDependencies = Readonly<{
 }>;
 
 export type ProjectManagementApplication = Readonly<{
-  createProductProject(
-    command: CreateProductProjectCommand,
-  ): Promise<CreateProductProjectResult>;
+  createProductProject(command: CreateProductProjectCommand): Promise<CreateProductProjectResult>;
   cancelProjectPreparation(
     command: ProjectPreparationCommand,
   ): Promise<CancelProjectPreparationResult>;

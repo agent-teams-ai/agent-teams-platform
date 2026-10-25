@@ -8,9 +8,7 @@ import { digestPreparationCommand } from "./canonical-command-digests.js";
 
 export function cancelProjectPreparationUseCase(
   dependencies: ProjectManagementDependencies,
-): (
-  command: ProjectPreparationCommand,
-) => Promise<CancelProjectPreparationResult> {
+): (command: ProjectPreparationCommand) => Promise<CancelProjectPreparationResult> {
   return async (command) => {
     const identity = {
       commandScope: command.commandScope,

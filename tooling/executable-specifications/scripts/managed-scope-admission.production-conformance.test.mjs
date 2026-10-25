@@ -14,15 +14,19 @@ test("production retry and blocked-reason cancellation remain conformant", async
   for (const evidence of await domainTraces.productionRecoverableCancellationEvidence()) {
     assertRecoveryPredecessor(evidence);
     assert.equal(evidence.resultKind, "cancelled", evidence.reason);
-    assert.deepEqual(evidence.after, {
-      ...evidence.before,
-      state: "blocked",
-      authority: "closed",
-      reconciliation: "clear",
-      revision: evidence.before.revision + 1,
-      blockReason: "USER_CANCELLED",
-      hasDispatchAuthority: false,
-    }, evidence.reason);
+    assert.deepEqual(
+      evidence.after,
+      {
+        ...evidence.before,
+        state: "blocked",
+        authority: "closed",
+        reconciliation: "clear",
+        revision: evidence.before.revision + 1,
+        blockReason: "USER_CANCELLED",
+        hasDispatchAuthority: false,
+      },
+      evidence.reason,
+    );
   }
 });
 

@@ -26,14 +26,20 @@ export function currentDispatchClaimState(
   const project = state.projects.get(claim.project.id);
   const admission = state.admissions.get(claim.project.id);
   if (
-    process === undefined || outbox === undefined || project === undefined ||
-    admission === undefined || process.revision !== claim.expectedProcessRevision ||
+    process === undefined ||
+    outbox === undefined ||
+    project === undefined ||
+    admission === undefined ||
+    process.revision !== claim.expectedProcessRevision ||
     project.incarnation !== claim.expectedProjectIncarnation ||
-    project.revision !== claim.expectedProjectRevision || project.lifecycle !== "open" ||
+    project.revision !== claim.expectedProjectRevision ||
+    project.lifecycle !== "open" ||
     admission.revision !== claim.expectedAdmissionRevision ||
     admission.lifecycleEpoch !== claim.expectedAdmissionLifecycleEpoch ||
-    outbox.state !== "leased" || outbox.leaseId !== claim.leaseId ||
-    outbox.leaseExpiresAt === null || outbox.leaseExpiresAt <= clock.now()
+    outbox.state !== "leased" ||
+    outbox.leaseId !== claim.leaseId ||
+    outbox.leaseExpiresAt === null ||
+    outbox.leaseExpiresAt <= clock.now()
   ) {
     return null;
   }
@@ -46,7 +52,8 @@ export function expireDispatchLeasesInMemory(
 ): void {
   for (const [outboxId, outbox] of state.outboxes) {
     if (
-      outbox.state !== "leased" || outbox.leaseExpiresAt === null ||
+      outbox.state !== "leased" ||
+      outbox.leaseExpiresAt === null ||
       outbox.leaseExpiresAt > now
     ) {
       continue;
@@ -59,8 +66,12 @@ export function expireDispatchLeasesInMemory(
     }
     state.outboxes.set(outboxId, {
       ...outbox,
-      state: process?.state === "claimed" ? "pending" :
-        process === undefined ? "superseded" : "consumed",
+      state:
+        process?.state === "claimed"
+          ? "pending"
+          : process === undefined
+            ? "superseded"
+            : "consumed",
       notBefore: now,
       leaseId: null,
       leaseExpiresAt: null,

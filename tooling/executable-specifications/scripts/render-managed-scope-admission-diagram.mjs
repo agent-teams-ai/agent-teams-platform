@@ -13,10 +13,7 @@ const diagramUrl = new URL(
 export function renderManagedScopeAdmissionDiagram(specification) {
   const lines = ["stateDiagram-v2"];
   const stateIds = new Map(
-    specification.axes.lifecycle.states.map((state, index) => [
-      state,
-      `lifecycle_${index}`,
-    ]),
+    specification.axes.lifecycle.states.map((state, index) => [state, `lifecycle_${index}`]),
   );
   const stateId = (state) => {
     const identifier = stateIds.get(state);
@@ -32,9 +29,7 @@ export function renderManagedScopeAdmissionDiagram(specification) {
   for (const event of specification.events) {
     for (const source of event.from) {
       const target = event.to === "$same" ? source : event.to;
-      lines.push(
-        `  ${stateId(source)} --> ${stateId(target)}: ${event.type}`,
-      );
+      lines.push(`  ${stateId(source)} --> ${stateId(target)}: ${event.type}`);
     }
   }
   lines.push(

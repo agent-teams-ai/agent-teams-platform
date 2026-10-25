@@ -10,10 +10,7 @@ import YAML from "yaml";
 
 export const DOSSIER_ROOT = "docs/domain/contexts";
 
-const markdownParser = unified()
-  .use(remarkParse)
-  .use(remarkFrontmatter, ["yaml"])
-  .freeze();
+const markdownParser = unified().use(remarkParse).use(remarkFrontmatter, ["yaml"]).freeze();
 
 export function parseYaml(source, subject, errors) {
   const document = YAML.parseDocument(source, { uniqueKeys: true });
@@ -44,9 +41,7 @@ export function parseMarkdown(source, relativePath, errors) {
   const tree = markdownParser.parse(source);
   const yamlNodes = tree.children.filter((node) => node.type === "yaml");
   if (yamlNodes.length !== 1 || tree.children[0] !== yamlNodes[0]) {
-    errors.push(
-      `DOMAIN-DOSSIER-001 ${relativePath} requires one leading YAML frontmatter block`,
-    );
+    errors.push(`DOMAIN-DOSSIER-001 ${relativePath} requires one leading YAML frontmatter block`);
   }
   const headings = new Set();
   const rootHeadings = [];
@@ -67,10 +62,7 @@ export function parseMarkdown(source, relativePath, errors) {
     content: source,
     headings,
     links,
-    metadata:
-      yamlNodes.length === 1
-        ? parseYaml(yamlNodes[0].value, relativePath, errors)
-        : null,
+    metadata: yamlNodes.length === 1 ? parseYaml(yamlNodes[0].value, relativePath, errors) : null,
     path: relativePath,
     rootHeadings,
   };
@@ -97,9 +89,7 @@ export async function loadDossiers(repositoryRoot, errors) {
   const dossiers = [];
   for (const entry of entries) {
     if (entry.isSymbolicLink()) {
-      errors.push(
-        `DOMAIN-DOSSIER-007 symlink is forbidden under ${DOSSIER_ROOT}: ${entry.name}`,
-      );
+      errors.push(`DOMAIN-DOSSIER-007 symlink is forbidden under ${DOSSIER_ROOT}: ${entry.name}`);
     }
   }
   const directories = entries

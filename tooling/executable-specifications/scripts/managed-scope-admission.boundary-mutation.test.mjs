@@ -2,14 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { domainTraces } from "./managed-scope-admission-domain-adapter.mjs";
-import {
-  assertProcessParity,
-  assertReadyParity,
-} from "./managed-scope-admission-invariants.mjs";
-import {
-  runTrace,
-  specification,
-} from "./managed-scope-admission-model.mjs";
+import { assertProcessParity, assertReadyParity } from "./managed-scope-admission-invariants.mjs";
+import { runTrace, specification } from "./managed-scope-admission-model.mjs";
 
 function mutateEvent(type, mutate) {
   const mutant = structuredClone(specification);
@@ -140,10 +134,7 @@ for (const [eventType, field] of [
       event.effects.increment = [field];
     });
     assert.throws(
-      () => assert.deepEqual(
-        runTrace([eventType], mutant).context,
-        runTrace([eventType]).context,
-      ),
+      () => assert.deepEqual(runTrace([eventType], mutant).context, runTrace([eventType]).context),
       { name: "AssertionError" },
     );
   });
@@ -155,10 +146,11 @@ test("kills JSON vocabulary drift against executable domain evidence", () => {
     (reason) => reason !== "DATA_INTEGRITY_CONFLICT",
   );
   assert.throws(
-    () => assert.deepEqual(
-      domainTraces.vocabularyEvidence().blockReasons,
-      mutant.vocabulary.blockReasons,
-    ),
+    () =>
+      assert.deepEqual(
+        domainTraces.vocabularyEvidence().blockReasons,
+        mutant.vocabulary.blockReasons,
+      ),
     { name: "AssertionError" },
   );
 });

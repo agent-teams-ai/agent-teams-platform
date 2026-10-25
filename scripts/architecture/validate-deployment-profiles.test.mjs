@@ -80,11 +80,9 @@ test("rejects a content digest mismatch for an active qualification", async () =
     ],
   ]);
   assert.match(
-    validateDeploymentProfileSemantics(
-      catalog,
-      records,
-      new Date("2026-08-01T00:00:00Z"),
-    ).join("\n"),
+    validateDeploymentProfileSemantics(catalog, records, new Date("2026-08-01T00:00:00Z")).join(
+      "\n",
+    ),
     /DEPLOY-QUALIFIED-003/u,
   );
 });
@@ -95,8 +93,7 @@ test("rejects NOT_APPLICABLE for every current required gate", async () => {
     evidence: [],
     gateId: gate.id,
     outcome: gate.id === "offline-behavior" ? "NOT_APPLICABLE" : "PASS",
-    rationale:
-      gate.id === "offline-behavior" ? "Offline mode is not supported." : undefined,
+    rationale: gate.id === "offline-behavior" ? "Offline mode is not supported." : undefined,
   }));
   const errors = validateQualificationRecordSemantics(
     {
@@ -127,19 +124,16 @@ test("requires a superseding ADR for an additional v1 qualification target", asy
 test("rejects deletion or demotion of an accepted qualification gate", async () => {
   const result = await validateDeploymentProfiles(repositoryRoot);
   const missingCatalog = structuredClone(result.catalog);
-  missingCatalog.qualificationGateCatalog =
-    missingCatalog.qualificationGateCatalog.filter(
-      (gate) => gate.id !== "fencing",
-    );
+  missingCatalog.qualificationGateCatalog = missingCatalog.qualificationGateCatalog.filter(
+    (gate) => gate.id !== "fencing",
+  );
   assert.match(
     validateDeploymentProfileSemantics(missingCatalog).join("\n"),
     /DEPLOY-GATE-001 fencing/u,
   );
 
   const demotedCatalog = structuredClone(result.catalog);
-  const security = demotedCatalog.qualificationGateCatalog.find(
-    (gate) => gate.id === "security",
-  );
+  const security = demotedCatalog.qualificationGateCatalog.find((gate) => gate.id === "security");
   security.requiredForQualification = false;
   assert.match(
     validateDeploymentProfileSemantics(demotedCatalog).join("\n"),
@@ -183,10 +177,7 @@ test("rejects a design evidence-set inheritance cycle", async () => {
     (evidenceSet) => evidenceSet.id === "cross-system-profile-baseline-v1",
   );
   baseline.extendsEvidenceSetIds = ["managed-byoc-control-v1"];
-  assert.match(
-    validateDeploymentProfileSemantics(catalog).join("\n"),
-    /DEPLOY-DESIGNED-005/u,
-  );
+  assert.match(validateDeploymentProfileSemantics(catalog).join("\n"), /DEPLOY-DESIGNED-005/u);
 });
 
 test("rejects proposed markdown as accepted design evidence", async () => {
@@ -210,9 +201,7 @@ test("rejects machine-readable files as accepted design evidence", async () => {
   const baseline = catalog.designEvidenceSets.find(
     (evidenceSet) => evidenceSet.id === "cross-system-profile-baseline-v1",
   );
-  baseline.evidenceRefs.push(
-    "architecture/foundation/repository-agent-workflow.yaml",
-  );
+  baseline.evidenceRefs.push("architecture/foundation/repository-agent-workflow.yaml");
   assert.match(
     (await validateDesignReferences(repositoryRoot, catalog)).join("\n"),
     /DEPLOY-DESIGNED-007/u,
@@ -223,9 +212,7 @@ test("ties accepted evidence sets to their owning architecture decisions", async
   const result = await validateDeploymentProfiles(repositoryRoot);
   const catalog = structuredClone(result.catalog);
   for (const evidenceSet of catalog.designEvidenceSets) {
-    evidenceSet.evidenceRefs = [
-      "docs/decisions/0002-personal-space-tenant-ownership.md",
-    ];
+    evidenceSet.evidenceRefs = ["docs/decisions/0002-personal-space-tenant-ownership.md"];
   }
   assert.match(
     (await validateDesignReferences(repositoryRoot, catalog)).join("\n"),
@@ -312,11 +299,9 @@ test("rejects a Platform authority artifact for Standalone qualification", async
     ],
   ]);
   assert.match(
-    validateDeploymentProfileSemantics(
-      catalog,
-      records,
-      new Date("2026-08-01T00:00:00Z"),
-    ).join("\n"),
+    validateDeploymentProfileSemantics(catalog, records, new Date("2026-08-01T00:00:00Z")).join(
+      "\n",
+    ),
     /DEPLOY-QUALIFIED-007/u,
   );
 });

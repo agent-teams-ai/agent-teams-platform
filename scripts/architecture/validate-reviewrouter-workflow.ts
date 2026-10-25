@@ -73,13 +73,19 @@ export async function validateRepositoryReviewRouterWorkflow(
   ]);
   return [
     ...validateReviewRouterWorkflow(source),
-    ...retiredWorkflows.filter((name) => files.includes(name)).map((name) =>
-      `RR-GATEWAY-RETIRED-001 retired credential-bearing workflow must remain absent: ${name}`,
-    ),
+    ...retiredWorkflows
+      .filter((name) => files.includes(name))
+      .map(
+        (name) =>
+          `RR-GATEWAY-RETIRED-001 retired credential-bearing workflow must remain absent: ${name}`,
+      ),
   ];
 }
 
-if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] !== undefined &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   const errors = await validateRepositoryReviewRouterWorkflow();
   if (errors.length > 0) {
     console.error(errors.join("\n"));

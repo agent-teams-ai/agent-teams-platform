@@ -16,25 +16,52 @@ const source = await readFile(
 
 await test("qualifies the adopted Gateway caller while accepting harmless YAML formatting", async () => {
   assert.deepEqual(await validateRepositoryReviewRouterWorkflow(), []);
-  assert.deepEqual(validateReviewRouterWorkflow(`# reviewed caller\n${source.replace("name:", "name: ")}`), []);
+  assert.deepEqual(
+    validateReviewRouterWorkflow(`# reviewed caller\n${source.replace("name:", "name: ")}`),
+    [],
+  );
 });
 
 const mutations = [
   ["privileged trigger", "  workflow_dispatch:", "  pull_request_target:"],
-  ["optional head input", "review_head_sha: { required: true", "review_head_sha: { required: false"],
+  [
+    "optional head input",
+    "review_head_sha: { required: true",
+    "review_head_sha: { required: false",
+  ],
   ["root permission expansion", "permissions: {}", "permissions: { contents: write }"],
   ["write permission", "pull-requests: read", "pull-requests: write"],
   ["missing OIDC", "id-token: write", "id-token: read"],
-  ["unbound request", "review_request_id: ${{ inputs.review_request_id }}", "review_request_id: unbound"],
+  [
+    "unbound request",
+    "review_request_id: ${{ inputs.review_request_id }}",
+    "review_request_id: unbound",
+  ],
   ["unbound PR", "pr_number: ${{ inputs.pr_number }}", "pr_number: unbound"],
-  ["unbound head", "review_head_sha: ${{ inputs.review_head_sha }}", "review_head_sha: ${{ github.sha }}"],
-  ["bypassed guard", "    if: ${{ inputs.review_request_id != '' && inputs.pr_number != '' && inputs.review_head_sha != '' }}", "    if: ${{ always() }}"],
+  [
+    "unbound head",
+    "review_head_sha: ${{ inputs.review_head_sha }}",
+    "review_head_sha: ${{ github.sha }}",
+  ],
+  [
+    "bypassed guard",
+    "    if: ${{ inputs.review_request_id != '' && inputs.pr_number != '' && inputs.review_head_sha != '' }}",
+    "    if: ${{ always() }}",
+  ],
   ["cross-request serialization", "-${{ inputs.review_request_id }}", "-all-requests"],
   ["request cancellation", "cancel-in-progress: false", "cancel-in-progress: true"],
-  ["runtime selection drift", "reviewrouter-runtime.yml@workflow-v1", "reviewrouter-runtime.yml@main"],
+  [
+    "runtime selection drift",
+    "reviewrouter-runtime.yml@workflow-v1",
+    "reviewrouter-runtime.yml@main",
+  ],
   ["secret inheritance", "    with:", "    secrets: inherit\n    with:"],
   ["local step injection", "    with:", "    steps: [{ run: untrusted }]\n    with:"],
-  ["extra job", "jobs:", "jobs:\n  injected: { runs-on: ubuntu-latest, steps: [{ run: untrusted }] }"],
+  [
+    "extra job",
+    "jobs:",
+    "jobs:\n  injected: { runs-on: ubuntu-latest, steps: [{ run: untrusted }] }",
+  ],
   ["extra root key", "permissions: {}", "env: { EXTRA: true }\npermissions: {}"],
 ] as const;
 
@@ -50,7 +77,10 @@ for (const [name, expected, replacement] of mutations) {
 
 await test("rejects malformed YAML, duplicate authority keys, and non-workflow documents", () => {
   assert.match(validateReviewRouterWorkflow("jobs: [").join("\n"), /RR-GATEWAY-YAML-001/u);
-  assert.match(validateReviewRouterWorkflow(`${source}permissions: {}\n`).join("\n"), /RR-GATEWAY-YAML-001/u);
+  assert.match(
+    validateReviewRouterWorkflow(`${source}permissions: {}\n`).join("\n"),
+    /RR-GATEWAY-YAML-001/u,
+  );
   assert.match(validateReviewRouterWorkflow("null").join("\n"), /RR-GATEWAY-AUTHORITY-001/u);
 });
 

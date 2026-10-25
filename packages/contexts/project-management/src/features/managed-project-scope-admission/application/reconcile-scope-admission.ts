@@ -2,10 +2,7 @@ import type {
   ProjectManagementDependencies,
   ReconcileManagedScopeAdmissionResult,
 } from "./contracts.js";
-import {
-  authorityDisposition,
-  evaluateCreationAuthority,
-} from "./evaluate-creation-authority.js";
+import { authorityDisposition, evaluateCreationAuthority } from "./evaluate-creation-authority.js";
 import type { ScopeAdmissionReceipt } from "../domain/managed-scope-admission-process.js";
 import type { ProjectPreparationOperationRef } from "../domain/value-objects.js";
 import { safeRetryAt, safeRetryExhausted } from "./safe-retry-policy.js";
@@ -27,9 +24,7 @@ function cancellationResult(
 
 export function reconcileManagedScopeAdmissionUseCase(
   dependencies: ProjectManagementDependencies,
-): (
-  operationRef: ProjectPreparationOperationRef,
-) => Promise<ReconcileManagedScopeAdmissionResult> {
+): (operationRef: ProjectPreparationOperationRef) => Promise<ReconcileManagedScopeAdmissionResult> {
   return async (operationRef) => {
     const target = await dependencies.store.loadReconciliationTarget(operationRef);
     if (target === null) {
@@ -59,10 +54,7 @@ export function reconcileManagedScopeAdmissionUseCase(
       }
       if (recovery.kind === "known-not-accepted") {
         if (cancelling) {
-          const result = await dependencies.store.recordCancellationReconciled(
-            target,
-            null,
-          );
+          const result = await dependencies.store.recordCancellationReconciled(target, null);
           return cancellationResult(result);
         }
         const now = dependencies.clock.now();
@@ -71,11 +63,7 @@ export function reconcileManagedScopeAdmissionUseCase(
           target.process.attemptCount,
         );
         const result = await dependencies.store.recordKnownNotAccepted(target, {
-          retryAt: safeRetryAt(
-            dependencies.safeRetryPolicy,
-            now,
-            recovery.retryAfter,
-          ),
+          retryAt: safeRetryAt(dependencies.safeRetryPolicy, now, recovery.retryAfter),
           exhausted,
         });
         return result.kind === "applied"
@@ -85,10 +73,7 @@ export function reconcileManagedScopeAdmissionUseCase(
       receipt = recovery.receipt;
     }
     if (cancelling) {
-      const result = await dependencies.store.recordCancellationReconciled(
-        target,
-        receipt,
-      );
+      const result = await dependencies.store.recordCancellationReconciled(target, receipt);
       return cancellationResult(result);
     }
     const authority = authorityDisposition(
@@ -105,10 +90,7 @@ export function reconcileManagedScopeAdmissionUseCase(
       target,
       receipt,
       authority,
-      safeRetryAt(
-        dependencies.safeRetryPolicy,
-        dependencies.clock.now(),
-      ),
+      safeRetryAt(dependencies.safeRetryPolicy, dependencies.clock.now()),
     );
     if (result.kind === "applied") {
       return { kind: "receipt-recorded" };

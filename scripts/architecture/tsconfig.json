@@ -2,13 +2,8 @@
   "extends": "@agent-teams/engineering-foundation/presets/typescript/node.json",
   "compilerOptions": {
     "noEmit": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "allowImportingTsExtensions": true
   },
-  "include": [
-    "validate-reviewrouter-workflow.ts",
-    "validate-reviewrouter-workflow.test.ts"
-  ]
+  "include": ["validate-reviewrouter-workflow.ts", "validate-reviewrouter-workflow.test.ts"]
 }

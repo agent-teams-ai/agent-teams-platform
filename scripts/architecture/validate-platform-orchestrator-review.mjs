@@ -20,15 +20,7 @@ const matrixFiles = [
   "08-contract-conformance-ownership.md",
 ];
 const traceFile = "concurrency-failure-traces.md";
-const requiredTraceIds = [
-  "CF-01",
-  "CF-02",
-  "CF-03",
-  "CF-04",
-  "CF-05",
-  "RT-01",
-  "RT-02",
-];
+const requiredTraceIds = ["CF-01", "CF-02", "CF-03", "CF-04", "CF-05", "RT-01", "RT-02"];
 const requiredTraceTerms = new Map([
   ["CF-01", ["linearization point", "crash windows", "response loss", "receipt"]],
   ["CF-02", ["concurrent", "same identity", "digest", "conflict"]],
@@ -66,9 +58,7 @@ const stalePhrases = [
 ];
 
 function markdownFrontmatter(source) {
-  const match = source.match(
-    /^---\r?\n(?<yaml>[\s\S]*?)\r?\n---(?:\r?\n|$)/u,
-  );
+  const match = source.match(/^---\r?\n(?<yaml>[\s\S]*?)\r?\n---(?:\r?\n|$)/u);
   if (!match?.groups?.yaml) {
     return null;
   }
@@ -84,14 +74,16 @@ function tableCells(line) {
   if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) {
     return null;
   }
-  return trimmed.slice(1, -1).split("|").map((cell) => cell.trim());
+  return trimmed
+    .slice(1, -1)
+    .split("|")
+    .map((cell) => cell.trim());
 }
 
 function stripFencedCodeBlocks(content) {
   let fence = null;
-  const withoutComments = content.replaceAll(
-    /<!--[\s\S]*?(?:-->|$)/gu,
-    (comment) => comment.replaceAll(/[^\n]/gu, ""),
+  const withoutComments = content.replaceAll(/<!--[\s\S]*?(?:-->|$)/gu, (comment) =>
+    comment.replaceAll(/[^\n]/gu, ""),
   );
   return withoutComments
     .split("\n")
@@ -101,10 +93,7 @@ function stripFencedCodeBlocks(content) {
         if (!opening?.groups?.marker) {
           return line;
         }
-        if (
-          opening.groups.marker[0] === "`" &&
-          opening.groups.info.includes("`")
-        ) {
+        if (opening.groups.marker[0] === "`" && opening.groups.info.includes("`")) {
           return line;
         }
         fence = {
@@ -180,9 +169,7 @@ function validateProseConfirmed(file, lines, lineIndex, errors) {
     return;
   }
   if (!/^\s*-\s+`CONFIRMED`:/u.test(line)) {
-    errors.push(
-      `REVIEW-STATUS-004 ${file} has an unvalidated prose CONFIRMED claim: ${line}`,
-    );
+    errors.push(`REVIEW-STATUS-004 ${file} has an unvalidated prose CONFIRMED claim: ${line}`);
     return;
   }
   const claim = collectProseClaim(lines, lineIndex);
@@ -194,11 +181,7 @@ function validateProseConfirmed(file, lines, lineIndex, errors) {
 }
 
 function statusHeaderIndexes(cells, nextCells) {
-  if (
-    nextCells === null ||
-    nextCells.length !== cells.length ||
-    !isDividerRow(nextCells)
-  ) {
+  if (nextCells === null || nextCells.length !== cells.length || !isDividerRow(nextCells)) {
     return [];
   }
   const statusHeaders = ["status", "semantic status", "representation status"];
@@ -211,9 +194,7 @@ function validateStatusHeaders(file, cells, indexes, errors) {
   const canonicalHeaders = ["Status", "Semantic status", "Representation status"];
   for (const index of indexes) {
     if (!canonicalHeaders.includes(cells[index])) {
-      errors.push(
-        `REVIEW-STATUS-006 ${file} has a non-canonical status header: ${cells[index]}`,
-      );
+      errors.push(`REVIEW-STATUS-006 ${file} has a non-canonical status header: ${cells[index]}`);
     }
   }
 }
@@ -230,33 +211,24 @@ function validateStatusTableRow(file, line, cells, statusColumnIndexes, errors) 
   const statusCells = statusColumnIndexes.map((index) => cells[index] ?? "");
   for (const statusCell of statusCells) {
     if (!/^`(?:CONFIRMED|PROPOSED|OPEN|OUT_OF_SCOPE)`$/u.test(statusCell)) {
-      errors.push(
-        `REVIEW-STATUS-003 ${file} has non-canonical status cell: ${statusCell}`,
-      );
+      errors.push(`REVIEW-STATUS-003 ${file} has non-canonical status cell: ${statusCell}`);
     }
   }
   const hasConfirmedOutsideStatus = cells.some(
-    (cell, index) =>
-      !statusColumnIndexes.includes(index) && /\bCONFIRMED\b/u.test(cell),
+    (cell, index) => !statusColumnIndexes.includes(index) && /\bCONFIRMED\b/u.test(cell),
   );
   if (hasConfirmedOutsideStatus) {
-    errors.push(
-      `REVIEW-STATUS-007 ${file} has CONFIRMED outside a canonical status cell: ${line}`,
-    );
+    errors.push(`REVIEW-STATUS-007 ${file} has CONFIRMED outside a canonical status cell: ${line}`);
   }
   if (!statusCells.some((cell) => /\bCONFIRMED\b/u.test(cell))) {
     return;
   }
   const sourceCell = cells.at(-1) ?? "";
   if (!acceptedSourcePatterns.some((source) => source.test(sourceCell))) {
-    errors.push(
-      `REVIEW-CONFIRMED-001 ${file} has CONFIRMED without accepted evidence: ${line}`,
-    );
+    errors.push(`REVIEW-CONFIRMED-001 ${file} has CONFIRMED without accepted evidence: ${line}`);
   }
   if (/Review proposal/u.test(line)) {
-    errors.push(
-      `REVIEW-CONFIRMED-002 ${file} confirms review-only evidence: ${line}`,
-    );
+    errors.push(`REVIEW-CONFIRMED-002 ${file} confirms review-only evidence: ${line}`);
   }
 }
 
@@ -275,10 +247,7 @@ function validateMatrixStatusTables(file, content, errors) {
       validateProseConfirmed(file, lines, lineIndex, errors);
       continue;
     }
-    const headerIndexes = statusHeaderIndexes(
-      cells,
-      tableCells(lines[lineIndex + 1] ?? ""),
-    );
+    const headerIndexes = statusHeaderIndexes(cells, tableCells(lines[lineIndex + 1] ?? ""));
     if (headerIndexes.length > 0) {
       foundStatusTable = true;
       validateStatusHeaders(file, cells, headerIndexes, errors);
@@ -325,9 +294,7 @@ function validateTraceSection(traceId, section, errors) {
   }
   for (const requiredTerm of requiredTraceTerms.get(traceId) ?? []) {
     if (!section.toLowerCase().includes(requiredTerm.toLowerCase())) {
-      errors.push(
-        `REVIEW-TRACE-006 ${traceId} lacks required semantic term: ${requiredTerm}`,
-      );
+      errors.push(`REVIEW-TRACE-006 ${traceId} lacks required semantic term: ${requiredTerm}`);
     }
   }
   const evidence = conformanceEvidence(section, traceId);
@@ -394,10 +361,7 @@ export async function loadReviewDocuments(repositoryRoot) {
   const documents = new Map();
   for (const file of [...matrixFiles, traceFile, "README.md"]) {
     try {
-      documents.set(
-        file,
-        await readFile(path.join(repositoryRoot, reviewDirectory, file), "utf8"),
-      );
+      documents.set(file, await readFile(path.join(repositoryRoot, reviewDirectory, file), "utf8"));
     } catch (error) {
       if (error.code !== "ENOENT") {
         throw error;
@@ -408,10 +372,7 @@ export async function loadReviewDocuments(repositoryRoot) {
     documents.set(
       "../deployment-profiles.yaml",
       await readFile(
-        path.join(
-          repositoryRoot,
-          "architecture/deployment-profiles/deployment-profiles.yaml",
-        ),
+        path.join(repositoryRoot, "architecture/deployment-profiles/deployment-profiles.yaml"),
         "utf8",
       ),
     );

@@ -22,8 +22,7 @@ function parseArguments(argv) {
   if (baseIndex !== -1 && !argv[baseIndex + 1]) {
     throw new Error("--base requires a Git revision");
   }
-  const root =
-    rootIndex === -1 ? defaultRepositoryRoot : path.resolve(argv[rootIndex + 1]);
+  const root = rootIndex === -1 ? defaultRepositoryRoot : path.resolve(argv[rootIndex + 1]);
   return { base: baseIndex === -1 ? null : argv[baseIndex + 1], root };
 }
 
@@ -41,10 +40,7 @@ export function validateQualificationHistoryEntries(entries) {
   return errors;
 }
 
-export async function validateQualificationRecordHistory(
-  repositoryRoot,
-  base = null,
-) {
+export async function validateQualificationRecordHistory(repositoryRoot, base = null) {
   const argumentsList = ["diff", "--name-status", "--find-renames"];
   if (base) {
     argumentsList.push(base, "HEAD");

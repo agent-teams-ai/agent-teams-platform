@@ -9,10 +9,5 @@
     "rootDir": "src",
     "tsBuildInfoFile": ".cache/tsconfig.tsbuildinfo"
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.mts",
-    "src/**/*.cts"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.mts", "src/**/*.cts"]
 }

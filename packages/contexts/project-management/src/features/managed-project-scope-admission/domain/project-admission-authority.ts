@@ -19,9 +19,7 @@ export type ProjectAdmissionAuthority = Readonly<{
       }>;
 }>;
 
-export function denyProjectAdmission(
-  projectId: ProductProjectId,
-): ProjectAdmissionAuthority {
+export function denyProjectAdmission(projectId: ProductProjectId): ProjectAdmissionAuthority {
   return Object.freeze({
     projectId,
     state: "denied",
@@ -55,10 +53,7 @@ export function allowProjectAdmission(
 export function blockProjectAdmissionForIntegrity(
   authority: ProjectAdmissionAuthority,
 ): ProjectAdmissionAuthority {
-  if (
-    authority.state === "denied" &&
-    authority.basis.kind === "integrity-conflict"
-  ) {
+  if (authority.state === "denied" && authority.basis.kind === "integrity-conflict") {
     return authority;
   }
   return Object.freeze({

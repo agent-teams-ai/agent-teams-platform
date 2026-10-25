@@ -17,11 +17,7 @@ import {
 import { ids } from "../../domain/value-objects.js";
 import { applyScopeAdmissionReceipt } from "../../application/apply-scope-admission-receipt.js";
 import { denyProjectAdmission } from "../../domain/project-admission-authority.js";
-import {
-  authorityBasis,
-  blockedTrace,
-  initialProcess,
-} from "./model-conformance-base-fixture.js";
+import { authorityBasis, blockedTrace, initialProcess } from "./model-conformance-base-fixture.js";
 
 import { command, fixture, NOW } from "./model-conformance-subject.js";
 
@@ -245,19 +241,12 @@ export function domainCommercialRetryExhaustedTrace() {
   let process = claimDispatch(initialProcess());
   process = releaseUnsubmittedDispatch(process, false);
   process = claimDispatch(process);
-  process = releaseUnsubmittedDispatch(
-    process,
-    true,
-    "COMMERCIAL_RESTRICTION",
-  );
+  process = releaseUnsubmittedDispatch(process, true, "COMMERCIAL_RESTRICTION");
   return blockedTrace(process);
 }
 
 export function domainPreDispatchAuthorityDeniedTrace() {
-  const process = blockDispatchForAuthority(
-    claimDispatch(initialProcess()),
-    "AUTHORITY_DENIED",
-  );
+  const process = blockDispatchForAuthority(claimDispatch(initialProcess()), "AUTHORITY_DENIED");
   return blockedTrace(process);
 }
 
@@ -284,9 +273,7 @@ export function domainConflictReceiptTrace() {
   return domainBlockedReceiptTrace("conflict");
 }
 
-function domainReconciledBlockedReceiptTrace(
-  kind: "rejected" | "stale" | "conflict",
-) {
+function domainReconciledBlockedReceiptTrace(kind: "rejected" | "stale" | "conflict") {
   let process = claimDispatch(initialProcess());
   process = authorizeDispatch(process, authorityBasis);
   process = requireReconciliation(process);
@@ -395,9 +382,7 @@ export function domainReconciliationRetryExhaustedTrace() {
   return blockedTrace(process);
 }
 
-function domainAfterReceiptAuthorityTrace(
-  reason: "AUTHORITY_DENIED" | "COMMERCIAL_RESTRICTION",
-) {
+function domainAfterReceiptAuthorityTrace(reason: "AUTHORITY_DENIED" | "COMMERCIAL_RESTRICTION") {
   let process = claimDispatch(initialProcess());
   process = authorizeDispatch(process, authorityBasis);
   process = observeScopeAdmissionReceipt(process, {
@@ -417,10 +402,7 @@ export function domainAfterReceiptCommercialRestrictionTrace() {
   return domainAfterReceiptAuthorityTrace("COMMERCIAL_RESTRICTION");
 }
 
-async function productionCommercialRouting(
-  decision: "denied" | "unavailable",
-  exhausted = true,
-) {
+async function productionCommercialRouting(decision: "denied" | "unavailable", exhausted = true) {
   const subject = fixture({
     safeRetryPolicy: { defaultDelayMs: 1_000, maxDelayMs: 1_000, maxAttempts: 2 },
   });
@@ -428,9 +410,10 @@ async function productionCommercialRouting(
   if (creation.kind !== "accepted") {
     throw new Error("Commercial routing fixture could not create its project.");
   }
-  subject.commercialAuthority.decision = decision === "denied"
-    ? { kind: "denied", reason: "MODEL_COMMERCIAL_DENIED" }
-    : { kind: "unavailable", reason: "MODEL_COMMERCIAL_UNAVAILABLE" };
+  subject.commercialAuthority.decision =
+    decision === "denied"
+      ? { kind: "denied", reason: "MODEL_COMMERCIAL_DENIED" }
+      : { kind: "unavailable", reason: "MODEL_COMMERCIAL_UNAVAILABLE" };
   if (decision === "unavailable" && exhausted) {
     const first = await subject.worker.dispatchManagedScopeAdmission();
     if (first.kind !== "retry") {
@@ -493,7 +476,8 @@ export {
   domainSafeCancellationTrace,
 } from "./model-conformance-cancellation-fixture.js";
 export {
-  domainClaimedTrace, productionDispatchCommittedCancellationEvidence,
+  domainClaimedTrace,
+  productionDispatchCommittedCancellationEvidence,
   productionIntegrityCancellationNoOpEvidence,
   productionNonAdmittedResumeEvidence,
   productionPendingCancellationNoOpEvidence,
@@ -504,7 +488,8 @@ export {
 } from "./model-conformance-freshness-fixture.js";
 export { domainVocabularyEvidence } from "./model-conformance-vocabulary-fixture.js";
 export {
-  productionBlockedResumeEvidence, productionCancellationRecoveryMatrixEvidence,
+  productionBlockedResumeEvidence,
+  productionCancellationRecoveryMatrixEvidence,
   productionReconciliationExhaustionEvidence,
   productionReconciledReceiptMatrixEvidence,
   productionRecoverableCancellationEvidence,

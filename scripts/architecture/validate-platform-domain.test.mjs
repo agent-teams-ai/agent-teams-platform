@@ -46,15 +46,9 @@ test("reproduction preserves immutable plans across compiler upgrades", () => {
   };
   const upgraded = structuredClone(plan);
   upgraded.compiler.version = "0.10.0";
-  assert.deepEqual(
-    reproduciblePlanProjection(plan),
-    reproduciblePlanProjection(upgraded),
-  );
+  assert.deepEqual(reproduciblePlanProjection(plan), reproduciblePlanProjection(upgraded));
   upgraded.compiler.id = "other-compiler";
-  assert.notDeepEqual(
-    reproduciblePlanProjection(plan),
-    reproduciblePlanProjection(upgraded),
-  );
+  assert.notDeepEqual(reproduciblePlanProjection(plan), reproduciblePlanProjection(upgraded));
 });
 
 async function fixture() {
@@ -75,11 +69,9 @@ async function fixture() {
   await cp(path.join(repositoryRoot, "docs/domain"), path.join(root, "docs/domain"), {
     recursive: true,
   });
-  await cp(
-    path.join(repositoryRoot, "docs/decisions"),
-    path.join(root, "docs/decisions"),
-    { recursive: true },
-  );
+  await cp(path.join(repositoryRoot, "docs/decisions"), path.join(root, "docs/decisions"), {
+    recursive: true,
+  });
   const projectDossierFile = path.join(root, projectDossierPath);
   const projectDossier = await readFile(projectDossierFile, "utf8");
   await writeFile(
@@ -109,8 +101,7 @@ async function editYaml(root, relativePath, mutate) {
 }
 
 async function writeProjectManagementIntent(root) {
-  const relativePath =
-    "architecture/scaffolding/intents/context.project-management.yaml";
+  const relativePath = "architecture/scaffolding/intents/context.project-management.yaml";
   await mkdir(path.join(root, path.dirname(relativePath)), { recursive: true });
   await writeFile(
     path.join(root, relativePath),
@@ -160,13 +151,7 @@ Accept the package target together with its first feature slice.
   );
   await execFileAsync(
     process.execPath,
-    [
-      foundationCli,
-      "architecture-decisions-promote-baseline",
-      "--consumer",
-      root,
-      "--json",
-    ],
+    [foundationCli, "architecture-decisions-promote-baseline", "--consumer", root, "--json"],
     { cwd: root },
   );
 
@@ -188,8 +173,7 @@ async function materializeProjectManagement(root) {
   const { stdout: planOutput } = await planFixture(root, intentPath);
   const plan = JSON.parse(planOutput);
   const planPath = "architecture/scaffolding/plans/context.project-management.json";
-  const receiptPath =
-    "architecture/scaffolding/receipts/context.project-management.json";
+  const receiptPath = "architecture/scaffolding/receipts/context.project-management.json";
   await mkdir(path.join(root, path.dirname(planPath)), { recursive: true });
   await mkdir(path.join(root, path.dirname(receiptPath)), { recursive: true });
   await writeFile(path.join(root, planPath), `${JSON.stringify(plan, null, 2)}\n`);
@@ -226,10 +210,8 @@ async function materializeProjectManagement(root) {
     import:
       "./dist/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.js",
   };
-  manifest.scripts.test =
-    "pnpm run test:compile && pnpm run test:unit && pnpm run test:package";
-  manifest.scripts["test:compile"] =
-    "tsc --project tsconfig.test.json --pretty false";
+  manifest.scripts.test = "pnpm run test:compile && pnpm run test:unit && pnpm run test:package";
+  manifest.scripts["test:compile"] = "tsc --project tsconfig.test.json --pretty false";
   manifest.scripts["test:unit"] =
     "node --test --test-concurrency=1 '.cache/tests/tests/**/*.test.js'";
   manifest.scripts["test:package"] =
@@ -290,10 +272,7 @@ test("accepts the Project Management model-conformance testing export", async ()
   const target = YAML.parse(
     await readFile(path.join(repositoryRoot, "architecture/package-catalog.yaml"), "utf8"),
   ).packages.find(({ id }) => id === "context.project-management");
-  assert.deepEqual(
-    await validatePlatformPackageManifest(repositoryRoot, target),
-    [],
-  );
+  assert.deepEqual(await validatePlatformPackageManifest(repositoryRoot, target), []);
 });
 
 test("rejects a Project Management manifest without its testing export", async () => {
@@ -309,10 +288,7 @@ test("rejects a Project Management manifest without its testing export", async (
       `${JSON.stringify(manifest, null, 2)}\n`,
     );
     const target = YAML.parse(
-      await readFile(
-        path.join(repositoryRoot, "architecture/package-catalog.yaml"),
-        "utf8",
-      ),
+      await readFile(path.join(repositoryRoot, "architecture/package-catalog.yaml"), "utf8"),
     ).packages.find(({ id }) => id === "context.project-management");
     assert.deepEqual(await validatePlatformPackageManifest(root, target), [
       `DOMAIN-PACKAGE-002 invalid package envelope: ${packagePath}/package.json`,
@@ -362,16 +338,20 @@ test("Foundation recovers a partially published Platform package transaction", a
     await chmod(path.join(root, publishedOperation.path), 0o644);
     await writeFile(
       journalFile,
-      `${JSON.stringify({
-        schemaVersion: 1,
-        state: "PREPARED",
-        plan,
-        operations: plan.operations.map((operation, index) => ({
-          operationId: operation.id,
-          path: operation.path,
-          state: index === 0 ? "published" : "pending",
-        })),
-      }, null, 2)}\n`,
+      `${JSON.stringify(
+        {
+          schemaVersion: 1,
+          state: "PREPARED",
+          plan,
+          operations: plan.operations.map((operation, index) => ({
+            operationId: operation.id,
+            path: operation.path,
+            state: index === 0 ? "published" : "pending",
+          })),
+        },
+        null,
+        2,
+      )}\n`,
     );
     const { stdout: recoveryOutput } = await execFileAsync(
       process.execPath,
@@ -381,8 +361,9 @@ test("Foundation recovers a partially published Platform package transaction", a
     const receipt = JSON.parse(recoveryOutput);
     assert.equal(receipt.commit.state, "recovered");
     assert.equal(
-      await readFile(path.join(root, packagePath, "package.json"), "utf8")
-        .then((source) => JSON.parse(source).name),
+      await readFile(path.join(root, packagePath, "package.json"), "utf8").then(
+        (source) => JSON.parse(source).name,
+      ),
       "@agent-teams/platform-project-management",
     );
     await assert.rejects(readFile(journalFile, "utf8"), /ENOENT/u);
@@ -489,11 +470,14 @@ test("rejects empty implementation and test files in the first feature", async (
     await materializeProjectManagement(root);
     const featurePath = `${packagePath}/src/features/managed-project-scope-admission`;
     await writeFile(path.join(root, featurePath, "admit-project-scope.ts"), "");
-    await writeFile(path.join(
-      root,
-      packagePath,
-      "tests/features/managed-project-scope-admission/admit-project-scope.test.ts",
-    ), "");
+    await writeFile(
+      path.join(
+        root,
+        packagePath,
+        "tests/features/managed-project-scope-admission/admit-project-scope.test.ts",
+      ),
+      "",
+    );
     assert.match(await validationText(root), /DOMAIN-PACKAGE-006/u);
   });
 });
@@ -551,11 +535,7 @@ test("rejects a feature public surface that exports internal application ports",
     await acceptProjectManagement(root);
     await materializeProjectManagement(root);
     await writeFile(
-      path.join(
-        root,
-        packagePath,
-        "src/features/managed-project-scope-admission/public.ts",
-      ),
+      path.join(root, packagePath, "src/features/managed-project-scope-admission/public.ts"),
       'export type { ProjectManagementStore } from "./application/ports/project-management-store.js";\n',
     );
     assert.match(await validationText(root), /DOMAIN-PACKAGE-008/u);
@@ -583,10 +563,7 @@ test("rejects orphan scaffold evidence before it becomes immutable history", asy
   await withFixture(async (root) => {
     await acceptProjectManagement(root);
     await materializeProjectManagement(root);
-    await writeFile(
-      path.join(root, "architecture/scaffolding/plans/orphan.json"),
-      "{}\n",
-    );
+    await writeFile(path.join(root, "architecture/scaffolding/plans/orphan.json"), "{}\n");
     assert.match(await validationText(root), /DOMAIN-PLAN-007/u);
   });
 });
@@ -596,10 +573,7 @@ test("reproduces committed scaffold operations from the canonical intent", async
     await acceptProjectManagement(root);
     await materializeProjectManagement(root);
     await writeFile(
-      path.join(
-        root,
-        "architecture/scaffolding/intents/context.project-management.yaml",
-      ),
+      path.join(root, "architecture/scaffolding/intents/context.project-management.yaml"),
       YAML.stringify({
         schemaVersion: 1,
         compositionId: "missing-composition",
@@ -614,13 +588,9 @@ test("requires every accepted context package to be dependency-governed", async 
   await withFixture(async (root) => {
     await acceptProjectManagement(root);
     await materializeProjectManagement(root);
-    await editYaml(
-      root,
-      "architecture/foundation/source-dependencies.yaml",
-      (config) => {
-        config.governedRoots = [];
-      },
-    );
+    await editYaml(root, "architecture/foundation/source-dependencies.yaml", (config) => {
+      config.governedRoots = [];
+    });
     assert.match(await validationText(root), /DOMAIN-BOUNDARY-001/u);
   });
 });
@@ -634,10 +604,7 @@ test("rejects an executable test inside the production source root", async () =>
       packagePath,
       "src/features/managed-project-scope-admission/misplaced.test.ts",
     );
-    await writeFile(
-      testFile,
-      `import test from "node:test";\n\ntest("misplaced", () => {});\n`,
-    );
+    await writeFile(testFile, `import test from "node:test";\n\ntest("misplaced", () => {});\n`);
     assert.match(await validationText(root), /DOMAIN-PACKAGE-010/u);
   });
 });
@@ -671,10 +638,7 @@ test("rejects duplicate dossier identities", async () => {
     const dossier = await readFile(dossierFile, "utf8");
     await writeFile(
       dossierFile,
-      dossier.replace(
-        "id: domain.contexts.tenancy",
-        "id: domain.contexts.customer-ownership",
-      ),
+      dossier.replace("id: domain.contexts.tenancy", "id: domain.contexts.customer-ownership"),
     );
     assert.match(await validationText(root), /DOMAIN-DOSSIER-001 duplicate id/u);
   });
@@ -757,10 +721,7 @@ test("does not accept mandatory headings nested inside a blockquote", async () =
   await withFixture(async (root) => {
     const dossierFile = path.join(root, projectDossierPath);
     const dossier = await readFile(dossierFile, "utf8");
-    await writeFile(
-      dossierFile,
-      dossier.replace("\n## Invariants\n", "\n> ## Invariants\n"),
-    );
+    await writeFile(dossierFile, dossier.replace("\n## Invariants\n", "\n> ## Invariants\n"));
     assert.match(await validationText(root), /DOMAIN-DOSSIER-005.*Invariants/u);
   });
 });
@@ -771,10 +732,7 @@ test("rejects regression of an accepted product decision", async () => {
     const packet = await readFile(packetFile, "utf8");
     await writeFile(
       packetFile,
-      packet.replace(
-        "  PO-PLAT-003: accepted",
-        "  PO-PLAT-003: awaiting-product-owner",
-      ),
+      packet.replace("  PO-PLAT-003: accepted", "  PO-PLAT-003: awaiting-product-owner"),
     );
     assert.match(await validationText(root), /DOMAIN-PO-003 PO-PLAT-003/u);
   });
@@ -799,10 +757,7 @@ test("rejects an incomplete product-decision resolution", async () => {
       "docs/decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md",
     );
     const resolution = await readFile(resolutionFile, "utf8");
-    await writeFile(
-      resolutionFile,
-      resolution.replace("  - PO-PLAT-007\n", ""),
-    );
+    await writeFile(resolutionFile, resolution.replace("  - PO-PLAT-007\n", ""));
     assert.match(await validationText(root), /DOMAIN-PO-006/u);
   });
 });
@@ -826,13 +781,7 @@ test("does not accept product-decision sections nested inside a blockquote", asy
   await withFixture(async (root) => {
     const packetFile = path.join(root, productDecisionPacketPath);
     const packet = await readFile(packetFile, "utf8");
-    await writeFile(
-      packetFile,
-      packet.replace("\n### Consequences\n", "\n> ### Consequences\n"),
-    );
-    assert.match(
-      await validationText(root),
-      /DOMAIN-PO-005 PO-PLAT-001 lacks Consequences/u,
-    );
+    await writeFile(packetFile, packet.replace("\n### Consequences\n", "\n> ### Consequences\n"));
+    assert.match(await validationText(root), /DOMAIN-PO-005 PO-PLAT-001 lacks Consequences/u);
   });
 });

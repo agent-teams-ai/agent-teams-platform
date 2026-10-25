@@ -124,23 +124,23 @@ execution and independent review of the exact integrated candidate before merge.
 
 ## Capability registry
 
-| Capability | Applicable | Enabled | Platform evidence or gate |
-| --- | --- | --- | --- |
-| `workspace.dependency-declarations` | Yes | Yes | Root pnpm workspace, exact catalog, and dev-only dependency policy |
-| `repository.agent-workflow` | Yes | Yes | Canonical instructions and changed, fast, and full checks are declared |
-| `documentation.local-references` | Yes | Yes | `docs` is checked with GitHub-compatible anchors and containment |
-| `governance.architecture-decisions` | Yes | Yes | Seven accepted ADRs have a committed immutable baseline |
-| `quality.source-coverage` | Yes | Yes | `quality-source-coverage.yaml` binds source classification, feature ownership, suppression policy, compiler projects and typed lint; `quality:scope` checks scope and `lint:typed` runs typed checks |
-| `quality.suppression-governance` | Yes | Yes | Package, architecture-script, and executable-specification source roots are governed; no waiver currently exists |
-| `quality.executable-specifications` | Yes | Yes | The Project Management model, property, mutation, and production-conformance bindings are blocking |
-| `architecture.source-dependencies` | Yes | Yes | Schema v3 covers Project Management, executable specifications, and root `scripts` with `rootPackage: true` |
-| Mandatory Node execution | Yes | Yes | `architecture:test:required` uses the public installed CLI and exact consumer contract; gate DAG orchestration is not enabled |
-| Native checks | No | No | Current declared production roots contain TypeScript; `quality:scope` rejects an unsupported or unrouted new language |
-| Dynamic plugins and SDK growth authority | No | No | No accepted dynamic Host or published SDK scope; release eligibility remains false |
-| `contract.json-schema-releases` | Later | No | Current schemas are repository-internal architecture policy; no published release contract, release baseline, or consumer fixture set exists |
-| `package.public-api-compatibility` | No | No | Platform publishes no versioned TypeScript API or SDK |
-| `repository.security-baseline` | No | No | The repository currently publishes no package |
-| `contract.protobuf-evolution` | No | No | Platform owns no Protobuf contract |
+| Capability                               | Applicable | Enabled | Platform evidence or gate                                                                                                                                                                            |
+| ---------------------------------------- | ---------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workspace.dependency-declarations`      | Yes        | Yes     | Root pnpm workspace, exact catalog, and dev-only dependency policy                                                                                                                                   |
+| `repository.agent-workflow`              | Yes        | Yes     | Canonical instructions and changed, fast, and full checks are declared                                                                                                                               |
+| `documentation.local-references`         | Yes        | Yes     | `docs` is checked with GitHub-compatible anchors and containment                                                                                                                                     |
+| `governance.architecture-decisions`      | Yes        | Yes     | Seven accepted ADRs have a committed immutable baseline                                                                                                                                              |
+| `quality.source-coverage`                | Yes        | Yes     | `quality-source-coverage.yaml` binds source classification, feature ownership, suppression policy, compiler projects and typed lint; `quality:scope` checks scope and `lint:typed` runs typed checks |
+| `quality.suppression-governance`         | Yes        | Yes     | Package, architecture-script, and executable-specification source roots are governed; no waiver currently exists                                                                                     |
+| `quality.executable-specifications`      | Yes        | Yes     | The Project Management model, property, mutation, and production-conformance bindings are blocking                                                                                                   |
+| `architecture.source-dependencies`       | Yes        | Yes     | Schema v3 covers Project Management, executable specifications, and root `scripts` with `rootPackage: true`                                                                                          |
+| Mandatory Node execution                 | Yes        | Yes     | `architecture:test:required` uses the public installed CLI and exact consumer contract; gate DAG orchestration is not enabled                                                                        |
+| Native checks                            | No         | No      | Current declared production roots contain TypeScript; `quality:scope` rejects an unsupported or unrouted new language                                                                                |
+| Dynamic plugins and SDK growth authority | No         | No      | No accepted dynamic Host or published SDK scope; release eligibility remains false                                                                                                                   |
+| `contract.json-schema-releases`          | Later      | No      | Current schemas are repository-internal architecture policy; no published release contract, release baseline, or consumer fixture set exists                                                         |
+| `package.public-api-compatibility`       | No         | No      | Platform publishes no versioned TypeScript API or SDK                                                                                                                                                |
+| `repository.security-baseline`           | No         | No      | The repository currently publishes no package                                                                                                                                                        |
+| `contract.protobuf-evolution`            | No         | No      | Platform owns no Protobuf contract                                                                                                                                                                   |
 
 Capability presence in `foundation.config.yaml` means blocking. Deferred
 capabilities are not represented by disabled placeholders or fabricated

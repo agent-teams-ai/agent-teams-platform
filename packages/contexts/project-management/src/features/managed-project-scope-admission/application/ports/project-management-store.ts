@@ -134,10 +134,7 @@ export type PreparationCommandReceipt = Readonly<{
   outcome:
     | Readonly<{
         kind: "cancel";
-        result:
-          | "cancelled"
-          | "reconciliation-required"
-          | "already-completed";
+        result: "cancelled" | "reconciliation-required" | "already-completed";
       }>
     | Readonly<{
         kind: "resume";
@@ -223,14 +220,16 @@ export interface ScopeAdmissionUnitOfWork {
     target: ScopeAdmissionReconciliationTarget,
     receipt: ScopeAdmissionReceipt | null,
   ): Promise<ScopeAdmissionMutationResult>;
-  resumePreparation(input: Readonly<{
-    identity: PreparationCommandIdentity;
-    expected: ScopeAdmissionSnapshot;
-    successor: ManagedScopeAdmissionProcess;
-    outbox: ScopeAdmissionOutboxRecord | null;
-    maxGenerations: number;
-    operationAuthorityValidUntil: Instant;
-  }>): Promise<ResumeScopeAdmissionCommitResult>;
+  resumePreparation(
+    input: Readonly<{
+      identity: PreparationCommandIdentity;
+      expected: ScopeAdmissionSnapshot;
+      successor: ManagedScopeAdmissionProcess;
+      outbox: ScopeAdmissionOutboxRecord | null;
+      maxGenerations: number;
+      operationAuthorityValidUntil: Instant;
+    }>,
+  ): Promise<ResumeScopeAdmissionCommitResult>;
   loadPreparationCommandReceipt(
     commandScope: CommandScope,
     commandId: ProjectPreparationCommandId,
