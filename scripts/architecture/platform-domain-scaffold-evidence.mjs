@@ -92,10 +92,7 @@ export async function validateScaffoldEvidence(repositoryRoot, target, errors) {
       intentPath: `architecture/scaffolding/intents/${target.id}.yaml`,
     });
     if (
-      !isDeepStrictEqual(
-        reproduciblePlanProjection(plan),
-        reproduciblePlanProjection(reproduced),
-      )
+      !isDeepStrictEqual(reproduciblePlanProjection(plan), reproduciblePlanProjection(reproduced))
     ) {
       errors.push(`DOMAIN-PLAN-006 compiler reproduction mismatch: ${target.id}`);
     }
@@ -139,9 +136,7 @@ export async function validateScaffoldEvidenceInventory(
 ) {
   const expected = new Set(
     targets
-      .filter((target) =>
-        dossiersById.get(target.owner_document)?.metadata?.status === "accepted"
-      )
+      .filter((target) => dossiersById.get(target.owner_document)?.metadata?.status === "accepted")
       .map((target) => `${target.id}.json`),
   );
   for (const relativeRoot of scaffoldEvidenceRoots) {
@@ -157,14 +152,10 @@ export async function validateScaffoldEvidenceInventory(
       withFileTypes: true,
     });
     const suffix = relativeRoot.endsWith("/intents") ? ".yaml" : ".json";
-    const expectedFiles = new Set(
-      [...expected].map((file) => file.replace(/\.json$/u, suffix)),
-    );
+    const expectedFiles = new Set([...expected].map((file) => file.replace(/\.json$/u, suffix)));
     for (const entry of entries) {
       if (!entry.isFile() || !expectedFiles.has(entry.name)) {
-        errors.push(
-          `DOMAIN-PLAN-007 orphan scaffold evidence: ${relativeRoot}/${entry.name}`,
-        );
+        errors.push(`DOMAIN-PLAN-007 orphan scaffold evidence: ${relativeRoot}/${entry.name}`);
       }
     }
   }

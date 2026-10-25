@@ -2,16 +2,11 @@ import assert from "node:assert/strict";
 
 import { specification } from "./managed-scope-admission-model.mjs";
 
-export function assertCrossAxisInvariants(
-  snapshot,
-  bounds = specification.witnessBounds,
-) {
+export function assertCrossAxisInvariants(snapshot, bounds = specification.witnessBounds) {
   const context = snapshot.context;
   assert.ok(specification.axes.lifecycle.states.includes(snapshot.value));
   assert.ok(specification.axes.authority.states.includes(context.authority));
-  assert.ok(
-    specification.axes.reconciliation.states.includes(context.reconciliation),
-  );
+  assert.ok(specification.axes.reconciliation.states.includes(context.reconciliation));
   assert.ok(context.generation >= specification.axes.generation.minimum);
   assert.ok(context.generation <= bounds.generations);
   assert.ok(context.attemptCount <= bounds.attempts);
@@ -36,10 +31,7 @@ export function assertCrossAxisInvariants(
   if (snapshot.value === "claimed") {
     assert.equal(context.authority, "dispatch-recheck-pending");
   }
-  if (
-    snapshot.value === "retry-wait" ||
-    context.blockReason === "SAFE_RETRY_EXHAUSTED"
-  ) {
+  if (snapshot.value === "retry-wait" || context.blockReason === "SAFE_RETRY_EXHAUSTED") {
     assert.equal(context.dispatchAuthorityPresent, false);
   }
   if (snapshot.value === "cancel-reconcile-required") {
@@ -50,10 +42,7 @@ export function assertCrossAxisInvariants(
     stale: "DOWNSTREAM_STALE",
     conflict: "DOWNSTREAM_CONFLICT",
   };
-  if (
-    context.receipt in reasonByReceipt &&
-    context.blockReason !== "USER_CANCELLED"
-  ) {
+  if (context.receipt in reasonByReceipt && context.blockReason !== "USER_CANCELLED") {
     assert.equal(context.blockReason, reasonByReceipt[context.receipt]);
     assert.equal(context.reconciliation, "clear");
   }
@@ -86,14 +75,8 @@ export function assertProcessParity(model, domain) {
   assert.equal(model.context.blockReason, domain.blockReason);
   assert.equal(model.context.receipt, domain.receiptKind);
   assert.equal(model.context.revision, domain.revision);
-  assert.equal(
-    model.context.dispatchAuthorityPresent,
-    domain.hasDispatchAuthority,
-  );
-  assert.equal(
-    model.context.admissionAuthorityPresent,
-    domain.hasAdmissionAuthority,
-  );
+  assert.equal(model.context.dispatchAuthorityPresent, domain.hasDispatchAuthority);
+  assert.equal(model.context.admissionAuthorityPresent, domain.hasAdmissionAuthority);
 }
 
 export function assertReadyParity(model, domain) {
@@ -235,29 +218,41 @@ export function assertRecoveryPredecessor(evidence) {
 export function assertResumeEvidence(evidence) {
   assertRecoveryPredecessor(evidence);
   const retained = evidence.predecessor.receiptKind === "admitted";
-  assert.deepEqual(evidence.first, {
-    kind: "accepted",
-    generation: evidence.predecessor.generation + (retained ? 0 : 1),
-    predecessorReceiptRetained: retained,
-    replayed: false,
-  }, evidence.reason);
-  assert.deepEqual(evidence.replay, {
-    ...evidence.first,
-    replayed: true,
-  }, evidence.reason);
-  assert.deepEqual(evidence.successor, {
-    state: retained ? "receipt-observed" : "requested",
-    authority: retained ? "admission-recheck-pending" : "creation-authorized",
-    reconciliation: "clear",
-    generation: evidence.predecessor.generation + (retained ? 0 : 1),
-    revision: evidence.predecessor.revision + 1,
-    attemptCount: 0,
-    resumptionCount: evidence.predecessor.resumptionCount + 1,
-    receiptKind: retained ? "admitted" : null,
-    blockReason: null,
-    hasDispatchAuthority: false,
-    hasAdmissionAuthority: false,
-  }, evidence.reason);
+  assert.deepEqual(
+    evidence.first,
+    {
+      kind: "accepted",
+      generation: evidence.predecessor.generation + (retained ? 0 : 1),
+      predecessorReceiptRetained: retained,
+      replayed: false,
+    },
+    evidence.reason,
+  );
+  assert.deepEqual(
+    evidence.replay,
+    {
+      ...evidence.first,
+      replayed: true,
+    },
+    evidence.reason,
+  );
+  assert.deepEqual(
+    evidence.successor,
+    {
+      state: retained ? "receipt-observed" : "requested",
+      authority: retained ? "admission-recheck-pending" : "creation-authorized",
+      reconciliation: "clear",
+      generation: evidence.predecessor.generation + (retained ? 0 : 1),
+      revision: evidence.predecessor.revision + 1,
+      attemptCount: 0,
+      resumptionCount: evidence.predecessor.resumptionCount + 1,
+      receiptKind: retained ? "admitted" : null,
+      blockReason: null,
+      hasDispatchAuthority: false,
+      hasAdmissionAuthority: false,
+    },
+    evidence.reason,
+  );
   assert.equal(
     evidence.successorCommandId === evidence.predecessorCommandId,
     retained,
@@ -272,17 +267,23 @@ export function assertResumeEvidence(evidence) {
 
 export function assertReconciliationExhaustionEvidence(evidence) {
   assert.equal(evidence.firstResultKind, "retry");
-  assert.deepEqual(evidence.first, recoveryPredecessor({
-    state: "retry-wait",
-    authority: "creation-authorized",
-    revision: 5,
-  }));
+  assert.deepEqual(
+    evidence.first,
+    recoveryPredecessor({
+      state: "retry-wait",
+      authority: "creation-authorized",
+      revision: 5,
+    }),
+  );
   assert.equal(evidence.exhaustedResultKind, "blocked");
-  assert.deepEqual(evidence.exhausted, recoveryPredecessor({
-    revision: 9,
-    attemptCount: 2,
-    blockReason: "SAFE_RETRY_EXHAUSTED",
-  }));
+  assert.deepEqual(
+    evidence.exhausted,
+    recoveryPredecessor({
+      revision: 9,
+      attemptCount: 2,
+      blockReason: "SAFE_RETRY_EXHAUSTED",
+    }),
+  );
 }
 
 export function assertReconciledReceiptMatrixEvidence(evidence) {
@@ -350,13 +351,19 @@ export function assertCancellationRecoveryMatrixEvidence(evidence) {
       item.resultKind,
       integrityConflict ? "integrity-conflict" : conflict ? "blocked" : "cancelled",
     );
-    assert.deepEqual(item.process, recoveryPredecessor({
-      revision: 6,
-      receiptKind: integrityConflict ? null : item.receiptKind,
-      blockReason: integrityConflict
-        ? "DATA_INTEGRITY_CONFLICT"
-        : conflict ? "DOWNSTREAM_CONFLICT" : "USER_CANCELLED",
-      hasDispatchAuthority: integrityConflict,
-    }), item.label);
+    assert.deepEqual(
+      item.process,
+      recoveryPredecessor({
+        revision: 6,
+        receiptKind: integrityConflict ? null : item.receiptKind,
+        blockReason: integrityConflict
+          ? "DATA_INTEGRITY_CONFLICT"
+          : conflict
+            ? "DOWNSTREAM_CONFLICT"
+            : "USER_CANCELLED",
+        hasDispatchAuthority: integrityConflict,
+      }),
+      item.label,
+    );
   }
 }

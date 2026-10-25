@@ -78,10 +78,7 @@ export function domainVocabularyEvidence() {
   const rejected = observe("rejected");
   const stale = observe("stale");
   const conflict = observe("conflict");
-  const denied = blockDispatchForAuthority(
-    claimDispatch(initialProcess()),
-    "AUTHORITY_DENIED",
-  );
+  const denied = blockDispatchForAuthority(claimDispatch(initialProcess()), "AUTHORITY_DENIED");
   const restricted = blockDispatchForAuthority(
     claimDispatch(initialProcess()),
     "COMMERCIAL_RESTRICTION",
@@ -120,9 +117,6 @@ export function domainVocabularyEvidence() {
       SAFE_RETRY_EXHAUSTED: exhausted.blockReason,
       USER_CANCELLED: cancelled.blockReason,
       DATA_INTEGRITY_CONFLICT: integrity.blockReason,
-    } satisfies Record<
-      ScopeAdmissionBlockReason,
-      ScopeAdmissionBlockReason | null | undefined
-    >),
+    } satisfies Record<ScopeAdmissionBlockReason, ScopeAdmissionBlockReason | null | undefined>),
   });
 }

@@ -8,7 +8,10 @@ import type {
 import { evaluateCreationAuthority } from "./evaluate-creation-authority.js";
 import { evaluatePreparationAuthority } from "./evaluate-preparation-authority.js";
 import type { PreparationCommandReceipt } from "./ports/project-management-store.js";
-import { digestPreparationCommand, digestScopeAdmissionCommand } from "./canonical-command-digests.js";
+import {
+  digestPreparationCommand,
+  digestScopeAdmissionCommand,
+} from "./canonical-command-digests.js";
 
 function replayedResume(
   prior: PreparationCommandReceipt | null,
@@ -38,7 +41,8 @@ function isResumable(
   maxGenerations: number,
 ): boolean {
   const canReuseAdmittedReceipt = process?.process.receipt?.kind === "admitted";
-  return process !== null &&
+  return (
+    process !== null &&
     process.process.state === "blocked" &&
     process.process.blockReason !== "DATA_INTEGRITY_CONFLICT" &&
     process.process.blockReason !== "DOWNSTREAM_CONFLICT" &&
@@ -49,20 +53,15 @@ function isResumable(
       resumptionCount: process.process.resumptionCount,
       retainsAdmittedReceipt: canReuseAdmittedReceipt,
       maxPreparationGenerations: maxGenerations,
-    });
+    })
+  );
 }
 
 export function resumeProjectPreparationUseCase(
   dependencies: ProjectManagementDependencies,
-): (
-  command: ProjectPreparationCommand,
-) => Promise<ResumeProjectPreparationResult> {
+): (command: ProjectPreparationCommand) => Promise<ResumeProjectPreparationResult> {
   return async (command) => {
-    const commandDigest = digestPreparationCommand(
-      dependencies.digest,
-      "resume",
-      command,
-    );
+    const commandDigest = digestPreparationCommand(dependencies.digest, "resume", command);
     const prior = await dependencies.store.loadPreparationCommandReceipt(
       command.commandScope,
       command.commandId,
@@ -114,16 +113,17 @@ export function resumeProjectPreparationUseCase(
     const stepCommandId = predecessorReceiptRetained
       ? undefined
       : dependencies.ids.nextScopeCommandId();
-    const stepDigest = stepCommandId === undefined
-      ? undefined
-      : digestScopeAdmissionCommand(dependencies.digest, {
-          tenantRef: expected.project.tenantRef,
-          projectId: expected.project.id,
-          projectIncarnation: expected.project.incarnation,
-          processId: expected.process.id,
-          generation,
-          commandId: stepCommandId,
-        });
+    const stepDigest =
+      stepCommandId === undefined
+        ? undefined
+        : digestScopeAdmissionCommand(dependencies.digest, {
+            tenantRef: expected.project.tenantRef,
+            projectId: expected.project.id,
+            projectIncarnation: expected.project.incarnation,
+            processId: expected.process.id,
+            generation,
+            commandId: stepCommandId,
+          });
     const successor = resumeManagedScopeAdmission(
       expected.process,
       stepCommandId === undefined || stepDigest === undefined

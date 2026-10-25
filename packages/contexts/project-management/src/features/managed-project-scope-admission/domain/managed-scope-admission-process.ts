@@ -91,9 +91,7 @@ function evolve(
   return Object.freeze({ ...process, ...update, revision: process.revision + 1 });
 }
 
-export function claimDispatch(
-  process: ManagedScopeAdmissionProcess,
-): ManagedScopeAdmissionProcess {
+export function claimDispatch(process: ManagedScopeAdmissionProcess): ManagedScopeAdmissionProcess {
   if (process.state !== "requested" && process.state !== "retry-wait") {
     throw new Error(`Cannot claim dispatch from ${process.state}.`);
   }
@@ -223,7 +221,6 @@ export function blockScopeAdmissionForAuthorityRecheckExhaustion(
   });
 }
 
-
 export function blockDispatchForAuthority(
   process: ManagedScopeAdmissionProcess,
   reason: "AUTHORITY_DENIED" | "COMMERCIAL_RESTRICTION",
@@ -308,8 +305,7 @@ export function completeScopeAdmissionCancellation(
   }
   if (
     process.receipt !== null &&
-    (process.receipt.receiptRef !== receipt.receiptRef ||
-      process.receipt.kind !== receipt.kind)
+    (process.receipt.receiptRef !== receipt.receiptRef || process.receipt.kind !== receipt.kind)
   ) {
     return blockScopeAdmissionForIntegrity(process);
   }
@@ -354,14 +350,12 @@ export function resumeManagedScopeAdmission(
   }
   const stepCommandId = retainsPredecessorReceipt
     ? process.stepCommandId
-    : input.stepCommandId as ScopeAdmissionStepCommandId;
+    : (input.stepCommandId as ScopeAdmissionStepCommandId);
   const stepDigest = retainsPredecessorReceipt
     ? process.stepDigest
-    : input.stepDigest as CanonicalCommandDigest;
+    : (input.stepDigest as CanonicalCommandDigest);
   return evolve(process, {
-    generation: retainsPredecessorReceipt
-      ? process.generation
-      : process.generation + 1,
+    generation: retainsPredecessorReceipt ? process.generation : process.generation + 1,
     state: retainsPredecessorReceipt ? "receipt-observed" : "requested",
     stepCommandId,
     stepDigest,

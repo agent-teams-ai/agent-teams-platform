@@ -8,14 +8,14 @@ import {
   assertProcessParity,
   assertReadyParity,
 } from "./managed-scope-admission-invariants.mjs";
-import {
-  runTrace,
-  specification,
-} from "./managed-scope-admission-model.mjs";
+import { runTrace, specification } from "./managed-scope-admission-model.mjs";
 
 function mutateEvent(type, mutate) {
   const mutant = structuredClone(specification);
-  mutate(mutant.events.find((event) => event.type === type), mutant);
+  mutate(
+    mutant.events.find((event) => event.type === type),
+    mutant,
+  );
   return mutant;
 }
 
@@ -106,26 +106,16 @@ const mutants = [
       delete event.effects.set.dispatchAuthorityPresent;
     }),
     witness: ["CLAIM", "AUTHORIZE_DISPATCH", "RELEASE_RETRY"],
-    oracle: (snapshot) =>
-      assertProcessParity(snapshot, domainTraces.dispatchCommittedRetry()),
+    oracle: (snapshot) => assertProcessParity(snapshot, domainTraces.dispatchCommittedRetry()),
   },
   {
     name: "dispatch-committed exhaustion retains stale dispatch authority",
     model: mutateEvent("RELEASE_EXHAUSTED", (event) => {
       delete event.effects.set.dispatchAuthorityPresent;
     }),
-    witness: [
-      "CLAIM",
-      "RELEASE_RETRY",
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "RELEASE_EXHAUSTED",
-    ],
+    witness: ["CLAIM", "RELEASE_RETRY", "CLAIM", "AUTHORIZE_DISPATCH", "RELEASE_EXHAUSTED"],
     oracle: (snapshot) =>
-      assertBlockedParity(
-        snapshot,
-        domainTraces.dispatchCommittedRetryExhausted(),
-      ),
+      assertBlockedParity(snapshot, domainTraces.dispatchCommittedRetryExhausted()),
   },
   {
     name: "unsubmitted dispatch exhausted before production retry policy",
@@ -153,28 +143,16 @@ const mutants = [
     model: mutateEvent("EXHAUST_AUTHORITY_RECHECK", (event) => {
       event.effects.set.blockReason = "AUTHORITY_DENIED";
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "OBSERVE_ADMITTED",
-      "EXHAUST_AUTHORITY_RECHECK",
-    ],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.authorityRecheckExhausted()),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "EXHAUST_AUTHORITY_RECHECK"],
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.authorityRecheckExhausted()),
   },
   {
     name: "integrity conflict misclassified as a downstream conflict",
     model: mutateEvent("OBSERVE_INTEGRITY_CONFLICT", (event) => {
       event.effects.set.blockReason = "DOWNSTREAM_CONFLICT";
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "OBSERVE_ADMITTED",
-      "OBSERVE_INTEGRITY_CONFLICT",
-    ],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.integrityConflict()),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "OBSERVE_INTEGRITY_CONFLICT"],
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.integrityConflict()),
   },
   {
     name: "primary wrong-digest receipt ignored before receipt observation",
@@ -182,15 +160,12 @@ const mutants = [
       event.from = event.from.filter((state) => state !== "dispatch-committed");
     }),
     witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_INTEGRITY_CONFLICT"],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.primaryIntegrityConflict()),
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.primaryIntegrityConflict()),
   },
   {
     name: "cancellation reconciliation wrong-digest receipt ignored",
     model: mutateEvent("OBSERVE_INTEGRITY_CONFLICT", (event) => {
-      event.from = event.from.filter(
-        (state) => state !== "cancel-reconcile-required",
-      );
+      event.from = event.from.filter((state) => state !== "cancel-reconcile-required");
     }),
     witness: [
       "CLAIM",
@@ -207,17 +182,9 @@ const mutants = [
     model: mutateEvent("OBSERVE_INTEGRITY_CONFLICT", (event) => {
       event.from = event.from.filter((state) => state !== "reconcile-required");
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "LOSE_ACKNOWLEDGEMENT",
-      "OBSERVE_INTEGRITY_CONFLICT",
-    ],
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "LOSE_ACKNOWLEDGEMENT", "OBSERVE_INTEGRITY_CONFLICT"],
     oracle: (snapshot) =>
-      assertBlockedParity(
-        snapshot,
-        domainTraces.reconciliationIntegrityConflict(),
-      ),
+      assertBlockedParity(snapshot, domainTraces.reconciliationIntegrityConflict()),
   },
   {
     name: "commercial denial misclassified as generic authority denial",
@@ -226,24 +193,15 @@ const mutants = [
     }),
     witness: ["CLAIM", "RESTRICT_DISPATCH"],
     oracle: (snapshot) =>
-      assertBlockedParity(
-        snapshot,
-        domainTraces.preDispatchCommercialRestriction(),
-      ),
+      assertBlockedParity(snapshot, domainTraces.preDispatchCommercialRestriction()),
   },
   {
     name: "commercial retry exhaustion loses commercial semantics",
     model: mutateEvent("RELEASE_COMMERCIAL_EXHAUSTED", (event) => {
       event.effects.set.blockReason = "SAFE_RETRY_EXHAUSTED";
     }),
-    witness: [
-      "CLAIM",
-      "RELEASE_RETRY",
-      "CLAIM",
-      "RELEASE_COMMERCIAL_EXHAUSTED",
-    ],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.commercialRetryExhausted()),
+    witness: ["CLAIM", "RELEASE_RETRY", "CLAIM", "RELEASE_COMMERCIAL_EXHAUSTED"],
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.commercialRetryExhausted()),
   },
   {
     name: "commercial denial loses its authority axis",
@@ -252,10 +210,7 @@ const mutants = [
     }),
     witness: ["CLAIM", "RESTRICT_DISPATCH"],
     oracle: (snapshot) =>
-      assertBlockedParity(
-        snapshot,
-        domainTraces.preDispatchCommercialRestriction(),
-      ),
+      assertBlockedParity(snapshot, domainTraces.preDispatchCommercialRestriction()),
   },
   {
     name: "commercial denial advances the process generation",
@@ -264,10 +219,7 @@ const mutants = [
     }),
     witness: ["CLAIM", "RESTRICT_DISPATCH"],
     oracle: (snapshot) =>
-      assertBlockedParity(
-        snapshot,
-        domainTraces.preDispatchCommercialRestriction(),
-      ),
+      assertBlockedParity(snapshot, domainTraces.preDispatchCommercialRestriction()),
   },
   {
     name: "commercial denial resets the dispatch attempt count",
@@ -276,10 +228,7 @@ const mutants = [
     }),
     witness: ["CLAIM", "RESTRICT_DISPATCH"],
     oracle: (snapshot) =>
-      assertBlockedParity(
-        snapshot,
-        domainTraces.preDispatchCommercialRestriction(),
-      ),
+      assertBlockedParity(snapshot, domainTraces.preDispatchCommercialRestriction()),
   },
   {
     name: "commercial denial consumes a preparation resumption",
@@ -288,27 +237,16 @@ const mutants = [
     }),
     witness: ["CLAIM", "RESTRICT_DISPATCH"],
     oracle: (snapshot) =>
-      assertBlockedParity(
-        snapshot,
-        domainTraces.preDispatchCommercialRestriction(),
-      ),
+      assertBlockedParity(snapshot, domainTraces.preDispatchCommercialRestriction()),
   },
   {
     name: "integrity conflict leaves reconciliation unresolved",
     model: mutateEvent("OBSERVE_INTEGRITY_CONFLICT", (event) => {
       event.effects.set.reconciliation = "outcome-unknown";
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "LOSE_ACKNOWLEDGEMENT",
-      "OBSERVE_INTEGRITY_CONFLICT",
-    ],
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "LOSE_ACKNOWLEDGEMENT", "OBSERVE_INTEGRITY_CONFLICT"],
     oracle: (snapshot) =>
-      assertBlockedParity(
-        snapshot,
-        domainTraces.reconciliationIntegrityConflict(),
-      ),
+      assertBlockedParity(snapshot, domainTraces.reconciliationIntegrityConflict()),
   },
   {
     name: "authority-recheck exhaustion made non-recoverable",
@@ -325,8 +263,7 @@ const mutants = [
       "RESUME_ADMITTED",
       "FINALIZE_READY",
     ],
-    oracle: (snapshot) =>
-      assertReadyParity(snapshot, domainTraces.authorityRecheckRecovery()),
+    oracle: (snapshot) => assertReadyParity(snapshot, domainTraces.authorityRecheckRecovery()),
   },
   {
     name: "rejected receipt misclassified as stale",
@@ -334,8 +271,7 @@ const mutants = [
       event.effects.set.blockReason = "DOWNSTREAM_STALE";
     }),
     witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_REJECTED"],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.rejectedReceipt()),
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.rejectedReceipt()),
   },
   {
     name: "stale receipt misclassified as rejected",
@@ -343,8 +279,7 @@ const mutants = [
       event.effects.set.blockReason = "DOWNSTREAM_REJECTED";
     }),
     witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_STALE"],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.staleReceipt()),
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.staleReceipt()),
   },
   {
     name: "conflict receipt misclassified as rejected",
@@ -352,8 +287,7 @@ const mutants = [
       event.effects.set.blockReason = "DOWNSTREAM_REJECTED";
     }),
     witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_CONFLICT"],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.conflictReceipt()),
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.conflictReceipt()),
   },
   ...[
     ["OBSERVE_REJECTED", "rejected", "reconciledRejectedReceipt"],
@@ -364,14 +298,8 @@ const mutants = [
     model: mutateEvent(eventType, (event) => {
       delete event.effects.set.reconciliation;
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "LOSE_ACKNOWLEDGEMENT",
-      eventType,
-    ],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces[traceName]()),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "LOSE_ACKNOWLEDGEMENT", eventType],
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces[traceName]()),
   })),
   {
     name: "pre-dispatch denial misclassified as commercial",
@@ -379,8 +307,7 @@ const mutants = [
       event.effects.set.blockReason = "COMMERCIAL_RESTRICTION";
     }),
     witness: ["CLAIM", "DENY_DISPATCH"],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.preDispatchAuthorityDenied()),
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.preDispatchAuthorityDenied()),
   },
   {
     name: "safe cancellation misclassified as authority denial",
@@ -388,25 +315,16 @@ const mutants = [
       event.effects.set.blockReason = "AUTHORITY_DENIED";
     }),
     witness: ["CANCEL_SAFE"],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.safeCancellation()),
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.safeCancellation()),
   },
   {
     name: "safe cancellation discards an admitted receipt",
     model: mutateEvent("CANCEL_SAFE", (event) => {
       event.effects.set.receipt = null;
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "OBSERVE_ADMITTED",
-      "CANCEL_SAFE",
-    ],
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "CANCEL_SAFE"],
     oracle: (snapshot) =>
-      assertBlockedParity(
-        snapshot,
-        domainTraces.admittedReceiptSafeCancellation(),
-      ),
+      assertBlockedParity(snapshot, domainTraces.admittedReceiptSafeCancellation()),
   },
   {
     name: "blocked authority denial cannot be cancelled",
@@ -422,14 +340,8 @@ const mutants = [
     model: mutateEvent("CANCEL_BLOCKED_SAFE", (event) => {
       event.effects.set.receipt = null;
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "OBSERVE_REJECTED",
-      "CANCEL_BLOCKED_SAFE",
-    ],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.blockedRejectedCancellation()),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_REJECTED", "CANCEL_BLOCKED_SAFE"],
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.blockedRejectedCancellation()),
   },
   {
     name: "retry exhaustion misclassified as authority denial",
@@ -437,8 +349,7 @@ const mutants = [
       event.effects.set.blockReason = "AUTHORITY_DENIED";
     }),
     witness: ["CLAIM", "RELEASE_RETRY", "CLAIM", "RELEASE_EXHAUSTED"],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.retryExhausted()),
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.retryExhausted()),
   },
   {
     name: "reconciliation exhaustion misclassified as authority denial",
@@ -463,31 +374,17 @@ const mutants = [
     model: mutateEvent("DENY_AFTER_RECEIPT", (event) => {
       event.effects.set.blockReason = "COMMERCIAL_RESTRICTION";
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "OBSERVE_ADMITTED",
-      "DENY_AFTER_RECEIPT",
-    ],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.afterReceiptAuthorityDenied()),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "DENY_AFTER_RECEIPT"],
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.afterReceiptAuthorityDenied()),
   },
   {
     name: "post-receipt commercial restriction misclassified as denial",
     model: mutateEvent("RESTRICT_AFTER_RECEIPT", (event) => {
       event.effects.set.blockReason = "AUTHORITY_DENIED";
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "OBSERVE_ADMITTED",
-      "RESTRICT_AFTER_RECEIPT",
-    ],
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "OBSERVE_ADMITTED", "RESTRICT_AFTER_RECEIPT"],
     oracle: (snapshot) =>
-      assertBlockedParity(
-        snapshot,
-        domainTraces.afterReceiptCommercialRestriction(),
-      ),
+      assertBlockedParity(snapshot, domainTraces.afterReceiptCommercialRestriction()),
   },
   {
     name: "reconciled cancellation misclassified as authority denial",
@@ -501,44 +398,20 @@ const mutants = [
       "CANCEL_UNCERTAIN",
       "CANCEL_RECONCILED",
     ],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces.reconciledCancellation()),
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces.reconciledCancellation()),
   },
   ...[
-    [
-      "CANCEL_RECONCILED_ADMITTED",
-      "reconciledAdmittedCancellation",
-      "AUTHORITY_DENIED",
-    ],
-    [
-      "CANCEL_RECONCILED_REJECTED",
-      "reconciledRejectedCancellation",
-      "AUTHORITY_DENIED",
-    ],
-    [
-      "CANCEL_RECONCILED_STALE",
-      "reconciledStaleCancellation",
-      "AUTHORITY_DENIED",
-    ],
-    [
-      "CANCEL_RECONCILED_CONFLICT",
-      "reconciledConflictCancellation",
-      "USER_CANCELLED",
-    ],
+    ["CANCEL_RECONCILED_ADMITTED", "reconciledAdmittedCancellation", "AUTHORITY_DENIED"],
+    ["CANCEL_RECONCILED_REJECTED", "reconciledRejectedCancellation", "AUTHORITY_DENIED"],
+    ["CANCEL_RECONCILED_STALE", "reconciledStaleCancellation", "AUTHORITY_DENIED"],
+    ["CANCEL_RECONCILED_CONFLICT", "reconciledConflictCancellation", "USER_CANCELLED"],
   ].map(([eventType, traceName, blockReason]) => ({
     name: `${eventType} loses its production terminal reason`,
     model: mutateEvent(eventType, (event) => {
       event.effects.set.blockReason = blockReason;
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      "LOSE_ACKNOWLEDGEMENT",
-      "CANCEL_UNCERTAIN",
-      eventType,
-    ],
-    oracle: (snapshot) =>
-      assertBlockedParity(snapshot, domainTraces[traceName]()),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", "LOSE_ACKNOWLEDGEMENT", "CANCEL_UNCERTAIN", eventType],
+    oracle: (snapshot) => assertBlockedParity(snapshot, domainTraces[traceName]()),
   })),
   {
     name: "premature reconciliation clear after lost acknowledgement",
@@ -586,8 +459,7 @@ const mutants = [
       "CANCEL_RECONCILED",
       "RESUME_NEW_GENERATION",
     ],
-    oracle: (snapshot) =>
-      assertProcessParity(snapshot, domainTraces.lostAckCancellationResume()),
+    oracle: (snapshot) => assertProcessParity(snapshot, domainTraces.lostAckCancellationResume()),
   },
   ...[
     ["OBSERVE_REJECTED", "rejectedReceiptResume"],
@@ -597,14 +469,8 @@ const mutants = [
     model: mutateEvent("RESUME_NEW_GENERATION", (event) => {
       delete event.effects.set.receipt;
     }),
-    witness: [
-      "CLAIM",
-      "AUTHORIZE_DISPATCH",
-      receiptEvent,
-      "RESUME_NEW_GENERATION",
-    ],
-    oracle: (snapshot) =>
-      assertProcessParity(snapshot, domainTraces[traceName]()),
+    witness: ["CLAIM", "AUTHORIZE_DISPATCH", receiptEvent, "RESUME_NEW_GENERATION"],
+    oracle: (snapshot) => assertProcessParity(snapshot, domainTraces[traceName]()),
   })),
 ];
 

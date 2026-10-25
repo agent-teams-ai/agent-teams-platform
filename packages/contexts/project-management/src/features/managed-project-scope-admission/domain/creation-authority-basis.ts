@@ -5,10 +5,7 @@ import type {
 } from "./value-objects.js";
 
 export type CreationAuthorityEvidence = Readonly<{
-  source:
-    | "tenant-admission"
-    | "project-creation-authority"
-    | "commercial-project-creation";
+  source: "tenant-admission" | "project-creation-authority" | "commercial-project-creation";
   evidenceRef: OpaqueAuthorityEvidenceRef;
   revision: OpaqueAuthorityRevision;
   validUntil: Instant;

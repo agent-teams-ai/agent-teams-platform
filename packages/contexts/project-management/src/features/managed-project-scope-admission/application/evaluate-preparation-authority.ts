@@ -41,11 +41,13 @@ function classify(decision: AuthorityDecision, now: number): PreparationAuthorit
   };
 }
 
-export async function evaluatePreparationAuthority(input: Readonly<{
-  port: ProjectPreparationAuthorityPort;
-  query: ProjectPreparationAuthorityQuery;
-  now: () => number;
-}>): Promise<PreparationAuthorityEvaluation> {
+export async function evaluatePreparationAuthority(
+  input: Readonly<{
+    port: ProjectPreparationAuthorityPort;
+    query: ProjectPreparationAuthorityQuery;
+    now: () => number;
+  }>,
+): Promise<PreparationAuthorityEvaluation> {
   let decision: AuthorityDecision;
   try {
     decision = await input.port.decide(input.query);

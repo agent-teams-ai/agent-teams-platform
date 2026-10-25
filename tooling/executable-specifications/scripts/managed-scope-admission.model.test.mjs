@@ -34,24 +34,17 @@ const traces = JSON.parse(
   ),
 ).traces;
 const committedDiagram = await readFile(
-  new URL(
-    "../fixtures/proof-artifacts/managed-scope-admission-model.mmd",
-    import.meta.url,
-  ),
+  new URL("../fixtures/proof-artifacts/managed-scope-admission-model.mmd", import.meta.url),
   "utf8",
 );
 
 function pathSignatures(paths) {
-  return paths
-    .map((path) => path.steps.map((step) => step.event.type).join(" > "))
-    .toSorted();
+  return paths.map((path) => path.steps.map((step) => step.event.type).join(" > ")).toSorted();
 }
 
 function declaredEdgeSignatures() {
   return specification.events
-    .flatMap((event) =>
-      event.from.map((source) => `${source} > ${event.type}`),
-    )
+    .flatMap((event) => event.from.map((source) => `${source} > ${event.type}`))
     .toSorted();
 }
 
@@ -60,10 +53,7 @@ function reachableEdgeSignatures(paths) {
     .flatMap((event) =>
       event.from
         .filter((source) =>
-          paths.some(
-            ({ state }) =>
-              state.value === source && state.can({ type: event.type }),
-          ),
+          paths.some(({ state }) => state.value === source && state.can({ type: event.type })),
         )
         .map((source) => `${source} > ${event.type}`),
     )
@@ -91,9 +81,7 @@ test("derives deterministic paths that reach every declared state and edge", () 
   }
   for (const axis of ["lifecycle", "authority", "reconciliation"]) {
     const reached = new Set(
-      first.map(({ state }) =>
-        axis === "lifecycle" ? state.value : state.context[axis],
-      ),
+      first.map(({ state }) => (axis === "lifecycle" ? state.value : state.context[axis])),
     );
     assert.deepEqual(
       [...reached].toSorted(),
@@ -102,9 +90,7 @@ test("derives deterministic paths that reach every declared state and edge", () 
     );
   }
   assert.deepEqual(
-    sortedNumbers(
-      new Set(first.map(({ state }) => state.context.generation)),
-    ),
+    sortedNumbers(new Set(first.map(({ state }) => state.context.generation))),
     sortedNumbers(
       Array.from(
         { length: specification.witnessBounds.generations },
@@ -118,17 +104,8 @@ test("derives deterministic paths that reach every declared state and edge", () 
     declaredEdgeSignatures(),
     "every declared source/event edge must be enabled by a reachable state",
   );
-  assert.ok(
-    first.some(
-      ({ state }) => state.context.blockReason === "DATA_INTEGRITY_CONFLICT",
-    ),
-  );
-  assert.ok(
-    first.some(
-      ({ state }) =>
-        state.context.blockReason === "AUTHORITY_RECHECK_EXHAUSTED",
-    ),
-  );
+  assert.ok(first.some(({ state }) => state.context.blockReason === "DATA_INTEGRITY_CONFLICT"));
+  assert.ok(first.some(({ state }) => state.context.blockReason === "AUTHORITY_RECHECK_EXHAUSTED"));
 });
 
 test("matches aggregate lost-ack cancellation and successor fencing", () => {
@@ -253,12 +230,10 @@ test("JSON vocabulary has exact executable domain evidence", () => {
 });
 
 test("committed Mermaid has exact deterministic parity with every JSON event", () => {
-  assert.equal(
-    committedDiagram,
-    renderManagedScopeAdmissionDiagram(specification),
+  assert.equal(committedDiagram, renderManagedScopeAdmissionDiagram(specification));
+  const eventLabels = [...committedDiagram.matchAll(/: ([A-Z][A-Z0-9_]*)$/gmu)].map(
+    (match) => match[1],
   );
-  const eventLabels = [...committedDiagram.matchAll(/: ([A-Z][A-Z0-9_]*)$/gmu)]
-    .map((match) => match[1]);
   assert.deepEqual(
     [...new Set(eventLabels)].toSorted(),
     specification.events.map(({ type }) => type).toSorted(),
@@ -267,12 +242,8 @@ test("committed Mermaid has exact deterministic parity with every JSON event", (
 
 test("Mermaid parity rejects authoritative transition drift", () => {
   const drifted = structuredClone(specification);
-  drifted.events.find(({ type }) => type === "OBSERVE_INTEGRITY_CONFLICT").to =
-    "ready";
-  assert.notEqual(
-    committedDiagram,
-    renderManagedScopeAdmissionDiagram(drifted),
-  );
+  drifted.events.find(({ type }) => type === "OBSERVE_INTEGRITY_CONFLICT").to = "ready";
+  assert.notEqual(committedDiagram, renderManagedScopeAdmissionDiagram(drifted));
 });
 
 test("Mermaid aliases remain injective for punctuation-equivalent state names", () => {
@@ -305,10 +276,7 @@ test("covers retry, cancellation, stale and illegal-event paths", () => {
     "RECONCILE_NOT_ACCEPTED_EXHAUSTED",
   ]);
   assert.equal(exhausted.value, "blocked");
-  assert.equal(
-    exhausted.context.attemptCount,
-    specification.witnessBounds.attempts,
-  );
+  assert.equal(exhausted.context.attemptCount, specification.witnessBounds.attempts);
 
   const cancelled = runTrace([
     "CLAIM",
@@ -358,8 +326,7 @@ test("matches admitted recovery from reconciliation", async () => {
 });
 
 test("matches cancellation directly from committed dispatch authority", async () => {
-  const evidence =
-    await domainTraces.productionDispatchCommittedCancellationEvidence();
+  const evidence = await domainTraces.productionDispatchCommittedCancellationEvidence();
   assert.equal(evidence.resultKind, "reconciliation-required");
   assertProcessParity(
     runTrace(["CLAIM", "AUTHORIZE_DISPATCH", "CANCEL_UNCERTAIN"]),
@@ -368,16 +335,14 @@ test("matches cancellation directly from committed dispatch authority", async ()
 });
 
 test("production integrity block is cancellation-invariant", async () => {
-  const evidence =
-    await domainTraces.productionIntegrityCancellationNoOpEvidence();
+  const evidence = await domainTraces.productionIntegrityCancellationNoOpEvidence();
   assert.equal(evidence.resultKind, "already-completed");
   assert.equal(evidence.before.blockReason, "DATA_INTEGRITY_CONFLICT");
   assert.deepEqual(evidence.after, evidence.before);
 });
 
 test("production protected terminal states are cancellation-invariant", async () => {
-  const evidence =
-    await domainTraces.productionProtectedCancellationNoOpEvidence();
+  const evidence = await domainTraces.productionProtectedCancellationNoOpEvidence();
   for (const [name, terminal] of Object.entries(evidence)) {
     assert.equal(
       terminal.resultKind,
@@ -387,16 +352,12 @@ test("production protected terminal states are cancellation-invariant", async ()
     assert.deepEqual(terminal.after, terminal.before, name);
   }
   assert.equal(evidence.ready.before.state, "ready");
-  assert.equal(
-    evidence.downstreamConflict.before.blockReason,
-    "DOWNSTREAM_CONFLICT",
-  );
+  assert.equal(evidence.downstreamConflict.before.blockReason, "DOWNSTREAM_CONFLICT");
   assert.equal(evidence.userCancelled.before.blockReason, "USER_CANCELLED");
 });
 
 test("production pending cancellation is repeat-command invariant", async () => {
-  const evidence =
-    await domainTraces.productionPendingCancellationNoOpEvidence();
+  const evidence = await domainTraces.productionPendingCancellationNoOpEvidence();
   assert.equal(evidence.resultKind, "reconciliation-required");
   assert.equal(evidence.before.state, "cancel-reconcile-required");
   assert.deepEqual(evidence.after, evidence.before);
@@ -404,18 +365,26 @@ test("production pending cancellation is repeat-command invariant", async () => 
 
 test("production non-admitted resumes report and replay a clean successor", async () => {
   for (const evidence of await domainTraces.productionNonAdmittedResumeEvidence()) {
-    assert.deepEqual(evidence.first, {
-      kind: "accepted",
-      generation: 2,
-      predecessorReceiptRetained: false,
-      replayed: false,
-    }, evidence.receiptKind);
-    assert.deepEqual(evidence.replay, {
-      kind: "accepted",
-      generation: 2,
-      predecessorReceiptRetained: false,
-      replayed: true,
-    }, evidence.receiptKind);
+    assert.deepEqual(
+      evidence.first,
+      {
+        kind: "accepted",
+        generation: 2,
+        predecessorReceiptRetained: false,
+        replayed: false,
+      },
+      evidence.receiptKind,
+    );
+    assert.deepEqual(
+      evidence.replay,
+      {
+        kind: "accepted",
+        generation: 2,
+        predecessorReceiptRetained: false,
+        replayed: true,
+      },
+      evidence.receiptKind,
+    );
     assert.equal(evidence.successorReceiptKind, null, evidence.receiptKind);
     assert.notEqual(
       evidence.successorCommandId,
@@ -429,15 +398,19 @@ test("production retry and every recoverable block cancel exactly", async () => 
   for (const evidence of await domainTraces.productionRecoverableCancellationEvidence()) {
     assertRecoveryPredecessor(evidence);
     assert.equal(evidence.resultKind, "cancelled", evidence.reason);
-    assert.deepEqual(evidence.after, {
-      ...evidence.before,
-      state: "blocked",
-      authority: "closed",
-      reconciliation: "clear",
-      revision: evidence.before.revision + 1,
-      blockReason: "USER_CANCELLED",
-      hasDispatchAuthority: false,
-    }, evidence.reason);
+    assert.deepEqual(
+      evidence.after,
+      {
+        ...evidence.before,
+        state: "blocked",
+        authority: "closed",
+        reconciliation: "clear",
+        revision: evidence.before.revision + 1,
+        blockReason: "USER_CANCELLED",
+        hasDispatchAuthority: false,
+      },
+      evidence.reason,
+    );
   }
 });
 

@@ -25,9 +25,7 @@ export function createProjectManagementModule(
     !Number.isSafeInteger(dependencies.maxPreparationGenerations) ||
     dependencies.maxPreparationGenerations <= 0
   ) {
-    throw new TypeError(
-      "Maximum preparation generations must be a positive safe integer.",
-    );
+    throw new TypeError("Maximum preparation generations must be a positive safe integer.");
   }
   return Object.freeze({
     application: Object.freeze({

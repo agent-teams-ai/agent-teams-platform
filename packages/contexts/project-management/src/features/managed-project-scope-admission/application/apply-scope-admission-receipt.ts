@@ -46,19 +46,13 @@ export function applyScopeAdmissionReceipt(input: {
   if (input.authority.kind === "allow") {
     return {
       process: finalizeScopeAdmission(observed, input.authority.basis),
-      admission: allowProjectAdmission(
-        input.admission,
-        observed.receipt.receiptRef,
-      ),
+      admission: allowProjectAdmission(input.admission, observed.receipt.receiptRef),
       integrityConflict: false,
     };
   }
   if (input.authority.kind === "deny") {
     return {
-      process: blockScopeAdmissionForAuthority(
-        observed,
-        input.authority.blockReason,
-      ),
+      process: blockScopeAdmissionForAuthority(observed, input.authority.blockReason),
       admission: input.admission,
       integrityConflict: false,
     };

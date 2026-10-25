@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
 
 import { ids } from "../../../src/features/managed-project-scope-admission/composition.js";
-import {
-  type ModelConformanceSubject,
-} from "../../../src/features/managed-project-scope-admission/testing/model-conformance/model-conformance-subject.js";
+import { type ModelConformanceSubject } from "../../../src/features/managed-project-scope-admission/testing/model-conformance/model-conformance-subject.js";
 
 export {
   acceptedProject,

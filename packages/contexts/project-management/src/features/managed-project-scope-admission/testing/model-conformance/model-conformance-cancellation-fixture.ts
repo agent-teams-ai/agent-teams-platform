@@ -8,11 +8,7 @@ import {
   requireReconciliation,
 } from "../../domain/managed-scope-admission-process.js";
 import { ids } from "../../domain/value-objects.js";
-import {
-  authorityBasis,
-  blockedTrace,
-  initialProcess,
-} from "./model-conformance-base-fixture.js";
+import { authorityBasis, blockedTrace, initialProcess } from "./model-conformance-base-fixture.js";
 
 export function domainSafeCancellationTrace() {
   return blockedTrace(requestScopeAdmissionCancellation(initialProcess()).process);
@@ -29,10 +25,7 @@ export function domainAdmittedReceiptSafeCancellationTrace() {
 }
 
 export function domainBlockedAuthorityCancellationTrace() {
-  const blocked = blockDispatchForAuthority(
-    claimDispatch(initialProcess()),
-    "AUTHORITY_DENIED",
-  );
+  const blocked = blockDispatchForAuthority(claimDispatch(initialProcess()), "AUTHORITY_DENIED");
   return blockedTrace(requestScopeAdmissionCancellation(blocked).process);
 }
 
@@ -53,9 +46,7 @@ function cancellingReconciliationProcess() {
 }
 
 export function domainReconciledCancellationTrace() {
-  return blockedTrace(
-    completeScopeAdmissionCancellation(cancellingReconciliationProcess(), null),
-  );
+  return blockedTrace(completeScopeAdmissionCancellation(cancellingReconciliationProcess(), null));
 }
 
 function domainReconciledReceiptCancellationTrace(

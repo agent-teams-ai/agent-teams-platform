@@ -5,9 +5,7 @@ import type {
 } from "./contracts.js";
 import { evaluatePreparationAuthority } from "./evaluate-preparation-authority.js";
 
-export function getScopeAdmissionReadinessUseCase(
-  dependencies: ProjectManagementDependencies,
-) {
+export function getScopeAdmissionReadinessUseCase(dependencies: ProjectManagementDependencies) {
   return async (query: GetScopeAdmissionReadinessQuery) => {
     const snapshot = await dependencies.store.loadByOperation(query.operationRef);
     if (snapshot === null || snapshot.project.tenantRef !== query.tenantRef) {

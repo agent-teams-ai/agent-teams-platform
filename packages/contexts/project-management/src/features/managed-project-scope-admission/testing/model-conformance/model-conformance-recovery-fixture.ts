@@ -26,10 +26,7 @@ function allowedAuthority(suffix: string) {
   };
 }
 
-function allowEveryAuthority(
-  subject: ReturnType<typeof fixture>,
-  suffix: string,
-) {
+function allowEveryAuthority(subject: ReturnType<typeof fixture>, suffix: string) {
   subject.tenantAuthority.decision = allowedAuthority(`${suffix}-tenant`);
   subject.projectAuthority.decision = allowedAuthority(`${suffix}-project`);
   subject.commercialAuthority.decision = allowedAuthority(`${suffix}-commercial`);
@@ -196,9 +193,7 @@ async function downstreamBlockedSubject(kind: "rejected" | "stale") {
   return { subject, created };
 }
 
-async function userCancelledSubject(
-  receiptKind: null | "admitted" | "rejected" | "stale",
-) {
+async function userCancelledSubject(receiptKind: null | "admitted" | "rejected" | "stale") {
   const subject = fixture();
   const created = await acceptedProject(subject);
   if (receiptKind === "admitted") {
@@ -218,15 +213,11 @@ async function userCancelledSubject(
     await subject.worker.dispatchManagedScopeAdmission();
   }
   subject.preparationAuthority.decision = allowedAuthority("cancel-control");
-  await subject.application.cancelProjectPreparation(
-    cancelCommand(created.operationRef),
-  );
+  await subject.application.cancelProjectPreparation(cancelCommand(created.operationRef));
   return { subject, created };
 }
 
-async function cancellationEvidence(
-  reason: RecoverableBlockReason | "RETRY_WAIT",
-) {
+async function cancellationEvidence(reason: RecoverableBlockReason | "RETRY_WAIT") {
   if (reason === "RETRY_WAIT") {
     const subject = fixture({
       safeRetryPolicy: { defaultDelayMs: 1000, maxDelayMs: 1000, maxAttempts: 2 },
@@ -276,20 +267,31 @@ async function cancellationEvidence(
 export async function productionRecoverableCancellationEvidence() {
   const evidence = [];
   const retry = await cancellationEvidence("RETRY_WAIT");
-  evidence.push(Object.freeze({
-    reason: "RETRY_WAIT",
-    resultKind: retry.result.kind,
-    before: productionProcessProjection(retry.before.process),
-    after: productionProcessProjection(retry.after.process),
-  }));
+  evidence.push(
+    Object.freeze({
+      reason: "RETRY_WAIT",
+      resultKind: retry.result.kind,
+      before: productionProcessProjection(retry.before.process),
+      after: productionProcessProjection(retry.after.process),
+    }),
+  );
   const cases = [
     ["AUTHORITY_DENIED_PRE_DISPATCH", await authorityDeniedSubject(false)],
     ["AUTHORITY_DENIED_AFTER_RECEIPT", await authorityDeniedSubject(true)],
-    ["AUTHORITY_DENIED_RECONCILED_ADMITTED", await reconciledAdmittedBlockedSubject("AUTHORITY_DENIED")],
+    [
+      "AUTHORITY_DENIED_RECONCILED_ADMITTED",
+      await reconciledAdmittedBlockedSubject("AUTHORITY_DENIED"),
+    ],
     ["COMMERCIAL_RESTRICTION_PRE_DISPATCH", await blockedSubject("COMMERCIAL_RESTRICTION")],
     ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT", await postReceiptCommercialBlockedSubject()],
-    ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT_UNAVAILABLE", await postReceiptCommercialUnavailableSubject()],
-    ["COMMERCIAL_RESTRICTION_RECONCILED_ADMITTED", await reconciledAdmittedBlockedSubject("COMMERCIAL_RESTRICTION")],
+    [
+      "COMMERCIAL_RESTRICTION_AFTER_RECEIPT_UNAVAILABLE",
+      await postReceiptCommercialUnavailableSubject(),
+    ],
+    [
+      "COMMERCIAL_RESTRICTION_RECONCILED_ADMITTED",
+      await reconciledAdmittedBlockedSubject("COMMERCIAL_RESTRICTION"),
+    ],
     ["DOWNSTREAM_REJECTED", await downstreamBlockedSubject("rejected")],
     ["DOWNSTREAM_STALE", await downstreamBlockedSubject("stale")],
     ["SAFE_RETRY_EXHAUSTED", await blockedSubject("SAFE_RETRY_EXHAUSTED")],
@@ -314,12 +316,14 @@ export async function productionRecoverableCancellationEvidence() {
       created.operationRef,
       `Expected ${reason} cancellation result.`,
     );
-    evidence.push(Object.freeze({
-      reason,
-      resultKind: result.kind,
-      before: productionProcessProjection(before.process),
-      after: productionProcessProjection(after.process),
-    }));
+    evidence.push(
+      Object.freeze({
+        reason,
+        resultKind: result.kind,
+        before: productionProcessProjection(before.process),
+        after: productionProcessProjection(after.process),
+      }),
+    );
   }
   return Object.freeze(evidence);
 }
@@ -329,11 +333,20 @@ export async function productionBlockedResumeEvidence() {
   const cases = [
     ["AUTHORITY_DENIED_PRE_DISPATCH", await authorityDeniedSubject(false)],
     ["AUTHORITY_DENIED_AFTER_RECEIPT", await authorityDeniedSubject(true)],
-    ["AUTHORITY_DENIED_RECONCILED_ADMITTED", await reconciledAdmittedBlockedSubject("AUTHORITY_DENIED")],
+    [
+      "AUTHORITY_DENIED_RECONCILED_ADMITTED",
+      await reconciledAdmittedBlockedSubject("AUTHORITY_DENIED"),
+    ],
     ["COMMERCIAL_RESTRICTION_PRE_DISPATCH", await blockedSubject("COMMERCIAL_RESTRICTION")],
     ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT", await postReceiptCommercialBlockedSubject()],
-    ["COMMERCIAL_RESTRICTION_AFTER_RECEIPT_UNAVAILABLE", await postReceiptCommercialUnavailableSubject()],
-    ["COMMERCIAL_RESTRICTION_RECONCILED_ADMITTED", await reconciledAdmittedBlockedSubject("COMMERCIAL_RESTRICTION")],
+    [
+      "COMMERCIAL_RESTRICTION_AFTER_RECEIPT_UNAVAILABLE",
+      await postReceiptCommercialUnavailableSubject(),
+    ],
+    [
+      "COMMERCIAL_RESTRICTION_RECONCILED_ADMITTED",
+      await reconciledAdmittedBlockedSubject("COMMERCIAL_RESTRICTION"),
+    ],
     ["USER_CANCELLED_NO_RECEIPT", await userCancelledSubject(null)],
     ["USER_CANCELLED_ADMITTED", await userCancelledSubject("admitted")],
     ["USER_CANCELLED_REJECTED", await userCancelledSubject("rejected")],
@@ -361,17 +374,19 @@ export async function productionBlockedResumeEvidence() {
       `Expected ${source} successor after resume.`,
     );
     const countsAfter = subject.store.inspectCounts();
-    evidence.push(Object.freeze({
-      reason: source,
-      first,
-      replay,
-      predecessor: productionProcessProjection(predecessor.process),
-      successor: productionProcessProjection(successor.process),
-      predecessorCommandId: predecessor.process.stepCommandId,
-      successorCommandId: successor.process.stepCommandId,
-      outboxesBefore: countsBefore.outboxes,
-      outboxesAfter: countsAfter.outboxes,
-    }));
+    evidence.push(
+      Object.freeze({
+        reason: source,
+        first,
+        replay,
+        predecessor: productionProcessProjection(predecessor.process),
+        successor: productionProcessProjection(successor.process),
+        predecessorCommandId: predecessor.process.stepCommandId,
+        successorCommandId: successor.process.stepCommandId,
+        outboxesBefore: countsBefore.outboxes,
+        outboxesAfter: countsAfter.outboxes,
+      }),
+    );
   }
   return Object.freeze(evidence);
 }
@@ -384,9 +399,7 @@ export async function productionReconciliationExhaustionEvidence() {
   subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
   subject.orchestration.recovery = () => ({ kind: "known-not-accepted" });
   await subject.worker.dispatchManagedScopeAdmission();
-  const firstResult = await subject.worker.reconcileManagedScopeAdmission(
-    created.operationRef,
-  );
+  const firstResult = await subject.worker.reconcileManagedScopeAdmission(created.operationRef);
   const first = await requireProductionSnapshot(
     subject,
     created.operationRef,
@@ -394,9 +407,7 @@ export async function productionReconciliationExhaustionEvidence() {
   );
   subject.setNow(NOW + 1000);
   await subject.worker.dispatchManagedScopeAdmission();
-  const exhaustedResult = await subject.worker.reconcileManagedScopeAdmission(
-    created.operationRef,
-  );
+  const exhaustedResult = await subject.worker.reconcileManagedScopeAdmission(created.operationRef);
   const exhausted = await requireProductionSnapshot(
     subject,
     created.operationRef,
@@ -429,25 +440,26 @@ export async function productionReconciledReceiptMatrixEvidence() {
       receipt: {
         kind: receiptKind,
         receiptRef: ids.orchestratorReceipt(`model-recovered-${label}`),
-        receiptDigest: label === "wrong-digest"
-          ? ids.digest("model-recovered-wrong-digest")
-          : intent.commandDigest,
+        receiptDigest:
+          label === "wrong-digest"
+            ? ids.digest("model-recovered-wrong-digest")
+            : intent.commandDigest,
       },
     });
-    const result = await subject.worker.reconcileManagedScopeAdmission(
-      created.operationRef,
-    );
+    const result = await subject.worker.reconcileManagedScopeAdmission(created.operationRef);
     const snapshot = await requireProductionSnapshot(
       subject,
       created.operationRef,
       `Expected recovered ${receiptKind} receipt.`,
     );
-    evidence.push(Object.freeze({
-      label,
-      receiptKind,
-      resultKind: result.kind,
-      process: productionProcessProjection(snapshot.process),
-    }));
+    evidence.push(
+      Object.freeze({
+        label,
+        receiptKind,
+        resultKind: result.kind,
+        process: productionProcessProjection(snapshot.process),
+      }),
+    );
   }
   return Object.freeze(evidence);
 }
@@ -467,35 +479,35 @@ export async function productionCancellationRecoveryMatrixEvidence() {
     const created = await acceptedProject(subject);
     subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
     await subject.worker.dispatchManagedScopeAdmission();
-    await subject.application.cancelProjectPreparation(
-      cancelCommand(created.operationRef),
-    );
-    subject.orchestration.recovery = receiptKind === null
-      ? () => ({ kind: "known-not-accepted" })
-      : (intent) => ({
-        kind: "receipt",
-        receipt: {
-          kind: receiptKind,
-          receiptRef: ids.orchestratorReceipt(`model-cancel-recovered-${label}`),
-          receiptDigest: label === "wrong-digest"
-            ? ids.digest("model-cancel-recovered-wrong-digest")
-            : intent.commandDigest,
-        },
-      });
-    const result = await subject.worker.reconcileManagedScopeAdmission(
-      created.operationRef,
-    );
+    await subject.application.cancelProjectPreparation(cancelCommand(created.operationRef));
+    subject.orchestration.recovery =
+      receiptKind === null
+        ? () => ({ kind: "known-not-accepted" })
+        : (intent) => ({
+            kind: "receipt",
+            receipt: {
+              kind: receiptKind,
+              receiptRef: ids.orchestratorReceipt(`model-cancel-recovered-${label}`),
+              receiptDigest:
+                label === "wrong-digest"
+                  ? ids.digest("model-cancel-recovered-wrong-digest")
+                  : intent.commandDigest,
+            },
+          });
+    const result = await subject.worker.reconcileManagedScopeAdmission(created.operationRef);
     const snapshot = await requireProductionSnapshot(
       subject,
       created.operationRef,
       `Expected cancellation recovery for ${receiptKind ?? "known-not-accepted"}.`,
     );
-    evidence.push(Object.freeze({
-      label,
-      receiptKind,
-      resultKind: result.kind,
-      process: productionProcessProjection(snapshot.process),
-    }));
+    evidence.push(
+      Object.freeze({
+        label,
+        receiptKind,
+        resultKind: result.kind,
+        process: productionProcessProjection(snapshot.process),
+      }),
+    );
   }
   return Object.freeze(evidence);
 }

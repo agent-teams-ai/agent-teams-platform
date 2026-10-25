@@ -64,10 +64,7 @@ test("source v3 rejects includeRootPackage as an unknown public field", async ()
     assert.equal(result.error, undefined, result.stderr);
     const envelope = JSON.parse(result.stdout);
     assert.notEqual(envelope.outcome, "passed", JSON.stringify(envelope));
-    assert.match(
-      JSON.stringify(envelope),
-      /includeRootPackage|unknown property|invalid-input/iu,
-    );
+    assert.match(JSON.stringify(envelope), /includeRootPackage|unknown property|invalid-input/iu);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

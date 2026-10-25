@@ -4,10 +4,7 @@
     "./node_modules/@agent-teams/engineering-foundation/presets/oxlint/type-aware.json",
     "./node_modules/@agent-teams/engineering-foundation/presets/oxlint/maintainability.json"
   ],
-  "ignorePatterns": [
-    "**/dist/**",
-    "packages/*/node_modules/**"
-  ],
+  "ignorePatterns": ["**/dist/**", "packages/*/node_modules/**"],
   "options": {
     "reportUnusedDisableDirectives": "error",
     "respectEslintDisableDirectives": false

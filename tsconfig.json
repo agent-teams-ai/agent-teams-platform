@@ -4,14 +4,7 @@
     "allowJs": true,
     "checkJs": false,
     "noEmit": true,
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "apps/**/*.ts",
-    "packages/**/*.ts",
-    "scripts/**/*.mjs",
-    "tooling/**/*.ts"
-  ]
+  "include": ["apps/**/*.ts", "packages/**/*.ts", "scripts/**/*.mjs", "tooling/**/*.ts"]
 }

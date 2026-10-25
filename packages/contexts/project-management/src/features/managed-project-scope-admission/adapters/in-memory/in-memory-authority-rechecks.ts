@@ -23,23 +23,23 @@ function authorityRecheckKey(
   return `${process.id.length}:${process.id}${process.generation}`;
 }
 
-function expireAuthorityRecheckLeases(
-  state: InMemoryProjectManagementState,
-  now: number,
-): void {
+function expireAuthorityRecheckLeases(state: InMemoryProjectManagementState, now: number): void {
   for (const [key, record] of state.authorityRechecks) {
     if (
       record.state === "leased" &&
       record.leaseExpiresAt !== null &&
       record.leaseExpiresAt <= now
     ) {
-      state.authorityRechecks.set(key, Object.freeze({
-        ...record,
-        state: "pending",
-        notBefore: now,
-        leaseId: null,
-        leaseExpiresAt: null,
-      }));
+      state.authorityRechecks.set(
+        key,
+        Object.freeze({
+          ...record,
+          state: "pending",
+          notBefore: now,
+          leaseId: null,
+          leaseExpiresAt: null,
+        }),
+      );
     }
   }
 }
@@ -49,15 +49,18 @@ export function scheduleAuthorityRecheckInMemory(
   process: ManagedScopeAdmissionProcess,
   notBefore: number,
 ): void {
-  state.authorityRechecks.set(authorityRecheckKey(process), Object.freeze({
-    processId: process.id,
-    processGeneration: process.generation,
-    attemptCount: 0,
-    state: "pending",
-    notBefore,
-    leaseId: null,
-    leaseExpiresAt: null,
-  }));
+  state.authorityRechecks.set(
+    authorityRecheckKey(process),
+    Object.freeze({
+      processId: process.id,
+      processGeneration: process.generation,
+      attemptCount: 0,
+      state: "pending",
+      notBefore,
+      leaseId: null,
+      leaseExpiresAt: null,
+    }),
+  );
 }
 
 export function claimAuthorityRecheckInMemory(
@@ -94,13 +97,16 @@ export function claimAuthorityRecheckInMemory(
   if (project === undefined || admission === undefined) {
     throw new Error("Authority recheck references missing Project state.");
   }
-  state.authorityRechecks.set(key, Object.freeze({
-    ...record,
-    state: "leased",
-    leaseId: input.leaseId,
-    attemptCount: record.attemptCount,
-    leaseExpiresAt: input.leaseExpiresAt,
-  }));
+  state.authorityRechecks.set(
+    key,
+    Object.freeze({
+      ...record,
+      state: "leased",
+      leaseId: input.leaseId,
+      attemptCount: record.attemptCount,
+      leaseExpiresAt: input.leaseExpiresAt,
+    }),
+  );
   return Object.freeze({
     leaseId: input.leaseId,
     attemptCount: record.attemptCount,
@@ -160,20 +166,21 @@ export function recordAuthorityRecheckInMemory(
     );
     state.authorityRechecks.delete(key);
   } else if (result.process.state === "receipt-observed") {
-    state.authorityRechecks.set(key, Object.freeze({
-      ...record,
-      attemptCount: record.attemptCount + 1,
-      state: "pending",
-      notBefore: retryAt,
-      leaseId: null,
-      leaseExpiresAt: null,
-    }));
+    state.authorityRechecks.set(
+      key,
+      Object.freeze({
+        ...record,
+        attemptCount: record.attemptCount + 1,
+        state: "pending",
+        notBefore: retryAt,
+        leaseId: null,
+        leaseExpiresAt: null,
+      }),
+    );
   } else {
     state.authorityRechecks.delete(key);
   }
-  return result.integrityConflict
-    ? { kind: "integrity-conflict" }
-    : { kind: "applied" };
+  return result.integrityConflict ? { kind: "integrity-conflict" } : { kind: "applied" };
 }
 
 function validRecheckLease(
@@ -181,11 +188,13 @@ function validRecheckLease(
   claim: ScopeAdmissionAuthorityRecheckClaim,
   now: number,
 ): record is AuthorityRecheckRecord {
-  return record !== undefined &&
+  return (
+    record !== undefined &&
     record.state === "leased" &&
     record.leaseId === claim.leaseId &&
     record.leaseExpiresAt !== null &&
-    record.leaseExpiresAt > now;
+    record.leaseExpiresAt > now
+  );
 }
 
 function matchesRecheckSnapshot(
@@ -194,7 +203,10 @@ function matchesRecheckSnapshot(
   admission: ProjectAdmissionAuthority | undefined,
   claim: ScopeAdmissionAuthorityRecheckClaim,
 ): current is ManagedScopeAdmissionProcess {
-  return current !== undefined && project !== undefined && admission !== undefined &&
+  return (
+    current !== undefined &&
+    project !== undefined &&
+    admission !== undefined &&
     current.revision === claim.expectedProcessRevision &&
     current.generation === claim.process.generation &&
     project.incarnation === claim.expectedProjectIncarnation &&
@@ -202,5 +214,6 @@ function matchesRecheckSnapshot(
     project.lifecycle === "open" &&
     admission.revision === claim.expectedAdmissionRevision &&
     admission.lifecycleEpoch === claim.expectedAdmissionLifecycleEpoch &&
-    current.receipt !== null;
+    current.receipt !== null
+  );
 }

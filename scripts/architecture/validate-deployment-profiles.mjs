@@ -99,7 +99,9 @@ async function loadQualificationRecords(catalogDirectory, validateRecordSchema, 
       errors.push(`DEPLOY-RECORD-ID-001 ${relativePath}: filename must be ${expectedFileName}`);
     }
     if (records.has(record.recordId)) {
-      errors.push(`DEPLOY-RECORD-ID-002 ${record.recordId}: duplicate qualification record identity`);
+      errors.push(
+        `DEPLOY-RECORD-ID-002 ${record.recordId}: duplicate qualification record identity`,
+      );
       continue;
     }
 
@@ -139,9 +141,7 @@ export async function validateDeploymentProfiles(repositoryRoot, asOf = null) {
     catalog.qualificationGateCatalog,
   );
   errors.push(...qualificationRecords.errors);
-  errors.push(
-    ...validateDeploymentProfileSemantics(catalog, qualificationRecords.records, asOf),
-  );
+  errors.push(...validateDeploymentProfileSemantics(catalog, qualificationRecords.records, asOf));
   errors.push(...(await validateDesignReferences(repositoryRoot, catalog)));
   errors.push(...(await validateCoreProfileIndependence(repositoryRoot, catalog)));
   return {
@@ -153,12 +153,8 @@ export async function validateDeploymentProfiles(repositoryRoot, asOf = null) {
 
 export async function validateDeploymentDesignReferences(repositoryRoot) {
   const catalogDirectory = path.join(repositoryRoot, "architecture/deployment-profiles");
-  const schema = await readJson(
-    path.join(catalogDirectory, "deployment-profiles.schema.json"),
-  );
-  const catalog = await readYaml(
-    path.join(catalogDirectory, "deployment-profiles.yaml"),
-  );
+  const schema = await readJson(path.join(catalogDirectory, "deployment-profiles.schema.json"));
+  const catalog = await readYaml(path.join(catalogDirectory, "deployment-profiles.yaml"));
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   const validate = ajv.compile(schema);
   if (!validate(catalog)) {

@@ -2,10 +2,7 @@ import type {
   ProjectManagementDependencies,
   RecheckScopeAdmissionAuthorityResult,
 } from "./contracts.js";
-import {
-  authorityDisposition,
-  evaluateCreationAuthority,
-} from "./evaluate-creation-authority.js";
+import { authorityDisposition, evaluateCreationAuthority } from "./evaluate-creation-authority.js";
 import { safeRetryAt, safeRetryExhausted } from "./safe-retry-policy.js";
 
 export function recheckScopeAdmissionAuthorityUseCase(
@@ -35,19 +32,14 @@ export function recheckScopeAdmissionAuthorityUseCase(
       claim,
       authority,
       safeRetryAt(dependencies.safeRetryPolicy, dependencies.clock.now()),
-      safeRetryExhausted(
-        dependencies.safeRetryPolicy,
-        claim.attemptCount + 1,
-      ),
+      safeRetryExhausted(dependencies.safeRetryPolicy, claim.attemptCount + 1),
     );
     if (result.kind !== "applied") {
       return {
         kind: result.kind === "integrity-conflict" ? "integrity-conflict" : "stale",
       };
     }
-    const current = await dependencies.store.loadByOperation(
-      claim.process.operationRef,
-    );
+    const current = await dependencies.store.loadByOperation(claim.process.operationRef);
     if (current === null || current.process.generation !== claim.process.generation) {
       return { kind: "stale" };
     }

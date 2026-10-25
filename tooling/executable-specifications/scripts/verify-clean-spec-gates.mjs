@@ -10,13 +10,21 @@ const snapshot = path.join(root, "source");
 
 try {
   // Qualify current candidate bytes, including intended new files, before commit.
-  const inventory = await execute("git", ["ls-files", "--cached", "--others", "--exclude-standard", "-z"], { encoding: "utf8" });
+  const inventory = await execute(
+    "git",
+    ["ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+    { encoding: "utf8" },
+  );
   for (const file of new Set(inventory.stdout.split("\0").filter(Boolean))) {
     const present = await lstat(file).catch((error) => {
-      if (error.code === "ENOENT") { return null; }
+      if (error.code === "ENOENT") {
+        return null;
+      }
       throw error;
     });
-    if (present === null) { continue; }
+    if (present === null) {
+      continue;
+    }
     const destination = path.join(snapshot, file);
     await mkdir(path.dirname(destination), { recursive: true });
     await cp(file, destination);
@@ -37,7 +45,14 @@ try {
     await cp(snapshot, checkout, { recursive: true });
     await execute(
       "pnpm",
-      ["install", "--offline", "--frozen-lockfile", "--ignore-scripts", "--store-dir", storeDirectory],
+      [
+        "install",
+        "--offline",
+        "--frozen-lockfile",
+        "--ignore-scripts",
+        "--store-dir",
+        storeDirectory,
+      ],
       { cwd: checkout },
     );
     await execute("pnpm", [gate], { cwd: checkout });

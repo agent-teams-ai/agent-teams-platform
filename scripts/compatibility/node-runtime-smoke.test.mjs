@@ -7,15 +7,16 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const execFileAsync = (command, args, options) => new Promise((resolve, reject) => {
-  execFile(command, args, options, (error, stdout, stderr) => {
-    if (error) {
-      reject(Object.assign(error, { stdout, stderr }));
-      return;
-    }
-    resolve({ stdout, stderr });
+const execFileAsync = (command, args, options) =>
+  new Promise((resolve, reject) => {
+    execFile(command, args, options, (error, stdout, stderr) => {
+      if (error) {
+        reject(Object.assign(error, { stdout, stderr }));
+        return;
+      }
+      resolve({ stdout, stderr });
+    });
   });
-});
 
 test("Node runtime APIs preserve observable filesystem and process behavior", async () => {
   const temporaryDirectory = await mkdtemp(path.join(tmpdir(), "platform-node-compat-"));
@@ -29,10 +30,7 @@ test("Node runtime APIs preserve observable filesystem and process behavior", as
     await writeFile(fixturePath, `${JSON.stringify(fixture)}\n`, "utf8");
     const roundTrip = JSON.parse(await readFile(fixturePath, "utf8"));
     assert.deepStrictEqual(fixture, structuredClone(roundTrip));
-    assert.equal(
-      createHash("sha256").update(JSON.stringify(fixture)).digest("hex").length,
-      64,
-    );
+    assert.equal(createHash("sha256").update(JSON.stringify(fixture)).digest("hex").length, 64);
     assert.equal(fileURLToPath(pathToFileURL(fixturePath)), fixturePath);
 
     const childScript = `

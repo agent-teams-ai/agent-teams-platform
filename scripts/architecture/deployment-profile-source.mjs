@@ -3,23 +3,8 @@ import path from "node:path";
 
 import { Lang, parse } from "@ast-grep/napi";
 
-const sourceExtensions = new Set([
-  ".cjs",
-  ".cts",
-  ".js",
-  ".jsx",
-  ".mjs",
-  ".mts",
-  ".ts",
-  ".tsx",
-]);
-const ignoredGeneratedDirectories = new Set([
-  ".cache",
-  ".nx",
-  "coverage",
-  "dist",
-  "node_modules",
-]);
+const sourceExtensions = new Set([".cjs", ".cts", ".js", ".jsx", ".mjs", ".mts", ".ts", ".tsx"]);
+const ignoredGeneratedDirectories = new Set([".cache", ".nx", "coverage", "dist", "node_modules"]);
 const forbiddenCoreIdentifiers = new Set([
   "DeploymentProfile",
   "DeploymentMode",
@@ -69,9 +54,7 @@ function profileVocabularyVariants(value) {
   if (words.length === 0) {
     return [];
   }
-  const pascal = words
-    .map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase())
-    .join("");
+  const pascal = words.map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase()).join("");
   return [
     value,
     pascal,

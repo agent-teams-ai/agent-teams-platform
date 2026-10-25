@@ -14,26 +14,28 @@ export function productionProcessProjection(
     Awaited<ReturnType<ReturnType<typeof fixture>["store"]["loadByOperation"]>>
   >["process"],
 ) {
-  const authority = process.admissionAuthorityBasis !== null
-    ? "admission-authorized"
-    : process.state === "receipt-observed"
-      ? "admission-recheck-pending"
-      : process.state === "claimed"
-        ? "dispatch-recheck-pending"
-      : process.blockReason === "COMMERCIAL_RESTRICTION"
-          ? "commercially-restricted"
-          : process.blockReason === "AUTHORITY_DENIED"
-            ? "denied"
-            : process.state === "blocked"
-              ? "closed"
-              : process.dispatchAuthorityBasis !== null
-                ? "dispatch-authorized"
-                : "creation-authorized";
-  const reconciliation = process.state === "reconcile-required"
-    ? "outcome-unknown"
-    : process.state === "cancel-reconcile-required"
-      ? "cancellation-unknown"
-      : "clear";
+  const authority =
+    process.admissionAuthorityBasis !== null
+      ? "admission-authorized"
+      : process.state === "receipt-observed"
+        ? "admission-recheck-pending"
+        : process.state === "claimed"
+          ? "dispatch-recheck-pending"
+          : process.blockReason === "COMMERCIAL_RESTRICTION"
+            ? "commercially-restricted"
+            : process.blockReason === "AUTHORITY_DENIED"
+              ? "denied"
+              : process.state === "blocked"
+                ? "closed"
+                : process.dispatchAuthorityBasis !== null
+                  ? "dispatch-authorized"
+                  : "creation-authorized";
+  const reconciliation =
+    process.state === "reconcile-required"
+      ? "outcome-unknown"
+      : process.state === "cancel-reconcile-required"
+        ? "cancellation-unknown"
+        : "clear";
   return Object.freeze({
     state: process.state,
     authority,
@@ -68,12 +70,8 @@ export async function requireProductionSnapshot(
 export async function productionStaleGenerationEvidence() {
   const subject = fixture();
   const created = await acceptedProject(subject);
-  await subject.application.cancelProjectPreparation(
-    cancelCommand(created.operationRef),
-  );
-  await subject.application.resumeProjectPreparation(
-    resumeCommand(created.operationRef),
-  );
+  await subject.application.cancelProjectPreparation(cancelCommand(created.operationRef));
+  await subject.application.resumeProjectPreparation(resumeCommand(created.operationRef));
   const before = await subject.store.loadByOperation(created.operationRef);
   if (before === null) {
     throw new Error("Expected resumed process before stale command.");
@@ -101,9 +99,7 @@ export async function productionStaleRevisionEvidence() {
   if (target === null) {
     throw new Error("Expected a reconciliation target before advancing revision.");
   }
-  await subject.application.cancelProjectPreparation(
-    cancelCommand(created.operationRef),
-  );
+  await subject.application.cancelProjectPreparation(cancelCommand(created.operationRef));
   const before = await requireProductionSnapshot(
     subject,
     created.operationRef,
@@ -138,9 +134,7 @@ export async function productionReconciledAdmittedEvidence() {
       receiptDigest: intent.commandDigest,
     },
   });
-  const result = await subject.worker.reconcileManagedScopeAdmission(
-    created.operationRef,
-  );
+  const result = await subject.worker.reconcileManagedScopeAdmission(created.operationRef);
   const snapshot = await requireProductionSnapshot(
     subject,
     created.operationRef,
@@ -266,14 +260,8 @@ export async function productionProtectedCancellationNoOpEvidence() {
 
   return Object.freeze({
     ready: await cancellationNoOpEvidence(readySubject, ready.operationRef),
-    downstreamConflict: await cancellationNoOpEvidence(
-      conflictSubject,
-      conflict.operationRef,
-    ),
-    userCancelled: await cancellationNoOpEvidence(
-      cancelledSubject,
-      cancelled.operationRef,
-    ),
+    downstreamConflict: await cancellationNoOpEvidence(conflictSubject, conflict.operationRef),
+    userCancelled: await cancellationNoOpEvidence(cancelledSubject, cancelled.operationRef),
   });
 }
 
@@ -332,14 +320,16 @@ export async function productionNonAdmittedResumeEvidence() {
       created.operationRef,
       `Expected successor after ${receiptKind} resume.`,
     );
-    evidence.push(Object.freeze({
-      receiptKind,
-      first,
-      replay,
-      predecessorCommandId: predecessor.process.stepCommandId,
-      successorCommandId: successor.process.stepCommandId,
-      successorReceiptKind: successor.process.receipt?.kind ?? null,
-    }));
+    evidence.push(
+      Object.freeze({
+        receiptKind,
+        first,
+        replay,
+        predecessorCommandId: predecessor.process.stepCommandId,
+        successorCommandId: successor.process.stepCommandId,
+        successorReceiptKind: successor.process.receipt?.kind ?? null,
+      }),
+    );
   }
   return Object.freeze(evidence);
 }
