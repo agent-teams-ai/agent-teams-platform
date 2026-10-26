@@ -13,7 +13,7 @@ related:
   - ADR-0007
 ---
 
-# Platform-Orchestrator Boundary Direction
+# Platform-Orchestrator Product Relationship and Boundary
 
 This document remains `proposed` for exact Platform-Orchestrator contracts and
 compatibility surfaces. ADR-0007 accepts Platform-side strategic ownership and
@@ -51,7 +51,7 @@ recovery, and isolation limits before claiming support at that scale.
 People and AI agents collaborate in the same visible Teams and Task system.
 Tasks admit multiple views; Kanban is one presentation rather than the domain
 model. Orchestrator owns Team, Work, and Run semantics. Human membership
-in several Teams, one authorized personal-work query, and several equal
+in several Teams, one authorized personal-work query, and zero or more equal
 executors on one Task are selected in [Orchestrator ADR-0111][collaboration-decision].
 Assignment takes effect through an authorized command without a mandatory
 offer, coordinator, or all-executor completion quorum. Work Coordination retains
@@ -63,8 +63,9 @@ Units or departments are possible structures for growth. This direction does
 not accept a new human organization aggregate or automatic authorization
 hierarchy, or replace existing Orchestrator Agent Organization decisions.
 
-Task assignment neither grants access nor approves a dangerous action. Such
-actions will need product approvals; approver eligibility, exact action binding,
+Task assignment does not grant access, approve a dangerous action, or start
+an Agent or activate its runtime. Dangerous actions will need product approvals;
+approver eligibility, exact action binding,
 expiry, revocation and dispatch enforcement remain deferred research under
 [Orchestrator OD-032][dangerous-action-approvals]. Product authorization, approval,
 AR technical permission and Work completion retain separate owners. The exact
@@ -140,6 +141,36 @@ provider, or a shared view never grants inherited access to another customer.
 Cross-installation work requires separately reviewed identity, trust,
 authorization, data-sharing, lifecycle, and recovery contracts.
 
+## IAM research follow-up
+
+The [IAM critical-decisions review dated 2026-10-23][iam-critical-research]
+records additional evidence for Platform Identity, Access and Authority, and
+the cross-product authority adapters. Its recommendations remain unaccepted:
+the report does not select production providers, accept exact contracts, or
+authorize packages.
+
+Platform-specific questions include shared-account login and recovery roots,
+preserving B when A removes a person's membership, customer-scoped administration
+and SCIM, and grant/revoke projection under stale writers, lost responses, and
+restore. Membership removal alone cannot prove isolation if A still controls
+a login or recovery root accepted for B. The owning review must qualify the
+actual authentication and provisioning paths, not only membership deletion.
+
+The report also evaluates managed, standalone, and personal-local authority
+composition, browser/native credential custody, protected query disclosure, and
+the minimum feature-owned dangerous-effect approval boundary. Existing ownership
+remains intact: durable identity, membership, and grant facts belong to the
+configured product authority; the Orchestrator ACL must not become a second
+grant ledger. Commercial authority remains a separate capability, without
+becoming a dependency of standalone Orchestrator.
+
+Keycloak plus OpenFGA remains provisional. SpiceDB is a bounded consistency
+comparator, not an accepted provider change. Personal single-owner local access,
+neutral account recovery, fixed role templates, and a browser BFF are research
+recommendations rather than selected Platform policy. The detailed options,
+scores, estimates, primary sources, and qualification scenarios remain in the
+linked report rather than a second research copy here.
+
 ## Cross-repository source records
 
 The following records are on the branch for
@@ -148,6 +179,7 @@ main-branch authority, implementation evidence, or deployment qualification.
 Their owning accepted decisions and explicit open questions retain their status.
 
 - [Identity-provider comparison and source review][identity-research].
+- [IAM critical decisions, adversarial review, and qualification questions][iam-critical-research].
 - [Get Modular adoption and scale review][modular-research].
 - [Collaboration, hierarchy, and Workspace review][collaboration-research].
 - [Human collaboration and Execution Directory decision][collaboration-decision].
@@ -158,6 +190,7 @@ Their owning accepted decisions and explicit open questions retain their status.
 [modular-foundation]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/decisions/0110-mandatory-get-modular-and-nested-feature-foundation.md
 [identity-decision]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/open-decisions/OD-012-identity-authorization-tenant-isolation.md
 [identity-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/research/identity-provider-comparison-2026-10-21.md
+[iam-critical-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/6564bfb21ff9e57fbbcd8d4b41eae209f813d7b8/docs/research/iam-critical-decisions-review-2026-10-23.md
 [modular-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/research/get-modular-adoption-and-scale-review-2026-10-21.md
 [collaboration-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/research/collaboration-hierarchy-and-workspace-review-2026-10-22.md
 [orchestrator-pr]: https://github.com/agent-teams-ai/agent-teams-orchestrator/pull/86
