@@ -86,12 +86,16 @@ compatible release and capability versions explicitly. Standalone Orchestrator c
 mandatory commercial Platform or cloud-service dependency.
 
 Concrete authentication, provider, transport, or relationship-projection
-mechanisms needed by both products should have one deliberate library owner
-and explicit contracts. A second real consumer or concrete repeated need must
-justify the shared mechanism. Share technical implementation behind narrow
-ports and module contracts without merging product membership policy,
-commercial decisions, Team composition, Task lifecycle, authorization authority,
-or owner-local persistence.
+mechanisms already expected to serve both products follow the organization's
+[library-first rule](https://github.com/agent-teams-ai/.github/blob/main/docs/engineering-quality-standard.md#library-first-design-and-deliberate-evolution):
+design one reusable library from the start, with a deliberate owner and explicit
+contract. Validate it with disposable consumers and at least one real consumer
+in the same delivery; do not first duplicate the mechanism and wait for a second
+implementation. A concrete repeated need still justifies the boundary, not
+speculation about every possible future consumer. Share technical implementation
+behind narrow ports and module contracts without merging product membership
+policy, commercial decisions, Team composition, Task lifecycle, authorization
+authority, or owner-local persistence.
 
 Get Modular is the owner's mandatory TypeScript module composition foundation;
 another homemade module framework is not the target. Each repository owns its
@@ -101,6 +105,12 @@ foundation decision in [ADR-0110][modular-foundation]. Platform's
 [local adoption record](feature-module-standard.md) distinguishes this required
 direction from its current v1 profile. This document neither claims a completed
 migration nor activates a new source topology.
+
+The linked ADR-0110 belongs to the companion PR #86 history. Canonical
+Orchestrator main separately accepts [ADR-0113][canonical-module-adoption], with
+a different exact Consumer Module Standard pin and adoption scope. Reconcile
+those sources before selecting a shared implementation baseline; this document
+does not select a competing pin or adopt either profile for Platform by reference.
 
 ## Open mappings and future cooperation
 
@@ -173,10 +183,13 @@ linked report rather than a second research copy here.
 
 ## Cross-repository source records
 
-The following records are on the branch for
-[Orchestrator draft PR #86][orchestrator-pr]. They are pending work, not merged
+The companion links below pin reviewed source at Orchestrator `51052e63`, from
+[Orchestrator draft PR #86][orchestrator-pr]; the critical IAM report retains its
+original publication snapshot. These are pending branch records, not merged
 main-branch authority, implementation evidence, or deployment qualification.
 Their owning accepted decisions and explicit open questions retain their status.
+The PR link provides navigation to subsequent updates without changing these
+reviewed source references.
 
 - [Identity-provider comparison and source review][identity-research].
 - [IAM critical decisions, adversarial review, and qualification questions][iam-critical-research].
@@ -184,15 +197,16 @@ Their owning accepted decisions and explicit open questions retain their status.
 - [Collaboration, hierarchy, and Workspace review][collaboration-research].
 - [Human collaboration and Execution Directory decision][collaboration-decision].
 
-[mixed-participation]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/open-decisions/OD-048-mixed-human-and-ai-team-participation.md
-[collaboration-decision]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/decisions/0111-human-collaboration-and-execution-directory-terminology.md
-[dangerous-action-approvals]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/open-decisions/OD-032-last-mile-side-effect-safety.md#deferred-dangerous-action-approval-research
-[modular-foundation]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/decisions/0110-mandatory-get-modular-and-nested-feature-foundation.md
-[identity-decision]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/open-decisions/OD-012-identity-authorization-tenant-isolation.md
-[identity-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/research/identity-provider-comparison-2026-10-21.md
+[mixed-participation]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/51052e63cfefb372ad49af7a923185dcf0b00944/docs/open-decisions/OD-048-mixed-human-and-ai-team-participation.md
+[collaboration-decision]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/51052e63cfefb372ad49af7a923185dcf0b00944/docs/decisions/0111-human-collaboration-and-execution-directory-terminology.md
+[dangerous-action-approvals]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/51052e63cfefb372ad49af7a923185dcf0b00944/docs/open-decisions/OD-032-last-mile-side-effect-safety.md#deferred-dangerous-action-approval-research
+[modular-foundation]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/51052e63cfefb372ad49af7a923185dcf0b00944/docs/decisions/0110-mandatory-get-modular-and-nested-feature-foundation.md
+[canonical-module-adoption]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/94a480d004e8e6eaf79507feeae30428d372a3d3/docs/decisions/0113-canonical-module-and-composition-adoption.md
+[identity-decision]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/51052e63cfefb372ad49af7a923185dcf0b00944/docs/open-decisions/OD-012-identity-authorization-tenant-isolation.md
+[identity-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/51052e63cfefb372ad49af7a923185dcf0b00944/docs/research/identity-provider-comparison-2026-10-21.md
 [iam-critical-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/6564bfb21ff9e57fbbcd8d4b41eae209f813d7b8/docs/research/iam-critical-decisions-review-2026-10-23.md
-[modular-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/research/get-modular-adoption-and-scale-review-2026-10-21.md
-[collaboration-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/docs/mandatory-modules-and-collaboration/docs/research/collaboration-hierarchy-and-workspace-review-2026-10-22.md
+[modular-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/51052e63cfefb372ad49af7a923185dcf0b00944/docs/research/get-modular-adoption-and-scale-review-2026-10-21.md
+[collaboration-research]: https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/51052e63cfefb372ad49af7a923185dcf0b00944/docs/research/collaboration-hierarchy-and-workspace-review-2026-10-22.md
 [orchestrator-pr]: https://github.com/agent-teams-ai/agent-teams-orchestrator/pull/86
 
 ## Agreed direction
