@@ -9,18 +9,11 @@ export type ScopeAdmissionReadiness =
   | Readonly<{ kind: "ready" }>
   | Readonly<{
       kind: "preparing";
-      reason:
-        | "DISPATCH_PENDING"
-        | "RETRY_WAIT"
-        | "OUTCOME_UNKNOWN"
-        | "AUTHORITY_RECHECK_PENDING";
+      reason: "DISPATCH_PENDING" | "RETRY_WAIT" | "OUTCOME_UNKNOWN" | "AUTHORITY_RECHECK_PENDING";
     }>
   | Readonly<{
       kind: "blocked";
-      reason:
-        | ScopeAdmissionBlockReason
-        | "PROJECT_RETIRED"
-        | "UNKNOWN_BLOCK";
+      reason: ScopeAdmissionBlockReason | "PROJECT_RETIRED" | "UNKNOWN_BLOCK";
       recoverable: boolean;
       allowedActions: readonly ("resume" | "inspect" | "retire")[];
     }>;
@@ -33,8 +26,7 @@ export function preparationGenerationExhausted(input: {
 }): boolean {
   return (
     input.resumptionCount >= input.maxPreparationGenerations ||
-    (!input.retainsAdmittedReceipt &&
-      input.generation >= input.maxPreparationGenerations)
+    (!input.retainsAdmittedReceipt && input.generation >= input.maxPreparationGenerations)
   );
 }
 
@@ -59,18 +51,15 @@ export function scopeAdmissionReadiness(input: {
       retainsAdmittedReceipt: input.process.receipt?.kind === "admitted",
       maxPreparationGenerations: input.maxPreparationGenerations,
     });
-    const recoverable = !generationExhausted && ![
-      "DATA_INTEGRITY_CONFLICT",
-      "DOWNSTREAM_CONFLICT",
-    ].includes(input.process.blockReason ?? "");
+    const recoverable =
+      !generationExhausted &&
+      !["DATA_INTEGRITY_CONFLICT", "DOWNSTREAM_CONFLICT"].includes(input.process.blockReason ?? "");
     return Object.freeze({
       kind: "blocked",
       reason: input.process.blockReason ?? "UNKNOWN_BLOCK",
       recoverable,
       allowedActions: Object.freeze(
-        recoverable
-          ? (["resume", "inspect", "retire"] as const)
-          : (["inspect", "retire"] as const),
+        recoverable ? (["resume", "inspect", "retire"] as const) : (["inspect", "retire"] as const),
       ),
     });
   }

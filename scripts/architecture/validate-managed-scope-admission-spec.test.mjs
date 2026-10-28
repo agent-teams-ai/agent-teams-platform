@@ -70,8 +70,7 @@ test("rejects lifecycle effects that omit aggregate revision advance", () => {
 
 test("rejects receipt effects outside the JSON-owned vocabulary", () => {
   const invalid = structuredClone(document);
-  invalid.events.find(({ type }) => type === "OBSERVE_REJECTED").effects.set.receipt =
-    "invented";
+  invalid.events.find(({ type }) => type === "OBSERVE_REJECTED").effects.set.receipt = "invented";
   assert.deepEqual(validateManagedScopeAdmissionDocument(invalid, schema), [
     "SCOPE-SPEC-EFFECT-005 OBSERVE_REJECTED sets undeclared receipt invented",
   ]);

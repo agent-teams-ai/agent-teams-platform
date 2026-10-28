@@ -47,10 +47,7 @@ function collectActiveEvidenceSetIds(evidenceSetsById, profiles) {
 
 function validateInactiveReviewInputs(evidenceSets, activeIds, errors) {
   for (const evidenceSet of evidenceSets) {
-    if (
-      (evidenceSet.reviewInputRefs?.length ?? 0) > 0 &&
-      !activeIds.has(evidenceSet.id)
-    ) {
+    if ((evidenceSet.reviewInputRefs?.length ?? 0) > 0 && !activeIds.has(evidenceSet.id)) {
       errors.push(
         `REVIEW-EVIDENCE-004 ${evidenceSet.id} contains review inputs but is not referenced by any profile evidence lineage`,
       );
@@ -71,32 +68,21 @@ function validateRequiredReviewInputs(
   for (const file of [...matrixFiles, traceFile]) {
     const requiredPath = `${reviewDirectory}/${file}`;
     if (!reviewInputs.has(requiredPath)) {
-      errors.push(
-        `REVIEW-EVIDENCE-001 deployment review inputs must include ${requiredPath}`,
-      );
+      errors.push(`REVIEW-EVIDENCE-001 deployment review inputs must include ${requiredPath}`);
     }
   }
 }
 
-function validateNoAcceptedReviewArtifacts(
-  activeEvidenceSets,
-  reviewDirectory,
-  errors,
-) {
+function validateNoAcceptedReviewArtifacts(activeEvidenceSets, reviewDirectory, errors) {
   const acceptedEvidence = activeEvidenceSets.flatMap(
     (evidenceSet) => evidenceSet.evidenceRefs ?? [],
   );
   if (acceptedEvidence.some((item) => item.startsWith(`${reviewDirectory}/`))) {
-    errors.push(
-      "REVIEW-EVIDENCE-002 proposed review artifacts cannot be accepted design evidence",
-    );
+    errors.push("REVIEW-EVIDENCE-002 proposed review artifacts cannot be accepted design evidence");
   }
 }
 
-export function validateReviewEvidence(
-  documents,
-  { matrixFiles, reviewDirectory, traceFile },
-) {
+export function validateReviewEvidence(documents, { matrixFiles, reviewDirectory, traceFile }) {
   const errors = [];
   const profileCatalog = parseProfileCatalog(documents, errors);
   const evidenceSets = objectEntries(
@@ -118,16 +104,8 @@ export function validateReviewEvidence(
   );
   const activeIds = collectActiveEvidenceSetIds(evidenceSetsById, profiles);
   validateInactiveReviewInputs(evidenceSets, activeIds, errors);
-  const activeEvidenceSets = evidenceSets.filter((evidenceSet) =>
-    activeIds.has(evidenceSet.id),
-  );
-  validateRequiredReviewInputs(
-    activeEvidenceSets,
-    matrixFiles,
-    reviewDirectory,
-    traceFile,
-    errors,
-  );
+  const activeEvidenceSets = evidenceSets.filter((evidenceSet) => activeIds.has(evidenceSet.id));
+  validateRequiredReviewInputs(activeEvidenceSets, matrixFiles, reviewDirectory, traceFile, errors);
   validateNoAcceptedReviewArtifacts(activeEvidenceSets, reviewDirectory, errors);
   return errors;
 }

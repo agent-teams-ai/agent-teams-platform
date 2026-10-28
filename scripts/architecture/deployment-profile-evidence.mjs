@@ -48,10 +48,7 @@ async function inspectRepositoryFile(repositoryRoot, realRepositoryRoot, referen
     return "outside repository";
   }
   try {
-    const [fileStat, realCandidate] = await Promise.all([
-      stat(candidate),
-      realpath(candidate),
-    ]);
+    const [fileStat, realCandidate] = await Promise.all([stat(candidate), realpath(candidate)]);
     if (!fileStat.isFile()) {
       return "not a file";
     }
@@ -68,9 +65,7 @@ async function inspectRepositoryFile(repositoryRoot, realRepositoryRoot, referen
 }
 
 function markdownDocumentStatus(source) {
-  const frontmatter = source.match(
-    /^---\r?\n(?<yaml>[\s\S]*?)\r?\n---(?:\r?\n|$)/u,
-  );
+  const frontmatter = source.match(/^---\r?\n(?<yaml>[\s\S]*?)\r?\n---(?:\r?\n|$)/u);
   if (!frontmatter?.groups?.yaml) {
     return null;
   }
@@ -106,9 +101,7 @@ function validateAcceptedEvidenceSets(evidenceSetsById, errors) {
   for (const [evidenceSetId, acceptedDefinition] of acceptedDesignEvidenceSets) {
     const evidenceSet = evidenceSetsById.get(evidenceSetId);
     if (!evidenceSet) {
-      errors.push(
-        `DEPLOY-DESIGNED-008 ${evidenceSetId}: accepted design evidence set is missing`,
-      );
+      errors.push(`DEPLOY-DESIGNED-008 ${evidenceSetId}: accepted design evidence set is missing`);
       continue;
     }
     for (const requiredRef of acceptedDefinition.evidenceRefs) {
@@ -155,10 +148,7 @@ function validateReviewOwnership(
     }
   }
   for (const evidenceSet of evidenceSets) {
-    if (
-      (evidenceSet.reviewInputRefs?.length ?? 0) > 0 &&
-      !activeIds.has(evidenceSet.id)
-    ) {
+    if ((evidenceSet.reviewInputRefs?.length ?? 0) > 0 && !activeIds.has(evidenceSet.id)) {
       errors.push(
         `DEPLOY-REVIEW-003 ${evidenceSet.id}: review inputs must belong to an evidence-set lineage referenced by a deployment profile`,
       );
@@ -174,11 +164,7 @@ async function validateAcceptedEvidenceReferences(
 ) {
   for (const evidenceRef of evidenceSet.evidenceRefs ?? []) {
     const evidencePath = path.join(repositoryRoot, evidenceRef);
-    const inspection = await inspectRepositoryFile(
-      repositoryRoot,
-      realRepositoryRoot,
-      evidenceRef,
-    );
+    const inspection = await inspectRepositoryFile(repositoryRoot, realRepositoryRoot, evidenceRef);
     if (inspection !== null) {
       errors.push(
         `DEPLOY-DESIGNED-002 ${evidenceSet.id}: invalid design evidence ${evidenceRef} (${inspection})`,
@@ -200,12 +186,7 @@ async function validateAcceptedEvidenceReferences(
   }
 }
 
-async function validateReviewReferences(
-  repositoryRoot,
-  realRepositoryRoot,
-  evidenceSet,
-  errors,
-) {
+async function validateReviewReferences(repositoryRoot, realRepositoryRoot, evidenceSet, errors) {
   for (const reviewInputRef of evidenceSet.reviewInputRefs ?? []) {
     const inspection = await inspectRepositoryFile(
       repositoryRoot,
@@ -235,11 +216,7 @@ async function validateImplementationReferences(
   ].filter((packagePath) => typeof packagePath === "string");
   for (const packagePath of packagePaths) {
     const packageJson = path.join(packagePath, "package.json");
-    const inspection = await inspectRepositoryFile(
-      repositoryRoot,
-      realRepositoryRoot,
-      packageJson,
-    );
+    const inspection = await inspectRepositoryFile(repositoryRoot, realRepositoryRoot, packageJson);
     if (inspection !== null) {
       errors.push(
         `DEPLOY-IMPLEMENTED-002 ${profile.id}: ${packagePath} must be a materialized package`,
@@ -247,11 +224,7 @@ async function validateImplementationReferences(
     }
   }
   for (const evidenceRef of profile.implementation.evidence ?? []) {
-    const inspection = await inspectRepositoryFile(
-      repositoryRoot,
-      realRepositoryRoot,
-      evidenceRef,
-    );
+    const inspection = await inspectRepositoryFile(repositoryRoot, realRepositoryRoot, evidenceRef);
     if (inspection !== null) {
       errors.push(
         `DEPLOY-IMPLEMENTED-003 ${profile.id}: invalid implementation evidence ${evidenceRef} (${inspection})`,
@@ -286,20 +259,10 @@ export async function validateDesignReferences(repositoryRoot, catalog) {
       evidenceSet,
       errors,
     );
-    await validateReviewReferences(
-      repositoryRoot,
-      realRepositoryRoot,
-      evidenceSet,
-      errors,
-    );
+    await validateReviewReferences(repositoryRoot, realRepositoryRoot, evidenceSet, errors);
   }
   for (const profile of catalog.profiles ?? []) {
-    await validateImplementationReferences(
-      repositoryRoot,
-      realRepositoryRoot,
-      profile,
-      errors,
-    );
+    await validateImplementationReferences(repositoryRoot, realRepositoryRoot, profile, errors);
   }
   return errors;
 }

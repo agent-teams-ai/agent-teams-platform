@@ -71,22 +71,16 @@ function classify(
     }
   }
   for (const item of decisions) {
-    if (
-      item.decision.kind === "allowed" &&
-      item.decision.validUntil > checkedAt
-    ) {
+    if (item.decision.kind === "allowed" && item.decision.validUntil > checkedAt) {
       continue;
     }
     const reason =
-      item.decision.kind === "allowed"
-        ? "AUTHORITY_EVIDENCE_EXPIRED"
-        : item.decision.reason;
+      item.decision.kind === "allowed" ? "AUTHORITY_EVIDENCE_EXPIRED" : item.decision.reason;
     return {
       kind: "unavailable",
       dependency: item.dependency,
       reason,
-      ...(item.decision.kind === "unavailable" &&
-      item.decision.retryAfter !== undefined
+      ...(item.decision.kind === "unavailable" && item.decision.retryAfter !== undefined
         ? { retryAfter: item.decision.retryAfter }
         : {}),
     };
@@ -113,9 +107,7 @@ export async function evaluateCreationAuthority(input: {
 }): Promise<CreationAuthorityEvaluation> {
   return classify(
     await Promise.all([
-      safeDecision("tenant-admission", () =>
-        input.ports.tenantAdmission.decide(input.query),
-      ),
+      safeDecision("tenant-admission", () => input.ports.tenantAdmission.decide(input.query)),
       safeDecision("project-creation-authority", () =>
         input.ports.projectCreation.decide(input.query),
       ),
@@ -141,9 +133,7 @@ export function authorityDisposition(
       }
     : {
         kind: "defer",
-        exhaustionReason: commercial
-          ? "COMMERCIAL_RESTRICTION"
-          : "AUTHORITY_RECHECK_EXHAUSTED",
+        exhaustionReason: commercial ? "COMMERCIAL_RESTRICTION" : "AUTHORITY_RECHECK_EXHAUSTED",
       };
 }
 
@@ -155,14 +145,10 @@ export function authorityDispositionAt(
     return disposition;
   }
   const commercialExpired = disposition.basis.evidence.some(
-    (evidence) =>
-      evidence.source === "commercial-project-creation" &&
-      evidence.validUntil <= now,
+    (evidence) => evidence.source === "commercial-project-creation" && evidence.validUntil <= now,
   );
   return {
     kind: "defer",
-    exhaustionReason: commercialExpired
-      ? "COMMERCIAL_RESTRICTION"
-      : "AUTHORITY_RECHECK_EXHAUSTED",
+    exhaustionReason: commercialExpired ? "COMMERCIAL_RESTRICTION" : "AUTHORITY_RECHECK_EXHAUSTED",
   };
 }

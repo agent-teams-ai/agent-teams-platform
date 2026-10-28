@@ -48,9 +48,7 @@ export function eventAllows(
   if (event === undefined) {
     throw new Error(`Unknown model event ${eventType}.`);
   }
-  return (event.guard?.all ?? []).every((predicate) =>
-    predicateAllows(context, predicate, bounds),
-  );
+  return (event.guard?.all ?? []).every((predicate) => predicateAllows(context, predicate, bounds));
 }
 
 export function createManagedScopeAdmissionModel(
@@ -68,11 +66,8 @@ export function createManagedScopeAdmissionModel(
               event.type,
               {
                 target: event.to === "$same" ? state : event.to,
-                guard: ({ context }) =>
-                  eventAllows(context, event.type, modelSpec, bounds),
-                actions: assign(({ context }) =>
-                  applyTransition(context, event),
-                ),
+                guard: ({ context }) => eventAllows(context, event.type, modelSpec, bounds),
+                actions: assign(({ context }) => applyTransition(context, event)),
               },
             ]),
         ),
@@ -88,14 +83,8 @@ export function createManagedScopeAdmissionModel(
   });
 }
 
-export function runTrace(
-  events,
-  modelSpec = specification,
-  bounds = modelSpec.witnessBounds,
-) {
-  const actor = createActor(
-    createManagedScopeAdmissionModel(modelSpec, bounds),
-  ).start();
+export function runTrace(events, modelSpec = specification, bounds = modelSpec.witnessBounds) {
+  const actor = createActor(createManagedScopeAdmissionModel(modelSpec, bounds)).start();
   for (const type of events) {
     actor.send({ type });
   }

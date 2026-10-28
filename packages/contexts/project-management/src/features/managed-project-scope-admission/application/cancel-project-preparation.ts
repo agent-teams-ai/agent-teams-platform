@@ -8,9 +8,7 @@ import { digestPreparationCommand } from "./canonical-command-digests.js";
 
 export function cancelProjectPreparationUseCase(
   dependencies: ProjectManagementDependencies,
-): (
-  command: ProjectPreparationCommand,
-) => Promise<CancelProjectPreparationResult> {
+): (command: ProjectPreparationCommand) => Promise<CancelProjectPreparationResult> {
   return async (command) => {
     const identity = {
       commandScope: command.commandScope,
@@ -26,6 +24,7 @@ export function cancelProjectPreparationUseCase(
         identity,
         operationRef: command.operationRef,
         expectedGeneration: command.expectedGeneration,
+        expectedResumptionCount: command.expectedResumptionCount,
         authorityValidUntil: Number.MAX_SAFE_INTEGER,
       });
       if (replay.kind === "conflict") {
@@ -61,6 +60,7 @@ export function cancelProjectPreparationUseCase(
       identity,
       operationRef: command.operationRef,
       expectedGeneration: command.expectedGeneration,
+      expectedResumptionCount: command.expectedResumptionCount,
       authorityValidUntil: authority.validUntil,
     });
     if (result.kind === "conflict") {

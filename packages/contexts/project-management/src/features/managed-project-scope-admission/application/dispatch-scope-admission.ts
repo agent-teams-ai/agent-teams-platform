@@ -33,10 +33,7 @@ async function releaseForRetry(
     ProjectManagementDependencies["store"]["releaseNotSubmitted"]
   >[1]["exhaustedReason"],
 ): Promise<DispatchManagedScopeAdmissionResult> {
-  const exhausted = safeRetryExhausted(
-    dependencies.safeRetryPolicy,
-    claim.process.attemptCount,
-  );
+  const exhausted = safeRetryExhausted(dependencies.safeRetryPolicy, claim.process.attemptCount);
   const now = dependencies.clock.now();
   const result = await dependencies.store.releaseNotSubmitted(claim, {
     retryAt: safeRetryAt(dependencies.safeRetryPolicy, now, suggested),
@@ -120,11 +117,7 @@ export function dispatchManagedScopeAdmissionUseCase(
       };
     }
     if (submission.kind === "not-submitted") {
-      return releaseForRetry(
-        dependencies,
-        authorizedClaim,
-        submission.retryAfter,
-      );
+      return releaseForRetry(dependencies, authorizedClaim, submission.retryAfter);
     }
     if (submission.kind === "outcome-unknown") {
       const result = await dependencies.store.recordUnknownOutcome(authorizedClaim);
@@ -135,13 +128,8 @@ export function dispatchManagedScopeAdmissionUseCase(
     const result = await dependencies.store.recordDispatchReceipt(
       authorizedClaim,
       submission.receipt,
-      authorityDisposition(
-        await currentAuthority(dependencies, authorizedClaim),
-      ),
-      safeRetryAt(
-        dependencies.safeRetryPolicy,
-        dependencies.clock.now(),
-      ),
+      authorityDisposition(await currentAuthority(dependencies, authorizedClaim)),
+      safeRetryAt(dependencies.safeRetryPolicy, dependencies.clock.now()),
     );
     if (result.kind === "applied") {
       return { kind: "receipt-recorded" };

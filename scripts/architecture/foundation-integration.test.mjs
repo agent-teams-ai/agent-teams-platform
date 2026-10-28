@@ -27,8 +27,7 @@ test("runs the authoritative full gate on merge-queue commits", async () => {
 test("compares merge-queue qualification records to the exact merge-group base", async () => {
   const workflow = await readYaml(".github/workflows/architecture.yml");
   const mergeGroupProtection = workflow.jobs.architecture.steps.find(
-    ({ name }) =>
-      name === "Protect published qualification records in the merge queue",
+    ({ name }) => name === "Protect published qualification records in the merge queue",
   );
   assert.deepEqual(mergeGroupProtection, {
     name: "Protect published qualification records in the merge queue",
@@ -42,10 +41,7 @@ test("keeps the fast gate comprehensive but excludes clean-checkout qualificatio
   const scripts = manifest.scripts;
   assert.match(scripts.check, /pnpm packages:check(?:\s|$)/u);
   assert.match(scripts["check:fast"], /pnpm packages:check:fast(?:\s|$)/u);
-  assert.equal(
-    scripts["packages:check"],
-    "pnpm packages:check:fast && pnpm spec:clean-checkout",
-  );
+  assert.equal(scripts["packages:check"], "pnpm packages:check:fast && pnpm spec:clean-checkout");
   for (const gate of [
     "foundation:check",
     "docs:protocol:check",
@@ -69,9 +65,7 @@ test("keeps the fast gate comprehensive but excludes clean-checkout qualificatio
 });
 
 test("bounds suppression governance to every owned source root", async () => {
-  const policy = await readYaml(
-    "architecture/foundation/suppression-governance.yaml",
-  );
+  const policy = await readYaml("architecture/foundation/suppression-governance.yaml");
   assert.deepEqual(policy.governedRoots, [
     "packages",
     "scripts",
@@ -80,9 +74,7 @@ test("bounds suppression governance to every owned source root", async () => {
 });
 
 test("forces full scans for policy, workflow, dependency, and spec inputs", async () => {
-  const policy = await readYaml(
-    "architecture/foundation/repository-agent-workflow.yaml",
-  );
+  const policy = await readYaml("architecture/foundation/repository-agent-workflow.yaml");
   const requiredPaths = [
     ".agents/skills/docs-authoring/SKILL.md",
     ".github/copilot-instructions.md",

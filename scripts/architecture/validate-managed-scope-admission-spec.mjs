@@ -6,15 +6,12 @@ import Ajv2020 from "ajv/dist/2020.js";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const defaultRepositoryRoot = path.resolve(scriptDirectory, "../..");
-const specificationPath =
-  "architecture/project-management/managed-scope-admission-process.json";
-const schemaPath =
-  "architecture/project-management/managed-scope-admission-process.schema.json";
+const specificationPath = "architecture/project-management/managed-scope-admission-process.json";
+const schemaPath = "architecture/project-management/managed-scope-admission-process.schema.json";
 
 function formatAjvErrors(errors) {
   return (errors ?? []).map(
-    (error) =>
-      `SCOPE-SPEC-SCHEMA-001 ${error.instancePath || "/"}: ${error.message}`,
+    (error) => `SCOPE-SPEC-SCHEMA-001 ${error.instancePath || "/"}: ${error.message}`,
   );
 }
 
@@ -35,9 +32,7 @@ function validateAxes(document, errors) {
   for (const axisName of ["lifecycle", "authority", "reconciliation"]) {
     const axis = document.axes[axisName];
     if (!axis.states.includes(axis.initial)) {
-      errors.push(
-        `SCOPE-SPEC-AXIS-001 ${axisName} initial state ${axis.initial} is undeclared`,
-      );
+      errors.push(`SCOPE-SPEC-AXIS-001 ${axisName} initial state ${axis.initial} is undeclared`);
     }
   }
 }
@@ -45,8 +40,7 @@ function validateAxes(document, errors) {
 function validateInitialContext(document, errors) {
   if (
     document.initialContext.authority !== document.axes.authority.initial ||
-    document.initialContext.reconciliation !==
-      document.axes.reconciliation.initial ||
+    document.initialContext.reconciliation !== document.axes.reconciliation.initial ||
     document.initialContext.generation !== document.axes.generation.initial
   ) {
     errors.push("SCOPE-SPEC-CONTEXT-001 initial context disagrees with its axes");
@@ -64,12 +58,16 @@ function validateEvents(document, errors) {
     }
     eventTypes.add(event.type);
     validateLifecycleReferences(event, lifecycleStates, errors);
-    validateEffects(event, {
-      authorityStates,
-      reconciliationStates,
-      receiptKinds: new Set(document.vocabulary.receiptKinds),
-      blockReasons: new Set(document.vocabulary.blockReasons),
-    }, errors);
+    validateEffects(
+      event,
+      {
+        authorityStates,
+        reconciliationStates,
+        receiptKinds: new Set(document.vocabulary.receiptKinds),
+        blockReasons: new Set(document.vocabulary.blockReasons),
+      },
+      errors,
+    );
     validateGuards(event, document.vocabulary, errors);
   }
 }
@@ -77,34 +75,21 @@ function validateEvents(document, errors) {
 function validateLifecycleReferences(event, lifecycleStates, errors) {
   for (const source of event.from) {
     if (!lifecycleStates.has(source)) {
-      errors.push(
-        `SCOPE-SPEC-EVENT-002 ${event.type} has undeclared source ${source}`,
-      );
+      errors.push(`SCOPE-SPEC-EVENT-002 ${event.type} has undeclared source ${source}`);
     }
   }
   if (event.to !== "$same" && !lifecycleStates.has(event.to)) {
-    errors.push(
-      `SCOPE-SPEC-EVENT-003 ${event.type} has undeclared target ${event.to}`,
-    );
+    errors.push(`SCOPE-SPEC-EVENT-003 ${event.type} has undeclared target ${event.to}`);
   }
 }
 
-function validateEffects(
-  event,
-  vocabulary,
-  errors,
-) {
+function validateEffects(event, vocabulary, errors) {
   const authority = event.effects.set.authority;
   const reconciliation = event.effects.set.reconciliation;
   if (authority !== undefined && !vocabulary.authorityStates.has(authority)) {
-    errors.push(
-      `SCOPE-SPEC-EFFECT-001 ${event.type} sets undeclared authority ${authority}`,
-    );
+    errors.push(`SCOPE-SPEC-EFFECT-001 ${event.type} sets undeclared authority ${authority}`);
   }
-  if (
-    reconciliation !== undefined &&
-    !vocabulary.reconciliationStates.has(reconciliation)
-  ) {
+  if (reconciliation !== undefined && !vocabulary.reconciliationStates.has(reconciliation)) {
     errors.push(
       `SCOPE-SPEC-EFFECT-002 ${event.type} sets undeclared reconciliation ${reconciliation}`,
     );
@@ -128,52 +113,38 @@ function validateEffects(
     );
   }
   if (event.to !== "$same" && !event.effects.increment.includes("revision")) {
-    errors.push(
-      `SCOPE-SPEC-EFFECT-003 ${event.type} changes lifecycle without revision`,
-    );
+    errors.push(`SCOPE-SPEC-EFFECT-003 ${event.type} changes lifecycle without revision`);
   }
   for (const field of event.effects.increment) {
     if (event.effects.set[field] !== undefined) {
-      errors.push(
-        `SCOPE-SPEC-EFFECT-004 ${event.type} both sets and increments ${field}`,
-      );
+      errors.push(`SCOPE-SPEC-EFFECT-004 ${event.type} both sets and increments ${field}`);
     }
   }
 }
 
 function validateGuards(event, vocabulary, errors) {
   for (const predicate of event.guard?.all ?? []) {
-    const expectedLimit =
-      predicate.field === "attemptCount" ? "attempts" : "generations";
+    const expectedLimit = predicate.field === "attemptCount" ? "attempts" : "generations";
     if (predicate.limit !== undefined && predicate.limit !== expectedLimit) {
       errors.push(
         `SCOPE-SPEC-GUARD-001 ${event.type} compares ${predicate.field} with ${predicate.limit}`,
       );
     }
-    if (
-      predicate.field === "receipt" &&
-      !vocabulary.receiptKinds.includes(predicate.value)
-    ) {
+    if (predicate.field === "receipt" && !vocabulary.receiptKinds.includes(predicate.value)) {
       errors.push(
         `SCOPE-SPEC-GUARD-002 ${event.type} references undeclared receipt ${predicate.value}`,
       );
     }
     if (
       predicate.field === "blockReason" &&
-      predicate.values.some(
-        (value) => !vocabulary.blockReasons.includes(value),
-      )
+      predicate.values.some((value) => !vocabulary.blockReasons.includes(value))
     ) {
-      errors.push(
-        `SCOPE-SPEC-GUARD-003 ${event.type} references an undeclared block reason`,
-      );
+      errors.push(`SCOPE-SPEC-GUARD-003 ${event.type} references an undeclared block reason`);
     }
   }
 }
 
-export async function validateManagedScopeAdmissionSpec(
-  repositoryRoot = defaultRepositoryRoot,
-) {
+export async function validateManagedScopeAdmissionSpec(repositoryRoot = defaultRepositoryRoot) {
   const [document, schema] = await Promise.all(
     [specificationPath, schemaPath].map(async (relativePath) =>
       JSON.parse(await readFile(path.join(repositoryRoot, relativePath), "utf8")),

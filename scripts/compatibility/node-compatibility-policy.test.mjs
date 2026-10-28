@@ -19,9 +19,24 @@ test("policy rejects unauthorized rollback, revoked owner authorization, and wro
   validatePolicyState(state);
 
   for (const [mutate, expected] of [
-    [ (record) => { record.migration.cutover.status = "NOT_AUTHORIZED"; }, /Node compatibility schema violation/u ],
-    [ (record) => { record.migration.cutover.requiresOwnerAuthorization = false; }, /Node compatibility schema violation/u ],
-    [ (record) => { record.qualification.targetVersion = "25.0.0"; }, /Qualification target must equal/u ],
+    [
+      (record) => {
+        record.migration.cutover.status = "NOT_AUTHORIZED";
+      },
+      /Node compatibility schema violation/u,
+    ],
+    [
+      (record) => {
+        record.migration.cutover.requiresOwnerAuthorization = false;
+      },
+      /Node compatibility schema violation/u,
+    ],
+    [
+      (record) => {
+        record.qualification.targetVersion = "25.0.0";
+      },
+      /Qualification target must equal/u,
+    ],
   ]) {
     const changed = clone(state);
     mutate(changed.compatibility);
@@ -37,12 +52,21 @@ test("policy rejects unauthorized rollback, revoked owner authorization, and wro
   assert.throws(() => validatePolicyState(oldDefault), /Node compatibility schema violation/u);
 
   const disabledInstallPolicy = clone(state);
-  disabledInstallPolicy.workspace = disabledInstallPolicy.workspace.replace("strictPeerDependencies: true", "strictPeerDependencies: false");
-  assert.throws(() => validatePolicyState(disabledInstallPolicy), /Effective pnpm workspace setting drift: strictPeerDependencies/u);
+  disabledInstallPolicy.workspace = disabledInstallPolicy.workspace.replace(
+    "strictPeerDependencies: true",
+    "strictPeerDependencies: false",
+  );
+  assert.throws(
+    () => validatePolicyState(disabledInstallPolicy),
+    /Effective pnpm workspace setting drift: strictPeerDependencies/u,
+  );
 
   const duplicateSetting = clone(state);
   duplicateSetting.workspace += "\nstrictPeerDependencies: false\n";
-  assert.throws(() => validatePolicyState(duplicateSetting), /Invalid pnpm workspace configuration/u);
+  assert.throws(
+    () => validatePolicyState(duplicateSetting),
+    /Invalid pnpm workspace configuration/u,
+  );
 });
 
 test("upstream engine readiness cannot certify Node 26 qualification", async () => {
@@ -73,14 +97,19 @@ test("published caret engines and exact package evidence are checked from YAML",
   assert.equal(report.upstreamDependencies.length, 5);
   assert.equal(report.productionDefault, "26.11.1");
   assert.equal(report.candidateVersion, "26.11.1");
-  assert.deepEqual(report.upstreamDependencies.map(({ lockIdentity }) => lockIdentity), [
-    "@agent-teams/engineering-foundation@1.7.2(@types/node@24.13.3)",
-    "@agent-teams/docs-protocol@0.6.2",
-    "@agent-teams/docs-protocol-agent-teams@0.3.2",
-    "@agent-teams/document-authoring@0.3.2",
-    "@agent-teams/repository-mutation@0.2.2",
-  ]);
-  assert.ok(report.upstreamDependencies.every(({ nodeEngine }) => nodeEngine === "^24.18.0 || ^26.0.0"));
+  assert.deepEqual(
+    report.upstreamDependencies.map(({ lockIdentity }) => lockIdentity),
+    [
+      "@agent-teams/engineering-foundation@1.7.2(@types/node@24.13.3)",
+      "@agent-teams/docs-protocol@0.6.2",
+      "@agent-teams/docs-protocol-agent-teams@0.3.2",
+      "@agent-teams/document-authoring@0.3.2",
+      "@agent-teams/repository-mutation@0.2.2",
+    ],
+  );
+  assert.ok(
+    report.upstreamDependencies.every(({ nodeEngine }) => nodeEngine === "^24.18.0 || ^26.0.0"),
+  );
 
   for (const nodeEngine of ["^24.18.0", "^26.12.0", "^0.26.0", "^0.0.26"]) {
     const changed = clone(state);
@@ -104,15 +133,62 @@ test("missing, malformed or drifted published evidence fails closed", async () =
   const dependency = state.compatibility.upstreamDependencies.foundation[0];
   const identity = `${dependency.name}@${dependency.version}`;
   for (const [mutate, expected] of [
-    [(changed, lock) => { delete lock.packages[identity].engines; }, /Missing published package engine/u],
-    [(changed, lock) => { delete lock.packages[identity].resolution.integrity; }, /Missing published package engine or integrity/u],
-    [(changed, lock) => { lock.packages[identity].resolution.integrity = "sha512-drift"; }, /Published integrity drift/u],
-    [(changed, lock) => { lock.packages[identity].engines.node = "^24.18.0 || >=26.0.0 unknown"; changed.compatibility.upstreamDependencies.foundation[0].nodeEngine = lock.packages[identity].engines.node; }, /Unsupported engine comparator/u],
-    [(changed, lock) => { lock.importers["."].devDependencies[dependency.name].specifier = "^1.7.2"; }, /exact root pin drift/u],
-    [(changed) => { changed.packageManifest.devDependencies[dependency.name] = "^1.7.2"; }, /exact root pin drift/u],
-    [(changed) => { changed.compatibility.upstreamDependencies.foundation[0].relationship = "TRANSITIVE"; }, /relationship or exact root pin drift/u],
-    [(changed) => { changed.compatibility.upstreamDependencies.foundation[0].role = "MANAGED_DOCS_ADAPTER"; }, /Published dependency role drift/u],
-    [(changed) => { changed.compatibility.upstreamDependencies.foundation.push(clone(dependency)); }, /Duplicate published dependency record/u],
+    [
+      (changed, lock) => {
+        delete lock.packages[identity].engines;
+      },
+      /Missing published package engine/u,
+    ],
+    [
+      (changed, lock) => {
+        delete lock.packages[identity].resolution.integrity;
+      },
+      /Missing published package engine or integrity/u,
+    ],
+    [
+      (changed, lock) => {
+        lock.packages[identity].resolution.integrity = "sha512-drift";
+      },
+      /Published integrity drift/u,
+    ],
+    [
+      (changed, lock) => {
+        lock.packages[identity].engines.node = "^24.18.0 || >=26.0.0 unknown";
+        changed.compatibility.upstreamDependencies.foundation[0].nodeEngine =
+          lock.packages[identity].engines.node;
+      },
+      /Unsupported engine comparator/u,
+    ],
+    [
+      (changed, lock) => {
+        lock.importers["."].devDependencies[dependency.name].specifier = "^1.7.2";
+      },
+      /exact root pin drift/u,
+    ],
+    [
+      (changed) => {
+        changed.packageManifest.devDependencies[dependency.name] = "^1.7.2";
+      },
+      /exact root pin drift/u,
+    ],
+    [
+      (changed) => {
+        changed.compatibility.upstreamDependencies.foundation[0].relationship = "TRANSITIVE";
+      },
+      /relationship or exact root pin drift/u,
+    ],
+    [
+      (changed) => {
+        changed.compatibility.upstreamDependencies.foundation[0].role = "MANAGED_DOCS_ADAPTER";
+      },
+      /Published dependency role drift/u,
+    ],
+    [
+      (changed) => {
+        changed.compatibility.upstreamDependencies.foundation.push(clone(dependency));
+      },
+      /Duplicate published dependency record/u,
+    ],
   ]) {
     const changed = clone(state);
     const lock = YAML.parse(changed.lockfile);
@@ -144,7 +220,10 @@ for (const [nodeEngine, supported] of [
     lock.packages[`${dependency.name}@${dependency.version}`].engines.node = nodeEngine;
     changed.lockfile = YAML.stringify(lock);
     validatePolicyState(changed);
-    await assert.rejects(createCompatibilityReport(changed), /Unsupported engine comparator: unknown/u);
+    await assert.rejects(
+      createCompatibilityReport(changed),
+      /Unsupported engine comparator: unknown/u,
+    );
   });
 }
 
@@ -186,12 +265,22 @@ for (const [nodeEngine, lower, lastInMajor, upper] of [
       }
       changed.lockfile = YAML.stringify(lock);
       changed.compatibility.qualification.status = supported
-        ? "IMPLEMENTED_PENDING_QUALIFICATION" : "PENDING_UPSTREAM_ENGINE_COMPATIBILITY";
+        ? "IMPLEMENTED_PENDING_QUALIFICATION"
+        : "PENDING_UPSTREAM_ENGINE_COMPATIBILITY";
       changed.compatibility.qualification.strictInstall = supported
-        ? "READY_FOR_STRICT_INSTALL" : "BLOCKED_BY_UPSTREAM_ENGINE";
+        ? "READY_FOR_STRICT_INSTALL"
+        : "BLOCKED_BY_UPSTREAM_ENGINE";
       const report = await createCompatibilityReport(changed);
-      assert.equal(report.status, supported ? "NODE26_STRICT_INSTALL_READY" : "NODE26_STRICT_INSTALL_BLOCKED", candidateVersion);
-      assert.equal(report.blockers.length, supported ? 0 : state.compatibility.upstreamDependencies.foundation.length, candidateVersion);
+      assert.equal(
+        report.status,
+        supported ? "NODE26_STRICT_INSTALL_READY" : "NODE26_STRICT_INSTALL_BLOCKED",
+        candidateVersion,
+      );
+      assert.equal(
+        report.blockers.length,
+        supported ? 0 : state.compatibility.upstreamDependencies.foundation.length,
+        candidateVersion,
+      );
     }
   });
 }
@@ -217,15 +306,33 @@ test("strict install readiness preserves central Cohort and Node 24 managed runt
 test("candidate input digest binds every checked-in gate input family", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "platform-node26-policy-"));
   const files = [
-    ".gitattributes", ".gitignore", ".markdownlint-cli2.mjs", ".node-version", ".npmrc",
-    ".oxlintrc.json", ".oxlintrc.type-aware.json", "AGENTS.md", "CLAUDE.md", "GEMINI.md",
-    "README.md", "foundation.config.yaml", "package.json", "pnpm-lock.yaml",
-    "pnpm-workspace.yaml", "tsconfig.json", ".agents/skills/docs-authoring/SKILL.md",
-    ".github/copilot-instructions.md", ".github/workflows/architecture.yml",
-    ".github/workflows/node26-compatibility.yml", ".github/workflows/docs-protocol.yml",
-    "architecture/runtime/policy.json", "docs/architecture/feature-module-standard-v1.md",
-    "docs/architecture/feature-module-standard.md", "packages/context/source.ts",
-    "scripts/check.mjs", "tooling/helper.js",
+    ".gitattributes",
+    ".gitignore",
+    ".markdownlint-cli2.mjs",
+    ".node-version",
+    ".npmrc",
+    ".oxlintrc.json",
+    ".oxlintrc.type-aware.json",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "README.md",
+    "foundation.config.yaml",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tsconfig.json",
+    ".agents/skills/docs-authoring/SKILL.md",
+    ".github/copilot-instructions.md",
+    ".github/workflows/architecture.yml",
+    ".github/workflows/node26-compatibility.yml",
+    ".github/workflows/docs-protocol.yml",
+    "architecture/runtime/policy.json",
+    "docs/architecture/feature-module-standard-v1.md",
+    "docs/architecture/feature-module-standard.md",
+    "packages/context/source.ts",
+    "scripts/check.mjs",
+    "tooling/helper.js",
   ];
   try {
     for (const file of files) {
@@ -235,34 +342,67 @@ test("candidate input digest binds every checked-in gate input family", async ()
     }
     const initial = await candidateInputDigest(root);
     for (const file of [
-      "packages/context/source.ts", "scripts/check.mjs", "tooling/helper.js",
-      "architecture/runtime/policy.json", "docs/architecture/feature-module-standard-v1.md",
-      ".github/workflows/architecture.yml", ".github/workflows/node26-compatibility.yml",
-      ".github/workflows/docs-protocol.yml", ".agents/skills/docs-authoring/SKILL.md",
-      "README.md", "AGENTS.md", ".gitignore", "pnpm-lock.yaml", "tsconfig.json",
-      "foundation.config.yaml", "pnpm-workspace.yaml", ".oxlintrc.type-aware.json",
-      "package.json", ".node-version", ".npmrc",
+      "packages/context/source.ts",
+      "scripts/check.mjs",
+      "tooling/helper.js",
+      "architecture/runtime/policy.json",
+      "docs/architecture/feature-module-standard-v1.md",
+      ".github/workflows/architecture.yml",
+      ".github/workflows/node26-compatibility.yml",
+      ".github/workflows/docs-protocol.yml",
+      ".agents/skills/docs-authoring/SKILL.md",
+      "README.md",
+      "AGENTS.md",
+      ".gitignore",
+      "pnpm-lock.yaml",
+      "tsconfig.json",
+      "foundation.config.yaml",
+      "pnpm-workspace.yaml",
+      ".oxlintrc.type-aware.json",
+      "package.json",
+      ".node-version",
+      ".npmrc",
     ]) {
       await writeFile(path.join(root, file), "changed\n");
-      assert.notEqual(await candidateInputDigest(root), initial, `${file} must affect candidate digest`);
+      assert.notEqual(
+        await candidateInputDigest(root),
+        initial,
+        `${file} must affect candidate digest`,
+      );
       await writeFile(path.join(root, file), "initial\n");
     }
     const added = path.join(root, "docs/architecture/new-authority.md");
     await writeFile(added, "new\n");
-    assert.notEqual(await candidateInputDigest(root), initial, "new gate input must affect candidate digest");
+    assert.notEqual(
+      await candidateInputDigest(root),
+      initial,
+      "new gate input must affect candidate digest",
+    );
     await rm(added);
     assert.equal(await candidateInputDigest(root), initial);
     const relocated = await mkdtemp(path.join(tmpdir(), "platform-node26-digest-TEST-"));
     try {
       await cp(root, relocated, { recursive: true });
-      assert.equal(await candidateInputDigest(relocated), initial, "checkout location must not affect digest");
+      assert.equal(
+        await candidateInputDigest(relocated),
+        initial,
+        "checkout location must not affect digest",
+      );
       const regenerated = path.join(relocated, "tooling", "helper.js");
       await rm(regenerated);
       await writeFile(regenerated, "initial\n");
-      assert.equal(await candidateInputDigest(relocated), initial, "creation order must not affect digest");
+      assert.equal(
+        await candidateInputDigest(relocated),
+        initial,
+        "creation order must not affect digest",
+      );
       await mkdir(path.join(relocated, "packages", "dist"));
       await writeFile(path.join(relocated, "packages", "dist", "build.js"), "generated\n");
-      assert.equal(await candidateInputDigest(relocated), initial, "generated output must not affect digest");
+      assert.equal(
+        await candidateInputDigest(relocated),
+        initial,
+        "generated output must not affect digest",
+      );
     } finally {
       await rm(relocated, { recursive: true, force: true });
     }
@@ -277,8 +417,19 @@ test("candidate input digest rejects symlinked roots and entries", async () => {
   try {
     await mkdir(root);
     await symlink(root, path.join(parent, "linked-candidate"));
-    await assert.rejects(candidateInputDigest(path.join(parent, "linked-candidate")), /Candidate input root must be a directory/u);
-    for (const directory of ["packages", "scripts", "tooling", "architecture", "docs", ".github", ".agents"]) {
+    await assert.rejects(
+      candidateInputDigest(path.join(parent, "linked-candidate")),
+      /Candidate input root must be a directory/u,
+    );
+    for (const directory of [
+      "packages",
+      "scripts",
+      "tooling",
+      "architecture",
+      "docs",
+      ".github",
+      ".agents",
+    ]) {
       await mkdir(path.join(root, directory));
     }
     await symlink(path.join(parent, "outside"), path.join(root, "docs", "escaped.md"));

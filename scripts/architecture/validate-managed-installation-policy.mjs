@@ -53,10 +53,7 @@ const requiredExecutionLifecycleTerms = new Set([
   "RuntimeOperation",
   "ExecutionRecovery",
 ]);
-const requiredScopeLifecycleTerms = new Set([
-  "ScopeAdmission",
-  "ScopeBinding",
-]);
+const requiredScopeLifecycleTerms = new Set(["ScopeAdmission", "ScopeBinding"]);
 
 function parseArguments(argv) {
   const rootIndex = argv.indexOf("--root");
@@ -64,10 +61,7 @@ function parseArguments(argv) {
     throw new Error("--root requires a path");
   }
   return {
-    root:
-      rootIndex === -1
-        ? defaultRepositoryRoot
-        : path.resolve(argv[rootIndex + 1]),
+    root: rootIndex === -1 ? defaultRepositoryRoot : path.resolve(argv[rootIndex + 1]),
   };
 }
 
@@ -119,14 +113,10 @@ export function validateManagedInstallationSemantics(policy, deploymentCatalog) 
     (candidate) => candidate.id === policy.profileId,
   );
   if (!profile) {
-    errors.push(
-      `INSTALL-PROFILE-001 ${policy.profileId}: deployment profile does not exist`,
-    );
+    errors.push(`INSTALL-PROFILE-001 ${policy.profileId}: deployment profile does not exist`);
   } else {
     if (profile.category !== "MANAGED_BYOC") {
-      errors.push(
-        `INSTALL-PROFILE-002 ${policy.profileId}: policy requires MANAGED_BYOC category`,
-      );
+      errors.push(`INSTALL-PROFILE-002 ${policy.profileId}: policy requires MANAGED_BYOC category`);
     }
     if (
       profile.currentStatus !== policy.architectureStatus ||
@@ -136,10 +126,7 @@ export function validateManagedInstallationSemantics(policy, deploymentCatalog) 
         `INSTALL-PROFILE-003 ${policy.profileId}: policy and profile must remain DESIGNED until implementation evidence exists`,
       );
     }
-    if (
-      profile.v1Scope !== "DESIGN_ONLY" ||
-      profile.v1TargetStatus !== "DESIGNED"
-    ) {
+    if (profile.v1Scope !== "DESIGN_ONLY" || profile.v1TargetStatus !== "DESIGNED") {
       errors.push(
         `INSTALL-PROFILE-004 ${policy.profileId}: Managed BYOC must remain design-only in v1`,
       );
@@ -202,9 +189,7 @@ export function validateManagedInstallationSemantics(policy, deploymentCatalog) 
     ...(policy.terminology?.scopeLifecycle ?? []),
   ];
   if (new Set(allTerms).size !== allTerms.length) {
-    errors.push(
-      "INSTALL-TERM-004 lifecycle vocabularies must be pairwise disjoint",
-    );
+    errors.push("INSTALL-TERM-004 lifecycle vocabularies must be pairwise disjoint");
   }
 
   return errors;
@@ -221,21 +206,13 @@ async function validateEvidencePaths(repositoryRoot, policy) {
 }
 
 export async function validateManagedInstallationPolicy(repositoryRoot) {
-  const policyDirectory = path.join(
-    repositoryRoot,
-    "architecture/managed-installation",
-  );
+  const policyDirectory = path.join(repositoryRoot, "architecture/managed-installation");
   const schema = await readJson(
     path.join(policyDirectory, "managed-installation-policy.schema.json"),
   );
-  const policy = await readYaml(
-    path.join(policyDirectory, "managed-installation-policy.yaml"),
-  );
+  const policy = await readYaml(path.join(policyDirectory, "managed-installation-policy.yaml"));
   const deploymentCatalog = await readYaml(
-    path.join(
-      repositoryRoot,
-      "architecture/deployment-profiles/deployment-profiles.yaml",
-    ),
+    path.join(repositoryRoot, "architecture/deployment-profiles/deployment-profiles.yaml"),
   );
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   const validate = ajv.compile(schema);

@@ -63,9 +63,7 @@ async function actualContextPackages(repositoryRoot, errors) {
     return [];
   }
   if (rootKind !== "directory") {
-    errors.push(
-      `DOMAIN-MATERIALIZE-006 invalid context package root: ${contextPackagesRoot}`,
-    );
+    errors.push(`DOMAIN-MATERIALIZE-006 invalid context package root: ${contextPackagesRoot}`);
     return [];
   }
   let entries;
@@ -114,12 +112,7 @@ function acceptedBaselineEntry(baseline, decisionId, errors) {
   return baselineEntry;
 }
 
-async function loadAcceptedDecision(
-  repositoryRoot,
-  baselineEntry,
-  decisionId,
-  errors,
-) {
+async function loadAcceptedDecision(repositoryRoot, baselineEntry, decisionId, errors) {
   if (
     !/^docs\/decisions\/\d{4}[a-z0-9-]*\.md$/u.test(baselineEntry.path) ||
     (await pathKind(repositoryRoot, baselineEntry.path)) !== "file"
@@ -140,9 +133,7 @@ function validateDecisionTarget(decision, decisionId, dossier, target, errors) {
     !Array.isArray(acceptedTargets) ||
     !acceptedTargets.includes(target.id)
   ) {
-    errors.push(
-      `DOMAIN-DECISION-003 ${decisionId} does not accept ${target.id}`,
-    );
+    errors.push(`DOMAIN-DECISION-003 ${decisionId} does not accept ${target.id}`);
   }
   if (!(dossier.metadata.related ?? []).includes(decisionId)) {
     errors.push(`DOMAIN-DECISION-004 ${dossier.path} must relate ${decisionId}`);
@@ -161,12 +152,7 @@ async function validateOwnerDecision(repositoryRoot, dossier, target, baseline, 
   if (baselineEntry === null) {
     return;
   }
-  const decision = await loadAcceptedDecision(
-    repositoryRoot,
-    baselineEntry,
-    decisionId,
-    errors,
-  );
+  const decision = await loadAcceptedDecision(repositoryRoot, baselineEntry, decisionId, errors);
   if (decision !== null) {
     validateDecisionTarget(decision, decisionId, dossier, target, errors);
   }
@@ -220,8 +206,7 @@ async function validatePackageManifest(repositoryRoot, target, errors) {
     manifest.type !== "module" ||
     manifest.scripts?.test !==
       "pnpm run test:compile && pnpm run test:unit && pnpm run test:package" ||
-    manifest.scripts?.["test:compile"] !==
-      "tsc --project tsconfig.test.json --pretty false" ||
+    manifest.scripts?.["test:compile"] !== "tsc --project tsconfig.test.json --pretty false" ||
     manifest.scripts?.["test:unit"] !==
       "node --test --test-concurrency=1 '.cache/tests/tests/**/*.test.js'" ||
     manifest.scripts?.["test:package"] !==
@@ -243,8 +228,12 @@ export async function validatePlatformPackageManifest(repositoryRoot, target) {
 
 function moduleSpecifier(statement) {
   const stringNode = statement.children().find((child) => child.kind() === "string");
-  return stringNode?.children().find((child) => child.kind() === "string_fragment")
-    ?.text() ?? null;
+  return (
+    stringNode
+      ?.children()
+      .find((child) => child.kind() === "string_fragment")
+      ?.text() ?? null
+  );
 }
 
 function exportedModuleSpecifiers(source) {
@@ -257,12 +246,7 @@ function exportedModuleSpecifiers(source) {
   return specifiers.every((specifier) => specifier !== null) ? specifiers : null;
 }
 
-async function validatePackageSurfaces(
-  repositoryRoot,
-  target,
-  firstFeature,
-  errors,
-) {
+async function validatePackageSurfaces(repositoryRoot, target, firstFeature, errors) {
   const surfaces = new Map([
     ["index.ts", "public"],
     ["composition.ts", "composition"],
@@ -278,8 +262,7 @@ async function validatePackageSurfaces(
       !specifiers.includes(expectedFirst) ||
       specifiers.some(
         (specifier) =>
-          !new RegExp(`^\\./features/[a-z0-9][a-z0-9-]*/${surface}\\.js$`, "u")
-            .test(specifier),
+          !new RegExp(`^\\./features/[a-z0-9][a-z0-9-]*/${surface}\\.js$`, "u").test(specifier),
       )
     ) {
       errors.push(`DOMAIN-PACKAGE-007 invalid package surface: ${relativePath}`);
@@ -287,12 +270,7 @@ async function validatePackageSurfaces(
   }
 }
 
-async function validateFeaturePublicSurface(
-  repositoryRoot,
-  featureRoot,
-  expectedExports,
-  errors,
-) {
+async function validateFeaturePublicSurface(repositoryRoot, featureRoot, expectedExports, errors) {
   const relativePath = `${featureRoot}/public.ts`;
   const source = await readText(repositoryRoot, relativePath, errors);
   if (source === null) {
@@ -315,8 +293,7 @@ async function validateFeaturePublicSurface(
       }
       if (
         specifier !== null &&
-        /(?:^|\/)(?:adapters|ports)(?:\/|$)|\/(?:composition|worker)(?:\.js)?$/u
-          .test(specifier)
+        /(?:^|\/)(?:adapters|ports)(?:\/|$)|\/(?:composition|worker)(?:\.js)?$/u.test(specifier)
       ) {
         forbidden.push(specifier);
       }
@@ -327,9 +304,7 @@ async function validateFeaturePublicSurface(
     pending.push(...node.children());
   }
   if (forbidden.length > 0) {
-    errors.push(
-      `DOMAIN-PACKAGE-008 public feature surface exports internals: ${relativePath}`,
-    );
+    errors.push(`DOMAIN-PACKAGE-008 public feature surface exports internals: ${relativePath}`);
   }
   if (
     !Array.isArray(expectedExports) ||
@@ -338,9 +313,7 @@ async function validateFeaturePublicSurface(
     new Set(expectedExports).size !== expectedExports.length ||
     !isDeepStrictEqual(actualExports.toSorted(), expectedExports.toSorted())
   ) {
-    errors.push(
-      `DOMAIN-PACKAGE-009 public export contract mismatch: ${relativePath}`,
-    );
+    errors.push(`DOMAIN-PACKAGE-009 public export contract mismatch: ${relativePath}`);
   }
 }
 
@@ -393,9 +366,7 @@ function hasTestRegistration(source, file) {
 }
 
 async function hasExecutableTest(repositoryRoot, files, errors) {
-  const tests = files.filter((file) =>
-    /\.(?:test|spec)\.(?:[cm]?ts|tsx)$/u.test(file),
-  );
+  const tests = files.filter((file) => /\.(?:test|spec)\.(?:[cm]?ts|tsx)$/u.test(file));
   for (const file of tests) {
     const source = await readText(repositoryRoot, file, errors);
     if (source?.trim() && hasTestRegistration(source, file)) {
@@ -405,13 +376,7 @@ async function hasExecutableTest(repositoryRoot, files, errors) {
   return false;
 }
 
-async function validateFirstFeature(
-  repositoryRoot,
-  target,
-  dossier,
-  packageFiles,
-  errors,
-) {
+async function validateFirstFeature(repositoryRoot, target, dossier, packageFiles, errors) {
   const firstFeature = dossier.metadata?.first_feature;
   if (!/^[a-z0-9][a-z0-9-]*$/u.test(firstFeature ?? "")) {
     errors.push(`DOMAIN-PACKAGE-004 ${dossier.path} lacks first_feature`);
@@ -433,9 +398,7 @@ async function validateFirstFeature(
   );
   const hasTest = await hasExecutableTest(repositoryRoot, testFiles, errors);
   if (!hasSource || !hasTest) {
-    errors.push(
-      `DOMAIN-PACKAGE-006 ${featureRoot} requires implementation and package-root test`,
-    );
+    errors.push(`DOMAIN-PACKAGE-006 ${featureRoot} requires implementation and package-root test`);
   }
   if (sourceFiles.some((file) => /\.(?:test|spec)\.(?:[cm]?ts|tsx)$/u.test(file))) {
     errors.push(`DOMAIN-PACKAGE-010 executable test inside production root: ${featureRoot}`);
@@ -449,11 +412,7 @@ async function validateFirstFeature(
 }
 
 async function validateAcceptedPackage(repositoryRoot, target, dossier, errors) {
-  const packageFiles = await regularPackageFiles(
-    repositoryRoot,
-    target.path,
-    errors,
-  );
+  const packageFiles = await regularPackageFiles(repositoryRoot, target.path, errors);
   for (const relativePath of [
     `${target.path}/package.json`,
     `${target.path}/tsconfig.json`,
@@ -466,40 +425,17 @@ async function validateAcceptedPackage(repositoryRoot, target, dossier, errors) 
     await validateRegularFile(repositoryRoot, relativePath, errors);
   }
   await validatePackageManifest(repositoryRoot, target, errors);
-  await validatePackageSurfaces(
-    repositoryRoot,
-    target,
-    dossier.metadata.first_feature,
-    errors,
-  );
-  await validateFirstFeature(
-    repositoryRoot,
-    target,
-    dossier,
-    packageFiles,
-    errors,
-  );
+  await validatePackageSurfaces(repositoryRoot, target, dossier.metadata.first_feature, errors);
+  await validateFirstFeature(repositoryRoot, target, dossier, packageFiles, errors);
   await validateScaffoldEvidence(repositoryRoot, target, errors);
 }
 
-export async function validateMaterialization(
-  repositoryRoot,
-  catalog,
-  dossiers,
-  errors,
-) {
+export async function validateMaterialization(repositoryRoot, catalog, dossiers, errors) {
   const baseline = await readJson(repositoryRoot, acceptedDecisionsPath, errors);
   const targets = Array.isArray(catalog?.packages) ? catalog.packages : [];
-  const dossiersById = new Map(
-    dossiers.map((dossier) => [dossier.metadata?.id, dossier]),
-  );
+  const dossiersById = new Map(dossiers.map((dossier) => [dossier.metadata?.id, dossier]));
   const actualPackages = await actualContextPackages(repositoryRoot, errors);
-  await validateScaffoldEvidenceInventory(
-    repositoryRoot,
-    targets,
-    dossiersById,
-    errors,
-  );
+  await validateScaffoldEvidenceInventory(repositoryRoot, targets, dossiersById, errors);
   for (const actualPath of actualPackages) {
     if (!targets.some((target) => target.path === actualPath)) {
       errors.push(`DOMAIN-MATERIALIZE-005 uncatalogued package: ${actualPath}`);

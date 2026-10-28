@@ -9,10 +9,7 @@ import {
   type ScopeAdmissionRecovery,
   type ScopeAdmissionSubmission,
 } from "../../composition.js";
-import type {
-  CreateProductProjectCommand,
-  ProjectPreparationCommand,
-} from "../../public.js";
+import type { CreateProductProjectCommand, ProjectPreparationCommand } from "../../public.js";
 
 export const NOW = 1_800_000_000_000;
 
@@ -42,15 +39,14 @@ export class OrchestrationScopeFake implements OrchestrationScopeAdmissionPort {
   recoveries: ScopeAdmissionIntent[] = [];
   submission: (
     intent: ScopeAdmissionIntent,
-  ) => ScopeAdmissionSubmission | Promise<ScopeAdmissionSubmission> =
-    (intent) => ({
-      kind: "receipt",
-      receipt: {
-        kind: "admitted",
-        receiptRef: ids.orchestratorReceipt("orchestrator-receipt-1"),
-        receiptDigest: intent.commandDigest,
-      },
-    });
+  ) => ScopeAdmissionSubmission | Promise<ScopeAdmissionSubmission> = (intent) => ({
+    kind: "receipt",
+    receipt: {
+      kind: "admitted",
+      receiptRef: ids.orchestratorReceipt("orchestrator-receipt-1"),
+      receiptDigest: intent.commandDigest,
+    },
+  });
   recovery: (intent: ScopeAdmissionIntent) => ScopeAdmissionRecovery = () => ({
     kind: "unresolved",
   });
@@ -96,12 +92,14 @@ export function cancelCommand(
   operationRef: ReturnType<typeof ids.operation>,
   expectedGeneration = 1,
   commandId = `cancel-${expectedGeneration}`,
+  expectedResumptionCount = 0,
 ): ProjectPreparationCommand {
   return {
     commandScope: ids.commandScope("tenant-1:user-1"),
     commandId: ids.preparationCommand(commandId),
     operationRef,
     expectedGeneration,
+    expectedResumptionCount,
     requesterRef: ids.requester("user-1"),
     tenantRef: ids.tenant("tenant-1"),
   };
@@ -111,23 +109,27 @@ export function resumeCommand(
   operationRef: ReturnType<typeof ids.operation>,
   expectedGeneration = 1,
   commandId = `resume-${expectedGeneration}`,
+  expectedResumptionCount = 0,
 ): ProjectPreparationCommand {
   return {
     commandScope: ids.commandScope("tenant-1:user-1"),
     commandId: ids.preparationCommand(commandId),
     operationRef,
     expectedGeneration,
+    expectedResumptionCount,
     requesterRef: ids.requester("user-1"),
     tenantRef: ids.tenant("tenant-1"),
   };
 }
 
-export function fixture(options: {
-  dispatchLeaseDurationMs?: number;
-  idGenerator?: ProjectManagementDependencies["ids"];
-  maxPreparationGenerations?: number;
-  safeRetryPolicy?: ProjectManagementDependencies["safeRetryPolicy"];
-} = {}) {
+export function fixture(
+  options: {
+    dispatchLeaseDurationMs?: number;
+    idGenerator?: ProjectManagementDependencies["ids"];
+    maxPreparationGenerations?: number;
+    safeRetryPolicy?: ProjectManagementDependencies["safeRetryPolicy"];
+  } = {},
+) {
   const clock = {
     current: NOW,
     now() {

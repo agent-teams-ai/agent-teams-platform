@@ -106,11 +106,14 @@ foundation decision in [ADR-0110][modular-foundation]. Platform's
 direction from its current v1 profile. This document neither claims a completed
 migration nor activates a new source topology.
 
-The linked ADR-0110 belongs to the companion PR #86 history. Canonical
-Orchestrator main separately accepts [ADR-0113][canonical-module-adoption], with
-a different exact Consumer Module Standard pin and adoption scope. Reconcile
-those sources before selecting a shared implementation baseline; this document
-does not select a competing pin or adopt either profile for Platform by reference.
+The linked ADR-0110 is retained companion history. Orchestrator's reconciliation
+in ADR-0117 keeps [ADR-0113][canonical-module-adoption]'s exact Core/Assembly
+baseline and carries the broader mandatory scope and foundation requirements
+forward; the older ADR-0110 pin is superseded. [PR #86][orchestrator-pr] is the
+publication route for that reconciliation. Platform does not adopt another
+repository's package/profile pins by reference; its own activation remains gated.
+The shared backend and Fully Local V1 choices already accepted by Platform
+ADR-0009 and ADR-0010 remain unchanged.
 
 ## Open mappings and future cooperation
 

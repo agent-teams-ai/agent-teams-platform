@@ -32,11 +32,14 @@ export type InMemoryProjectManagementState = {
   receipts: Map<string, AcceptedProjectCreationReceipt>;
   outboxes: Map<string, ScopeAdmissionOutboxRecord>;
   preparationCommands: Map<string, PreparationCommandReceipt>;
-  generationHistory: Map<string, Readonly<{
-    process: ManagedScopeAdmissionProcess;
-    lateReceipt: ScopeAdmissionReceipt | null;
-    integrityConflict: boolean;
-  }>>;
+  generationHistory: Map<
+    string,
+    Readonly<{
+      process: ManagedScopeAdmissionProcess;
+      lateReceipt: ScopeAdmissionReceipt | null;
+      integrityConflict: boolean;
+    }>
+  >;
   authorityRechecks: Map<string, AuthorityRecheckRecord>;
 };
 
@@ -93,10 +96,7 @@ export function processGenerationKey(
 }
 
 export function projectCreationReceiptKey(
-  receipt: Pick<
-    AcceptedProjectCreationReceipt,
-    "commandScope" | "commandId"
-  >,
+  receipt: Pick<AcceptedProjectCreationReceipt, "commandScope" | "commandId">,
 ): string {
   return `${receipt.commandScope.length}:${receipt.commandScope}${receipt.commandId.length}:${receipt.commandId}`;
 }
@@ -111,24 +111,24 @@ export function recordKnownNonAcceptanceInMemory(
   const admission = state.admissions.get(target.project.id);
   const outboxEntry = [...state.outboxes.entries()].find(
     ([, item]) =>
-      item.processId === target.process.id &&
-      item.processGeneration === target.process.generation,
+      item.processId === target.process.id && item.processGeneration === target.process.generation,
   );
   if (
-    current === undefined || project === undefined || admission === undefined ||
-    outboxEntry === undefined || current.revision !== target.expectedProcessRevision ||
+    current === undefined ||
+    project === undefined ||
+    admission === undefined ||
+    outboxEntry === undefined ||
+    current.revision !== target.expectedProcessRevision ||
     project.incarnation !== target.expectedProjectIncarnation ||
-    project.revision !== target.expectedProjectRevision || project.lifecycle !== "open" ||
+    project.revision !== target.expectedProjectRevision ||
+    project.lifecycle !== "open" ||
     admission.revision !== target.expectedAdmissionRevision ||
     admission.lifecycleEpoch !== target.expectedAdmissionLifecycleEpoch
   ) {
     return { kind: "stale" };
   }
   const [outboxId, outbox] = outboxEntry;
-  state.processes.set(
-    current.id,
-    releaseReconciledNonAcceptance(current, input.exhausted),
-  );
+  state.processes.set(current.id, releaseReconciledNonAcceptance(current, input.exhausted));
   state.outboxes.set(outboxId, {
     ...outbox,
     state: input.exhausted ? "consumed" : "pending",
@@ -163,6 +163,7 @@ export function cancelPreparationInMemory(
     identity: PreparationCommandIdentity;
     operationRef: ProjectPreparationOperationRef;
     expectedGeneration: number;
+    expectedResumptionCount: number;
     authorityValidUntil: number;
   }>,
 ): CancelScopeAdmissionMutationResult {
@@ -181,7 +182,10 @@ export function cancelPreparationInMemory(
   if (snapshot === null) {
     return { kind: "not-found" };
   }
-  if (snapshot.process.generation !== input.expectedGeneration) {
+  if (
+    snapshot.process.generation !== input.expectedGeneration ||
+    snapshot.process.resumptionCount !== input.expectedResumptionCount
+  ) {
     return { kind: "stale" };
   }
   if (now >= input.authorityValidUntil) {
@@ -208,13 +212,16 @@ export function cancelPreparationInMemory(
       }
     }
   }
-  state.preparationCommands.set(key, Object.freeze({
-    identity: input.identity,
-    kind: "cancel",
-    operationRef: input.operationRef,
-    expectedGeneration: input.expectedGeneration,
-    outcome: Object.freeze({ kind: "cancel", result: transition.outcome }),
-  }));
+  state.preparationCommands.set(
+    key,
+    Object.freeze({
+      identity: input.identity,
+      kind: "cancel",
+      operationRef: input.operationRef,
+      expectedGeneration: input.expectedGeneration,
+      outcome: Object.freeze({ kind: "cancel", result: transition.outcome }),
+    }),
+  );
   return { kind: "applied", outcome: transition.outcome, replayed: false };
 }
 
@@ -227,11 +234,14 @@ export function completeCancellationInMemory(
   const project = state.projects.get(target.project.id);
   const admission = state.admissions.get(target.project.id);
   if (
-    current === undefined || project === undefined || admission === undefined ||
+    current === undefined ||
+    project === undefined ||
+    admission === undefined ||
     current.revision !== target.expectedProcessRevision ||
     current.generation !== target.process.generation ||
     project.incarnation !== target.expectedProjectIncarnation ||
-    project.revision !== target.expectedProjectRevision || project.lifecycle !== "open" ||
+    project.revision !== target.expectedProjectRevision ||
+    project.lifecycle !== "open" ||
     admission.revision !== target.expectedAdmissionRevision ||
     admission.lifecycleEpoch !== target.expectedAdmissionLifecycleEpoch
   ) {
@@ -265,10 +275,7 @@ export function resumePreparationInMemory(
   if (replay !== null) {
     return replay;
   }
-  const current = projectManagementSnapshot(
-    state,
-    input.expected.process.operationRef,
-  );
+  const current = projectManagementSnapshot(state, input.expected.process.operationRef);
   if (!matchesResumeSnapshot(current, input.expected)) {
     return { kind: "stale" };
   }
@@ -308,29 +315,35 @@ export function resumePreparationInMemory(
     }
   }
   if (input.successor.generation > current.process.generation) {
-    state.generationHistory.set(processGenerationKey(current.process), Object.freeze({
-      process: current.process,
-      lateReceipt: null,
-      integrityConflict: false,
-    }));
+    state.generationHistory.set(
+      processGenerationKey(current.process),
+      Object.freeze({
+        process: current.process,
+        lateReceipt: null,
+        integrityConflict: false,
+      }),
+    );
   }
   state.processes.set(current.process.id, input.successor);
   if (input.outbox !== null) {
     state.outboxes.set(input.outbox.id, input.outbox);
   }
   const predecessorReceiptRetained = current.process.receipt?.kind === "admitted";
-  state.preparationCommands.set(commandKey, Object.freeze({
-    identity: input.identity,
-    kind: "resume",
-    operationRef: current.process.operationRef,
-    expectedGeneration: current.process.generation,
-    outcome: Object.freeze({
+  state.preparationCommands.set(
+    commandKey,
+    Object.freeze({
+      identity: input.identity,
       kind: "resume",
-      result: "accepted",
-      generation: input.successor.generation,
-      predecessorReceiptRetained,
+      operationRef: current.process.operationRef,
+      expectedGeneration: current.process.generation,
+      outcome: Object.freeze({
+        kind: "resume",
+        result: "accepted",
+        generation: input.successor.generation,
+        predecessorReceiptRetained,
+      }),
     }),
-  }));
+  );
   return {
     kind: "applied",
     generation: input.successor.generation,
@@ -343,15 +356,18 @@ function matchesResumeSnapshot(
   current: ScopeAdmissionSnapshot | null,
   expected: ScopeAdmissionSnapshot,
 ): current is ScopeAdmissionSnapshot {
-  return current !== null &&
+  return (
+    current !== null &&
     current.process.revision === expected.process.revision &&
     current.process.generation === expected.process.generation &&
+    current.process.resumptionCount === expected.process.resumptionCount &&
     current.project.incarnation === expected.project.incarnation &&
     current.project.revision === expected.project.revision &&
     current.project.lifecycle === "open" &&
     current.admission.revision === expected.admission.revision &&
     current.admission.lifecycleEpoch === expected.admission.lifecycleEpoch &&
-    current.admission.state === "denied";
+    current.admission.state === "denied"
+  );
 }
 
 function replayedResumeCommit(
@@ -396,16 +412,22 @@ export function recordHistoricalReceiptInMemory(
       historical.lateReceipt.kind !== receipt.kind ||
       historical.lateReceipt.receiptDigest !== receipt.receiptDigest)
   ) {
-    state.generationHistory.set(key, Object.freeze({
-      ...historical,
-      integrityConflict: true,
-    }));
+    state.generationHistory.set(
+      key,
+      Object.freeze({
+        ...historical,
+        integrityConflict: true,
+      }),
+    );
     return { kind: "integrity-conflict" };
   }
-  state.generationHistory.set(key, Object.freeze({
-    ...historical,
-    lateReceipt: receipt,
-  }));
+  state.generationHistory.set(
+    key,
+    Object.freeze({
+      ...historical,
+      lateReceipt: receipt,
+    }),
+  );
   return { kind: "stale" };
 }
 

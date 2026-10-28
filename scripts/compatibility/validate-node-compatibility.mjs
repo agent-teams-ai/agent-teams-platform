@@ -55,10 +55,12 @@ function satisfiesComparator(version, comparator) {
   const caret = /^\^(\d+)\.(\d+)\.(\d+)$/u.exec(comparator);
   if (caret) {
     const [, major, minor, patch] = caret.map(Number);
-    const upper = major > 0 ? `${major + 1}.0.0`
-      : minor > 0 ? `0.${minor + 1}.0` : `0.0.${patch + 1}`;
-    return compareVersions(version, `${major}.${minor}.${patch}`) >= 0 &&
-      compareVersions(version, upper) < 0;
+    const upper =
+      major > 0 ? `${major + 1}.0.0` : minor > 0 ? `0.${minor + 1}.0` : `0.0.${patch + 1}`;
+    return (
+      compareVersions(version, `${major}.${minor}.${patch}`) >= 0 &&
+      compareVersions(version, upper) < 0
+    );
   }
   const match = /^(>=|>|<=|<|=)?(\d+(?:\.\d+){0,2})$/.exec(comparator.trim());
   if (!match) {
@@ -82,8 +84,12 @@ function satisfiesComparator(version, comparator) {
 function satisfiesRange(version, range) {
   // Evaluate every comparator so an unsupported clause cannot hide behind a
   // satisfied alternative or a failing lower bound.
-  const alternatives = range.split("||").map((alternative) => alternative
-    .trim().split(/\s+/u).map((comparator) => satisfiesComparator(version, comparator)));
+  const alternatives = range.split("||").map((alternative) =>
+    alternative
+      .trim()
+      .split(/\s+/u)
+      .map((comparator) => satisfiesComparator(version, comparator)),
+  );
   return alternatives.some((results) => results.every(Boolean));
 }
 
@@ -131,11 +137,14 @@ export async function candidateInputDigest(root = repositoryRoot) {
     await collectDigestFiles(path.join(root, sourceRoot), files);
   }
   const hash = createHash("sha256");
-  const candidates = files.map((file) => ({
-    file,
-    relativePath: path.relative(root, file).split(path.sep).join("/"),
-  })).toSorted((left, right) => left.relativePath < right.relativePath ? -1
-    : left.relativePath > right.relativePath ? 1 : 0);
+  const candidates = files
+    .map((file) => ({
+      file,
+      relativePath: path.relative(root, file).split(path.sep).join("/"),
+    }))
+    .toSorted((left, right) =>
+      left.relativePath < right.relativePath ? -1 : left.relativePath > right.relativePath ? 1 : 0,
+    );
   for (const { file, relativePath } of candidates) {
     if (!(await lstat(file)).isFile()) {
       fail(`Candidate input must be a regular file: ${relativePath}`);
@@ -155,7 +164,9 @@ async function collectNodeApis() {
   const nodeApis = new Set();
   for (const filePath of files) {
     const source = await readFile(filePath, "utf8");
-    for (const match of source.matchAll(/(?:from\s+|require\(\s*|import\(\s*)["'](node:[^"']+)["']/gu)) {
+    for (const match of source.matchAll(
+      /(?:from\s+|require\(\s*|import\(\s*)["'](node:[^"']+)["']/gu,
+    )) {
       nodeApis.add(match[1]);
     }
   }
@@ -179,7 +190,10 @@ function parseLockedAgentTeamsPackages(lockfile) {
     const versionSeparator = identity.lastIndexOf("@");
     const name = identity.slice(0, versionSeparator);
     const version = identity.slice(versionSeparator + 1);
-    if (typeof evidence.engines?.node !== "string" || typeof evidence.resolution?.integrity !== "string") {
+    if (
+      typeof evidence.engines?.node !== "string" ||
+      typeof evidence.resolution?.integrity !== "string"
+    ) {
       fail(`Missing published package engine or integrity evidence: ${identity}`);
     }
     const direct = lock.importers["."].devDependencies?.[name];
@@ -211,14 +225,23 @@ function validateDependencyEvidence(dependency, lockedDependency, packageManifes
   }
   const direct = packageManifest.devDependencies?.[dependency.name];
   const expectedRelationship = direct ? "DIRECT" : "TRANSITIVE";
-  if (dependency.lockIdentity !== lockedDependency.lockIdentity || !lockedDependency.snapshotPresent ||
-    dependency.relationship !== expectedRelationship || (direct &&
-    (direct !== dependency.version || lockedDependency.direct?.specifier !== direct ||
-      lockedDependency.direct?.version?.split("(")[0] !== direct))) {
+  if (
+    dependency.lockIdentity !== lockedDependency.lockIdentity ||
+    !lockedDependency.snapshotPresent ||
+    dependency.relationship !== expectedRelationship ||
+    (direct &&
+      (direct !== dependency.version ||
+        lockedDependency.direct?.specifier !== direct ||
+        lockedDependency.direct?.version?.split("(")[0] !== direct))
+  ) {
     fail(`Published dependency relationship or exact root pin drift for ${identity}`);
   }
-  const expectedRole = dependency.name === "@agent-teams/docs-protocol-agent-teams"
-    ? "MANAGED_DOCS_ADAPTER" : direct ? "DEVELOPMENT_TOOLING" : "DEVELOPMENT_TOOLING_LIBRARY";
+  const expectedRole =
+    dependency.name === "@agent-teams/docs-protocol-agent-teams"
+      ? "MANAGED_DOCS_ADAPTER"
+      : direct
+        ? "DEVELOPMENT_TOOLING"
+        : "DEVELOPMENT_TOOLING_LIBRARY";
   if (dependency.role !== expectedRole) {
     fail(`Published dependency role drift for ${identity}`);
   }
@@ -226,8 +249,14 @@ function validateDependencyEvidence(dependency, lockedDependency, packageManifes
 
 function validateUpstreamDependencies(compatibility, lockedPackages, packageManifest) {
   const dependencies = [
-    ...compatibility.upstreamDependencies.foundation.map((dependency) => ({ ...dependency, owner: "foundation" })),
-    ...compatibility.upstreamDependencies.runtime.map((dependency) => ({ ...dependency, owner: "runtime" })),
+    ...compatibility.upstreamDependencies.foundation.map((dependency) => ({
+      ...dependency,
+      owner: "foundation",
+    })),
+    ...compatibility.upstreamDependencies.runtime.map((dependency) => ({
+      ...dependency,
+      owner: "runtime",
+    })),
   ];
   const recordedKeys = new Set(recordedDependencyKeys(compatibility));
   if (recordedKeys.size !== dependencies.length) {
@@ -245,10 +274,15 @@ function validateUpstreamDependencies(compatibility, lockedPackages, packageMani
       fail(`Recorded upstream dependency is absent from pnpm-lock.yaml: ${identity}`);
     }
     if (lockedDependency.nodeEngine !== dependency.nodeEngine) {
-      fail(`Node engine drift for ${identity}: ${lockedDependency.nodeEngine} != ${dependency.nodeEngine}`);
+      fail(
+        `Node engine drift for ${identity}: ${lockedDependency.nodeEngine} != ${dependency.nodeEngine}`,
+      );
     }
     validateDependencyEvidence(dependency, lockedDependency, packageManifest);
-    const supported = satisfiesRange(compatibility.platform.candidateVersion, dependency.nodeEngine);
+    const supported = satisfiesRange(
+      compatibility.platform.candidateVersion,
+      dependency.nodeEngine,
+    );
     const expectedStatus = supported ? "SUPPORTED" : "BLOCKED_BY_UPSTREAM_ENGINE";
     if (dependency.node26StrictInstall !== expectedStatus) {
       fail(
@@ -267,7 +301,11 @@ async function validatePrivatePackages(compatibility) {
       "packages/contexts/project-management/package.json",
     );
     const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
-    if (!manifest.private || manifest.name !== artifact.name || manifest.version !== artifact.version) {
+    if (
+      !manifest.private ||
+      manifest.name !== artifact.name ||
+      manifest.version !== artifact.version
+    ) {
       fail(`Private package identity drift: ${artifact.name}@${artifact.version}`);
     }
     const runtimeDependencies = Object.keys(manifest.dependencies ?? {}).toSorted();
@@ -278,23 +316,22 @@ async function validatePrivatePackages(compatibility) {
 }
 
 export async function readCompatibilityState() {
-  const [
-    compatibility,
-    schema,
-    packageManifest,
-    lockfile,
-    nodeVersion,
-    npmrc,
-    workspace,
-  ] = await Promise.all([
-    readFile(path.join(repositoryRoot, "architecture/runtime/node-compatibility.json"), "utf8").then(JSON.parse),
-    readFile(path.join(repositoryRoot, "architecture/runtime/node-compatibility.schema.json"), "utf8").then(JSON.parse),
-    readFile(path.join(repositoryRoot, "package.json"), "utf8").then(JSON.parse),
-    readFile(path.join(repositoryRoot, "pnpm-lock.yaml"), "utf8"),
-    readFile(path.join(repositoryRoot, ".node-version"), "utf8"),
-    readFile(path.join(repositoryRoot, ".npmrc"), "utf8"),
-    readFile(path.join(repositoryRoot, "pnpm-workspace.yaml"), "utf8"),
-  ]);
+  const [compatibility, schema, packageManifest, lockfile, nodeVersion, npmrc, workspace] =
+    await Promise.all([
+      readFile(
+        path.join(repositoryRoot, "architecture/runtime/node-compatibility.json"),
+        "utf8",
+      ).then(JSON.parse),
+      readFile(
+        path.join(repositoryRoot, "architecture/runtime/node-compatibility.schema.json"),
+        "utf8",
+      ).then(JSON.parse),
+      readFile(path.join(repositoryRoot, "package.json"), "utf8").then(JSON.parse),
+      readFile(path.join(repositoryRoot, "pnpm-lock.yaml"), "utf8"),
+      readFile(path.join(repositoryRoot, ".node-version"), "utf8"),
+      readFile(path.join(repositoryRoot, ".npmrc"), "utf8"),
+      readFile(path.join(repositoryRoot, "pnpm-workspace.yaml"), "utf8"),
+    ]);
   return { compatibility, schema, packageManifest, lockfile, nodeVersion, npmrc, workspace };
 }
 
@@ -350,7 +387,11 @@ export function validatePolicyState(state) {
 export async function createCompatibilityReport(state) {
   const { compatibility, lockfile, packageManifest } = state;
   const lockedPackages = parseLockedAgentTeamsPackages(lockfile);
-  const upstreamDependencies = validateUpstreamDependencies(compatibility, lockedPackages, packageManifest);
+  const upstreamDependencies = validateUpstreamDependencies(
+    compatibility,
+    lockedPackages,
+    packageManifest,
+  );
   await validatePrivatePackages(compatibility);
 
   const actualNodeApis = await collectNodeApis();
@@ -365,17 +406,21 @@ export async function createCompatibilityReport(state) {
       package: `${dependency.name}@${dependency.version}`,
       nodeEngine: dependency.nodeEngine,
     }));
-  const expectedQualificationStatus = blockers.length === 0
-    ? "IMPLEMENTED_PENDING_QUALIFICATION"
-    : "PENDING_UPSTREAM_ENGINE_COMPATIBILITY";
-  const expectedStrictInstallStatus = blockers.length === 0
-    ? "READY_FOR_STRICT_INSTALL"
-    : "BLOCKED_BY_UPSTREAM_ENGINE";
+  const expectedQualificationStatus =
+    blockers.length === 0
+      ? "IMPLEMENTED_PENDING_QUALIFICATION"
+      : "PENDING_UPSTREAM_ENGINE_COMPATIBILITY";
+  const expectedStrictInstallStatus =
+    blockers.length === 0 ? "READY_FOR_STRICT_INSTALL" : "BLOCKED_BY_UPSTREAM_ENGINE";
   if (compatibility.qualification.status !== expectedQualificationStatus) {
-    fail(`Qualification status drift: ${compatibility.qualification.status} != ${expectedQualificationStatus}`);
+    fail(
+      `Qualification status drift: ${compatibility.qualification.status} != ${expectedQualificationStatus}`,
+    );
   }
   if (compatibility.qualification.strictInstall !== expectedStrictInstallStatus) {
-    fail(`Strict-install status drift: ${compatibility.qualification.strictInstall} != ${expectedStrictInstallStatus}`);
+    fail(
+      `Strict-install status drift: ${compatibility.qualification.strictInstall} != ${expectedStrictInstallStatus}`,
+    );
   }
 
   return {
@@ -384,16 +429,28 @@ export async function createCompatibilityReport(state) {
     candidateVersion: compatibility.platform.candidateVersion,
     skippedVersion: compatibility.platform.skippedVersion,
     auditedNodeApis: actualNodeApis,
-    upstreamDependencies: upstreamDependencies.map(({ owner, name, version, relationship, role, integrity, lockIdentity, nodeEngine, node26StrictInstall }) => ({
-      owner,
-      package: `${name}@${version}`,
-      relationship,
-      role,
-      integrity,
-      lockIdentity,
-      nodeEngine,
-      node26StrictInstall,
-    })),
+    upstreamDependencies: upstreamDependencies.map(
+      ({
+        owner,
+        name,
+        version,
+        relationship,
+        role,
+        integrity,
+        lockIdentity,
+        nodeEngine,
+        node26StrictInstall,
+      }) => ({
+        owner,
+        package: `${name}@${version}`,
+        relationship,
+        role,
+        integrity,
+        lockIdentity,
+        nodeEngine,
+        node26StrictInstall,
+      }),
+    ),
     privatePackages: compatibility.privatePackages,
     managedDocsRuntime: compatibility.managedDocsRuntime,
     blockers,

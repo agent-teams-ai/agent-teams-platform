@@ -29,15 +29,12 @@ test("cancels before claim without any downstream side effect", async () => {
   );
   subject.preparationAuthority.decision = initialPreparationAuthority;
   assert.equal(subject.orchestration.submissions.length, 0);
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    {
-      kind: "blocked",
-      reason: "USER_CANCELLED",
-      recoverable: true,
-      allowedActions: ["resume", "inspect", "retire"],
-    },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), {
+    kind: "blocked",
+    reason: "USER_CANCELLED",
+    recoverable: true,
+    allowedActions: ["resume", "inspect", "retire"],
+  });
 });
 
 test("fails closed for unauthorized and cross-tenant preparation access", async () => {
@@ -73,10 +70,10 @@ test("rejects conflicting and stale lifecycle commands without mutating a succes
   const subject = fixture();
   const created = await acceptedProject(subject);
   const acceptedCancel = cancelCommand(created.operationRef, 1, "lifecycle-command");
-  assert.deepEqual(
-    await subject.application.cancelProjectPreparation(acceptedCancel),
-    { kind: "cancelled", replayed: false },
-  );
+  assert.deepEqual(await subject.application.cancelProjectPreparation(acceptedCancel), {
+    kind: "cancelled",
+    replayed: false,
+  });
   assert.deepEqual(
     await subject.application.cancelProjectPreparation({
       ...acceptedCancel,
@@ -85,9 +82,7 @@ test("rejects conflicting and stale lifecycle commands without mutating a succes
     { kind: "conflict", reason: "COMMAND_DIGEST_MISMATCH" },
   );
   assert.equal(
-    (await subject.application.resumeProjectPreparation(
-      resumeCommand(created.operationRef),
-    )).kind,
+    (await subject.application.resumeProjectPreparation(resumeCommand(created.operationRef))).kind,
     "accepted",
   );
   assert.deepEqual(
@@ -102,10 +97,7 @@ test("rejects conflicting and stale lifecycle commands without mutating a succes
     ),
     { kind: "stale" },
   );
-  assert.equal(
-    (await subject.store.loadByOperation(created.operationRef))?.process.generation,
-    2,
-  );
+  assert.equal((await subject.store.loadByOperation(created.operationRef))?.process.generation, 2);
 });
 
 test("does not retain unbounded receipts for lifecycle commands with no side effect", async () => {
@@ -185,21 +177,23 @@ test("bounds retained process generations and outbox growth", async () => {
   const created = await acceptedProject(subject);
   for (const generation of [1, 2]) {
     await subject.application.cancelProjectPreparation(
-      cancelCommand(created.operationRef, generation),
+      cancelCommand(created.operationRef, generation, `cancel-${generation}`, generation - 1),
     );
     assert.equal(
-      (await subject.application.resumeProjectPreparation(
-        resumeCommand(created.operationRef, generation),
-      )).kind,
+      (
+        await subject.application.resumeProjectPreparation(
+          resumeCommand(created.operationRef, generation, `resume-${generation}`, generation - 1),
+        )
+      ).kind,
       "accepted",
     );
   }
   await subject.application.cancelProjectPreparation(
-    cancelCommand(created.operationRef, 3),
+    cancelCommand(created.operationRef, 3, "cancel-3", 2),
   );
   assert.deepEqual(
     await subject.application.resumeProjectPreparation(
-      resumeCommand(created.operationRef, 3),
+      resumeCommand(created.operationRef, 3, "resume-3", 2),
     ),
     { kind: "not-resumable" },
   );
@@ -220,10 +214,7 @@ test("cancellation wins a claimed but uncommitted dispatch CAS", async () => {
     { kind: "cancelled", replayed: false },
   );
   assert.deepEqual(
-    await subject.store.authorizeDispatch(
-      claim,
-      claim.process.creationAuthorityBasis,
-    ),
+    await subject.store.authorizeDispatch(claim, claim.process.creationAuthorityBasis),
     { kind: "stale" },
   );
 });
@@ -238,24 +229,19 @@ test("cancellation reconciles an ambiguous dispatch before completing", async ()
     { kind: "reconciliation-required", replayed: false },
   );
   subject.orchestration.recovery = () => ({ kind: "unresolved" });
-  assert.deepEqual(
-    await subject.worker.reconcileManagedScopeAdmission(created.operationRef),
-    { kind: "unresolved" },
-  );
+  assert.deepEqual(await subject.worker.reconcileManagedScopeAdmission(created.operationRef), {
+    kind: "unresolved",
+  });
   subject.orchestration.recovery = () => ({ kind: "known-not-accepted" });
-  assert.deepEqual(
-    await subject.worker.reconcileManagedScopeAdmission(created.operationRef),
-    { kind: "cancelled" },
-  );
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    {
-      kind: "blocked",
-      reason: "USER_CANCELLED",
-      recoverable: true,
-      allowedActions: ["resume", "inspect", "retire"],
-    },
-  );
+  assert.deepEqual(await subject.worker.reconcileManagedScopeAdmission(created.operationRef), {
+    kind: "cancelled",
+  });
+  assert.deepEqual(await readiness(subject, created.operationRef), {
+    kind: "blocked",
+    reason: "USER_CANCELLED",
+    recoverable: true,
+    allowedActions: ["resume", "inspect", "retire"],
+  });
 });
 
 test("reports a reconciled downstream conflict as blocked, not cancelled", async () => {
@@ -274,10 +260,9 @@ test("reports a reconciled downstream conflict as blocked, not cancelled", async
       receiptDigest: target.process.stepDigest,
     },
   });
-  assert.deepEqual(
-    await subject.worker.reconcileManagedScopeAdmission(created.operationRef),
-    { kind: "blocked" },
-  );
+  assert.deepEqual(await subject.worker.reconcileManagedScopeAdmission(created.operationRef), {
+    kind: "blocked",
+  });
   assert.deepEqual(await readiness(subject, created.operationRef), {
     kind: "blocked",
     reason: "DOWNSTREAM_CONFLICT",
@@ -302,10 +287,9 @@ test("cancellation preserves a late admitted receipt while admission stays denie
       receiptDigest: intent.commandDigest,
     },
   });
-  assert.deepEqual(
-    await subject.worker.reconcileManagedScopeAdmission(created.operationRef),
-    { kind: "cancelled" },
-  );
+  assert.deepEqual(await subject.worker.reconcileManagedScopeAdmission(created.operationRef), {
+    kind: "cancelled",
+  });
   const cancelled = await subject.store.loadByOperation(created.operationRef);
   assert.equal(cancelled?.admission.state, "denied");
   assert.equal(cancelled?.process.receipt?.kind, "admitted");
@@ -366,9 +350,7 @@ test("a delayed predecessor receipt cannot mutate successor generation", async (
   const created = await acceptedProject(subject);
   subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
   await subject.worker.dispatchManagedScopeAdmission();
-  const predecessor = await subject.store.loadReconciliationTarget(
-    created.operationRef,
-  );
+  const predecessor = await subject.store.loadReconciliationTarget(created.operationRef);
   assert.ok(predecessor);
   await subject.application.cancelProjectPreparation(cancelCommand(created.operationRef));
   subject.orchestration.recovery = () => ({ kind: "known-not-accepted" });
@@ -395,10 +377,8 @@ test("a delayed predecessor receipt cannot mutate successor generation", async (
   assert.equal(successor?.admission.state, "denied");
   assert.notEqual(successor?.process.blockReason, "DATA_INTEGRITY_CONFLICT");
   assert.equal(
-    subject.store.inspectGenerationEvidence(
-      predecessor.process.id,
-      predecessor.process.generation,
-    )?.lateReceipt?.receiptRef,
+    subject.store.inspectGenerationEvidence(predecessor.process.id, predecessor.process.generation)
+      ?.lateReceipt?.receiptRef,
     ids.orchestratorReceipt("delayed-predecessor"),
   );
 });
@@ -444,16 +424,122 @@ test("resume rechecks an admitted receipt without creating a successor command",
       replayed: false,
     },
   );
-  assert.deepEqual(
-    await subject.worker.recheckScopeAdmissionAuthority(),
-    { kind: "ready" },
-  );
+  assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), { kind: "ready" });
   assert.equal(subject.orchestration.submissions.length, 1);
   assert.equal(subject.orchestration.recoveries.length, 0);
+  assert.deepEqual(await readiness(subject, created.operationRef), { kind: "ready" });
+});
+
+test("same-generation resume fences delayed lifecycle commands while preserving receipt replay", async () => {
+  const subject = fixture();
+  const created = await acceptedProject(subject);
+  subject.orchestration.submission = () => ({ kind: "outcome-unknown" });
+  await subject.worker.dispatchManagedScopeAdmission();
+  await subject.application.cancelProjectPreparation(cancelCommand(created.operationRef));
+  subject.orchestration.recovery = (intent) => ({
+    kind: "receipt",
+    receipt: {
+      kind: "admitted",
+      receiptRef: ids.orchestratorReceipt("cancelled-admitted-receipt"),
+      receiptDigest: intent.commandDigest,
+    },
+  });
+  await subject.worker.reconcileManagedScopeAdmission(created.operationRef);
+  const noOpCancel = cancelCommand(created.operationRef, 1, "no-op-cancel");
+  const delayedResume = resumeCommand(created.operationRef, 1, "delayed-resume");
+  assert.deepEqual(await subject.application.cancelProjectPreparation(noOpCancel), {
+    kind: "cancelled",
+    replayed: false,
+  });
+  assert.equal(subject.store.inspectPreparationCommandReceiptCount(), 1);
+
+  const firstResume = resumeCommand(created.operationRef, 1, "first-resume");
+  assert.deepEqual(await subject.application.resumeProjectPreparation(firstResume), {
+    kind: "accepted",
+    generation: 1,
+    predecessorReceiptRetained: true,
+    replayed: false,
+  });
+  const resumed = await subject.store.loadByOperation(created.operationRef);
+  assert.equal(resumed?.process.state, "receipt-observed");
+  assert.equal(resumed?.process.resumptionCount, 1);
+  assert.deepEqual(await subject.application.cancelProjectPreparation(noOpCancel), {
+    kind: "stale",
+  });
+  assert.deepEqual(await subject.store.loadByOperation(created.operationRef), resumed);
+  assert.equal(subject.store.inspectPreparationCommandReceiptCount(), 2);
   assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "ready" },
+    await subject.application.resumeProjectPreparation({
+      ...firstResume,
+      expectedResumptionCount: 1,
+    }),
+    { kind: "conflict", reason: "COMMAND_DIGEST_MISMATCH" },
   );
+
+  subject.tenantAuthority.decision = { kind: "denied", reason: "TENANT_ACCESS_REVOKED" };
+  assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), { kind: "blocked" });
+  const blocked = await subject.store.loadByOperation(created.operationRef);
+  assert.deepEqual(await subject.application.resumeProjectPreparation(delayedResume), {
+    kind: "not-resumable",
+  });
+  assert.deepEqual(await subject.store.loadByOperation(created.operationRef), blocked);
+  subject.tenantAuthority.decision = {
+    kind: "allowed",
+    evidenceRef: ids.authorityEvidence("resume-current-authority"),
+    revision: ids.authorityRevision("resume-current-authority"),
+    validUntil: NOW + 60_000,
+  };
+  const readinessQuery = {
+    operationRef: created.operationRef,
+    requesterRef: ids.requester("user-1"),
+    tenantRef: ids.tenant("tenant-1"),
+  };
+  assert.deepEqual(
+    await subject.application.getScopeAdmissionReadiness({
+      ...readinessQuery,
+      tenantRef: ids.tenant("tenant-2"),
+    }),
+    { kind: "not-found" },
+  );
+  const preparationAuthority = subject.preparationAuthority.decision;
+  subject.preparationAuthority.decision = { kind: "denied", reason: "READ_NOT_AUTHORIZED" };
+  assert.deepEqual(await subject.application.getScopeAdmissionReadiness(readinessQuery), {
+    kind: "denied",
+    dependency: "project-preparation-authority",
+    reason: "READ_NOT_AUTHORIZED",
+  });
+  subject.preparationAuthority.decision = preparationAuthority;
+  const observed = await subject.application.getScopeAdmissionReadiness(readinessQuery);
+  assert.ok(observed.kind === "found");
+  assert.equal(observed.generation, 1);
+  assert.equal(observed.resumptionCount, 1);
+  assert.equal(
+    (
+      await subject.application.resumeProjectPreparation(
+        resumeCommand(
+          created.operationRef,
+          observed.generation,
+          "current-resume",
+          observed.resumptionCount,
+        ),
+      )
+    ).kind,
+    "accepted",
+  );
+  const current = await subject.store.loadByOperation(created.operationRef);
+  assert.deepEqual(await subject.application.resumeProjectPreparation(firstResume), {
+    kind: "accepted",
+    generation: 1,
+    predecessorReceiptRetained: true,
+    replayed: true,
+  });
+  assert.deepEqual(await subject.store.loadByOperation(created.operationRef), current);
+  assert.equal(current?.process.resumptionCount, 2);
+  assert.equal(current?.process.stepCommandId, resumed?.process.stepCommandId);
+  assert.deepEqual(current?.process.receipt, resumed?.process.receipt);
+  assert.equal(subject.orchestration.submissions.length, 1);
+  assert.equal(subject.store.inspectPreparationCommandReceiptCount(), 3);
+  assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), { kind: "ready" });
 });
 
 test("bounds repeated admitted-receipt reauthorization receipts", async () => {
@@ -484,9 +570,11 @@ test("bounds repeated admitted-receipt reauthorization receipts", async () => {
       validUntil: NOW + 60_000,
     };
     assert.equal(
-      (await subject.application.resumeProjectPreparation(
-        resumeCommand(created.operationRef, 1, `reauthorize-${attempt}`),
-      )).kind,
+      (
+        await subject.application.resumeProjectPreparation(
+          resumeCommand(created.operationRef, 1, `reauthorize-${attempt}`, attempt - 1),
+        )
+      ).kind,
       "accepted",
     );
     subject.tenantAuthority.decision = {
@@ -505,7 +593,7 @@ test("bounds repeated admitted-receipt reauthorization receipts", async () => {
   };
   assert.deepEqual(
     await subject.application.resumeProjectPreparation(
-      resumeCommand(created.operationRef, 1, "reauthorize-exhausted"),
+      resumeCommand(created.operationRef, 1, "reauthorize-exhausted", 3),
     ),
     { kind: "not-resumable" },
   );

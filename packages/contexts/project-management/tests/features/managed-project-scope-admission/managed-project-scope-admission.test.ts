@@ -6,13 +6,7 @@ import {
   ids,
   type ProjectManagementDependencies,
 } from "../../../src/features/managed-project-scope-admission/composition.js";
-import {
-  NOW,
-  acceptedProject,
-  command,
-  fixture,
-  readiness,
-} from "./test-fixture.js";
+import { NOW, acceptedProject, command, fixture, readiness } from "./test-fixture.js";
 
 test("commits Project, denied admission, receipt, process and outbox atomically", async () => {
   const subject = fixture();
@@ -24,20 +18,14 @@ test("commits Project, denied admission, receipt, process and outbox atomically"
     receipts: 1,
     outboxes: 1,
   });
-  assert.deepEqual(
-    await readiness(subject, result.operationRef),
-    { kind: "preparing", reason: "DISPATCH_PENDING" },
-  );
+  assert.deepEqual(await readiness(subject, result.operationRef), {
+    kind: "preparing",
+    reason: "DISPATCH_PENDING",
+  });
 });
 
 test("rolls back every injected creation failure without partial state", async (t) => {
-  for (const point of [
-    "project",
-    "admission",
-    "process",
-    "receipt",
-    "outbox",
-  ] as const) {
+  for (const point of ["project", "admission", "process", "receipt", "outbox"] as const) {
     await t.test(point, async () => {
       const subject = fixture();
       subject.store.injectCreationFailure(point);
@@ -117,35 +105,35 @@ test("fails closed when authority expires at the creation linearization point", 
 
 test("rejects retry policies that can spin or never terminate", () => {
   assert.throws(
-    () => fixture({
-      safeRetryPolicy: { defaultDelayMs: 0, maxDelayMs: 1000, maxAttempts: 2 },
-    }),
+    () =>
+      fixture({
+        safeRetryPolicy: { defaultDelayMs: 0, maxDelayMs: 1000, maxAttempts: 2 },
+      }),
     /retry delay/u,
   );
   assert.throws(
-    () => fixture({
-      safeRetryPolicy: { defaultDelayMs: 1000, maxDelayMs: 1000, maxAttempts: 0 },
-    }),
+    () =>
+      fixture({
+        safeRetryPolicy: { defaultDelayMs: 1000, maxDelayMs: 1000, maxAttempts: 0 },
+      }),
     /retry attempts/u,
   );
   assert.throws(
-    () => fixture({
-      safeRetryPolicy: {
-        defaultDelayMs: 1000,
-        maxDelayMs: 999,
-        maxAttempts: 2,
-      },
-    }),
+    () =>
+      fixture({
+        safeRetryPolicy: {
+          defaultDelayMs: 1000,
+          maxDelayMs: 999,
+          maxAttempts: 2,
+        },
+      }),
     /maximum delay/u,
   );
   assert.throws(
     () => fixture({ dispatchLeaseDurationMs: Number.POSITIVE_INFINITY }),
     /lease duration/u,
   );
-  assert.throws(
-    () => fixture({ maxPreparationGenerations: 0 }),
-    /preparation generations/u,
-  );
+  assert.throws(() => fixture({ maxPreparationGenerations: 0 }), /preparation generations/u);
 });
 
 test("owns versioned canonical digest preimages inside the application", async () => {
@@ -157,28 +145,32 @@ test("owns versioned canonical digest preimages inside the application", async (
   );
   assert.equal(
     creationReceipt?.commandDigest,
-    ids.digest(JSON.stringify([
-      "agent-teams.platform.project-management.create-product-project.v1",
-      "tenant-1:user-1",
-      "create-1",
-      "user-1",
-      "tenant-1",
-      "Alpha Project",
-    ])),
+    ids.digest(
+      JSON.stringify([
+        "agent-teams.platform.project-management.create-product-project.v1",
+        "tenant-1:user-1",
+        "create-1",
+        "user-1",
+        "tenant-1",
+        "Alpha Project",
+      ]),
+    ),
   );
   const snapshot = await subject.store.loadByOperation(created.operationRef);
   assert.ok(snapshot);
   assert.equal(
     snapshot.process.stepDigest,
-    ids.digest(JSON.stringify([
-      "agent-teams.platform.project-management.admit-orchestration-scope.v1",
-      snapshot.project.tenantRef,
-      snapshot.project.id,
-      snapshot.project.incarnation,
-      snapshot.process.id,
-      snapshot.process.generation,
-      snapshot.process.stepCommandId,
-    ])),
+    ids.digest(
+      JSON.stringify([
+        "agent-teams.platform.project-management.admit-orchestration-scope.v1",
+        snapshot.project.tenantRef,
+        snapshot.project.id,
+        snapshot.project.incarnation,
+        snapshot.process.id,
+        snapshot.process.generation,
+        snapshot.process.stepCommandId,
+      ]),
+    ),
   );
 });
 
@@ -235,15 +227,11 @@ test("replays an accepted command even after current authority is revoked", asyn
 test("serializes concurrent duplicate commands into one Project", async () => {
   const subject = fixture();
   const results = await Promise.all(
-    Array.from({ length: 20 }, () =>
-      subject.application.createProductProject(command()),
-    ),
+    Array.from({ length: 20 }, () => subject.application.createProductProject(command())),
   );
   assert.equal(results.filter((result) => result.kind === "accepted").length, 20);
   assert.equal(
-    results.filter(
-      (result) => result.kind === "accepted" && result.replayed === false,
-    ).length,
+    results.filter((result) => result.kind === "accepted" && result.replayed === false).length,
     1,
   );
   assert.equal(subject.store.inspectCounts().projects, 1);
@@ -261,9 +249,7 @@ test("rejects durable identity reuse instead of overwriting prior state", async 
   const subject = fixture({ idGenerator: constantIds });
   await acceptedProject(subject);
   await assert.rejects(
-    subject.application.createProductProject(
-      command("Second Project", "create-2"),
-    ),
+    subject.application.createProductProject(command("Second Project", "create-2")),
     /reuse a durable identity/u,
   );
   assert.equal(subject.store.inspectCounts().projects, 1);
@@ -290,19 +276,10 @@ test("records an admitted receipt and exposes READY without using it as command 
   assert.deepEqual(await subject.worker.dispatchManagedScopeAdmission(), {
     kind: "receipt-recorded",
   });
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "ready" },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), { kind: "ready" });
   assert.equal(subject.orchestration.submissions.length, 1);
-  assert.equal(
-    subject.orchestration.submissions[0]?.dispatchAuthority.validUntil,
-    NOW + 60_000,
-  );
-  assert.equal(
-    subject.orchestration.submissions[0]?.dispatchLease.validUntil,
-    NOW + 1000,
-  );
+  assert.equal(subject.orchestration.submissions[0]?.dispatchAuthority.validUntil, NOW + 60_000);
+  assert.equal(subject.orchestration.submissions[0]?.dispatchLease.validUntil, NOW + 1000);
 });
 
 test("reconciles a lost acknowledgement by the original command identity", async () => {
@@ -322,19 +299,12 @@ test("reconciles a lost acknowledgement by the original command identity", async
       receiptDigest: query.commandDigest,
     },
   });
-  assert.deepEqual(
-    await subject.worker.reconcileManagedScopeAdmission(created.operationRef),
-    { kind: "receipt-recorded" },
-  );
+  assert.deepEqual(await subject.worker.reconcileManagedScopeAdmission(created.operationRef), {
+    kind: "receipt-recorded",
+  });
   assert.equal(subject.orchestration.recoveries[0]?.commandId, original.commandId);
-  assert.equal(
-    subject.orchestration.recoveries[0]?.commandDigest,
-    original.commandDigest,
-  );
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "ready" },
-  );
+  assert.equal(subject.orchestration.recoveries[0]?.commandDigest, original.commandDigest);
+  assert.deepEqual(await readiness(subject, created.operationRef), { kind: "ready" });
 });
 
 test("does not open admission when authority expires inside reconciliation", async () => {
@@ -355,10 +325,9 @@ test("does not open admission when authority expires inside reconciliation", asy
   subject.store.injectBeforeReceiptLinearizationForTest(() => {
     subject.setNow(NOW + 60_000);
   });
-  assert.deepEqual(
-    await subject.worker.reconcileManagedScopeAdmission(created.operationRef),
-    { kind: "receipt-recorded" },
-  );
+  assert.deepEqual(await subject.worker.reconcileManagedScopeAdmission(created.operationRef), {
+    kind: "receipt-recorded",
+  });
   subject.preparationAuthority.decision = {
     kind: "allowed",
     evidenceRef: ids.authorityEvidence("read-reconciliation-recheck"),
@@ -384,10 +353,9 @@ test("retries the same command only after reconciliation proves non-acceptance",
     kind: "known-not-accepted",
     retryAfter: NOW + 5000,
   });
-  assert.deepEqual(
-    await subject.worker.reconcileManagedScopeAdmission(created.operationRef),
-    { kind: "retry" },
-  );
+  assert.deepEqual(await subject.worker.reconcileManagedScopeAdmission(created.operationRef), {
+    kind: "retry",
+  });
   assert.deepEqual(await subject.worker.dispatchManagedScopeAdmission(), {
     kind: "idle",
   });
@@ -404,10 +372,7 @@ test("retries the same command only after reconciliation proves non-acceptance",
     kind: "receipt-recorded",
   });
   assert.equal(subject.orchestration.submissions[1]?.commandId, original.commandId);
-  assert.equal(
-    subject.orchestration.submissions[1]?.commandDigest,
-    original.commandDigest,
-  );
+  assert.equal(subject.orchestration.submissions[1]?.commandDigest, original.commandDigest);
 });
 
 test("treats an exception after dispatch claim as an ambiguous outcome", async () => {
@@ -419,10 +384,10 @@ test("treats an exception after dispatch claim as an ambiguous outcome", async (
   assert.deepEqual(await subject.worker.dispatchManagedScopeAdmission(), {
     kind: "reconcile-required",
   });
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "preparing", reason: "OUTCOME_UNKNOWN" },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), {
+    kind: "preparing",
+    reason: "OUTCOME_UNKNOWN",
+  });
 });
 
 test("retries only a proven not-submitted dispatch with the same semantic command", async () => {
@@ -467,10 +432,7 @@ test("safely requeues an expired claim that never committed a dispatch", async (
     kind: "receipt-recorded",
   });
   assert.equal(subject.orchestration.submissions.length, 1);
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "ready" },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), { kind: "ready" });
 });
 
 test("rejects an expired dispatch lease at the authorization CAS", async () => {
@@ -484,10 +446,7 @@ test("rejects an expired dispatch lease at the authorization CAS", async () => {
   assert.ok(claim);
   subject.setNow(NOW + 1000);
   assert.deepEqual(
-    await subject.store.authorizeDispatch(
-      claim,
-      claim.process.creationAuthorityBasis,
-    ),
+    await subject.store.authorizeDispatch(claim, claim.process.creationAuthorityBasis),
     { kind: "stale" },
   );
 });
@@ -503,10 +462,7 @@ test("rejects authority that expires at the dispatch authorization CAS", async (
   assert.ok(claim);
   subject.setNow(NOW + 60_000);
   assert.deepEqual(
-    await subject.store.authorizeDispatch(
-      claim,
-      claim.process.creationAuthorityBasis,
-    ),
+    await subject.store.authorizeDispatch(claim, claim.process.creationAuthorityBasis),
     { kind: "stale" },
   );
 });
@@ -525,10 +481,10 @@ test("does not submit after the dispatch lease expires past authorization", asyn
   assert.deepEqual(await subject.worker.dispatchManagedScopeAdmission(), {
     kind: "idle",
   });
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "preparing", reason: "OUTCOME_UNKNOWN" },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), {
+    kind: "preparing",
+    reason: "OUTCOME_UNKNOWN",
+  });
 });
 
 test("reconciles an expired claim after dispatch authority was committed", async () => {
@@ -540,19 +496,16 @@ test("reconciles an expired claim after dispatch authority was committed", async
     leaseExpiresAt: NOW + 1000,
   });
   assert.ok(claim);
-  await subject.store.authorizeDispatch(
-    claim,
-    claim.process.creationAuthorityBasis,
-  );
+  await subject.store.authorizeDispatch(claim, claim.process.creationAuthorityBasis);
   subject.setNow(NOW + 1001);
   assert.deepEqual(await subject.worker.dispatchManagedScopeAdmission(), {
     kind: "idle",
   });
   assert.equal(subject.orchestration.submissions.length, 0);
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "preparing", reason: "OUTCOME_UNKNOWN" },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), {
+    kind: "preparing",
+    reason: "OUTCOME_UNKNOWN",
+  });
 });
 
 test("does not submit until last-mile authority is available", async () => {
@@ -566,10 +519,10 @@ test("does not submit until last-mile authority is available", async () => {
     kind: "retry",
   });
   assert.equal(subject.orchestration.submissions.length, 0);
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "preparing", reason: "RETRY_WAIT" },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), {
+    kind: "preparing",
+    reason: "RETRY_WAIT",
+  });
   subject.tenantAuthority.decision = {
     kind: "allowed",
     evidenceRef: ids.authorityEvidence("fresh"),
@@ -577,15 +530,11 @@ test("does not submit until last-mile authority is available", async () => {
     validUntil: NOW + 60_000,
   };
   subject.setNow(NOW + 1000);
-  assert.deepEqual(
-    await subject.worker.dispatchManagedScopeAdmission(),
-    { kind: "receipt-recorded" },
-  );
+  assert.deepEqual(await subject.worker.dispatchManagedScopeAdmission(), {
+    kind: "receipt-recorded",
+  });
   assert.equal(subject.orchestration.submissions.length, 1);
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "ready" },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), { kind: "ready" });
 });
 
 test("bounds unavailable authority retries and preserves commercial restriction semantics", async () => {
@@ -630,10 +579,7 @@ test("rejects a receipt when Project revision changes during dispatch", async ()
   assert.deepEqual(await subject.worker.dispatchManagedScopeAdmission(), {
     kind: "stale",
   });
-  assert.notDeepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "ready" },
-  );
+  assert.notDeepEqual(await readiness(subject, created.operationRef), { kind: "ready" });
 });
 
 test("blocks conflicting receipt evidence without opening admission", async () => {
@@ -650,15 +596,12 @@ test("blocks conflicting receipt evidence without opening admission", async () =
   assert.deepEqual(await subject.worker.dispatchManagedScopeAdmission(), {
     kind: "integrity-conflict",
   });
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    {
-      kind: "blocked",
-      reason: "DATA_INTEGRITY_CONFLICT",
-      recoverable: false,
-      allowedActions: ["inspect", "retire"],
-    },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), {
+    kind: "blocked",
+    reason: "DATA_INTEGRITY_CONFLICT",
+    recoverable: false,
+    allowedActions: ["inspect", "retire"],
+  });
 });
 
 test("does not open admission when authority expires inside receipt transaction", async () => {
@@ -676,10 +619,10 @@ test("does not open admission when authority expires inside receipt transaction"
     revision: ids.authorityRevision("read-recheck-state"),
     validUntil: NOW + 120_000,
   };
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "preparing", reason: "AUTHORITY_RECHECK_PENDING" },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), {
+    kind: "preparing",
+    reason: "AUTHORITY_RECHECK_PENDING",
+  });
   subject.tenantAuthority.decision = {
     kind: "allowed",
     evidenceRef: ids.authorityEvidence("recheck-fresh"),
@@ -692,10 +635,7 @@ test("does not open admission when authority expires inside receipt transaction"
   assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), {
     kind: "ready",
   });
-  assert.deepEqual(
-    await readiness(subject, created.operationRef),
-    { kind: "ready" },
-  );
+  assert.deepEqual(await readiness(subject, created.operationRef), { kind: "ready" });
 });
 
 test("blocks authority recheck after the bounded retry horizon", async () => {
@@ -722,10 +662,9 @@ test("blocks authority recheck after the bounded retry horizon", async () => {
   assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), {
     kind: "retry",
   });
-  assert.deepEqual(
-    await subject.worker.reconcileManagedScopeAdmission(created.operationRef),
-    { kind: "not-found" },
-  );
+  assert.deepEqual(await subject.worker.reconcileManagedScopeAdmission(created.operationRef), {
+    kind: "not-found",
+  });
   subject.setNow(NOW + 61_000);
   assert.deepEqual(await subject.worker.recheckScopeAdmissionAuthority(), {
     kind: "blocked",

@@ -36,7 +36,8 @@ Consumer Module Standard adoption is introduced by this profile.
 The product owner requires Get Modular as Platform's TypeScript module
 composition foundation. New composition must not introduce a competing homemade
 framework. Orchestrator's corresponding decision and activation requirements are
-recorded in [ADR-0110][orchestrator-modules]; its
+preserved in historical [ADR-0110][orchestrator-modules] and reconciled by
+ADR-0117 in [PR #86][orchestrator-pr], retaining the canonical ADR-0113 baseline; its
 [adoption and scale research][module-research] retains the supporting evidence
 and limitations. Both links point to the branch for
 [draft PR #86][orchestrator-pr], not merged main-branch authority.

@@ -3,15 +3,10 @@
     "./node_modules/@agent-teams/engineering-foundation/presets/oxlint/node.json",
     "./node_modules/@agent-teams/engineering-foundation/presets/oxlint/maintainability.json"
   ],
-  "ignorePatterns": [
-    "node_modules/**"
-  ],
+  "ignorePatterns": ["node_modules/**"],
   "overrides": [
     {
-      "files": [
-        "**/generated/**",
-        "**/vendor/**"
-      ],
+      "files": ["**/generated/**", "**/vendor/**"],
       "rules": {
         "complexity": "off",
         "max-depth": "off",
@@ -21,10 +16,7 @@
       }
     },
     {
-      "files": [
-        "**/*.test.*",
-        "**/fixtures/**"
-      ],
+      "files": ["**/*.test.*", "**/fixtures/**"],
       "rules": {
         "complexity": ["error", 30],
         "max-depth": ["error", 5],

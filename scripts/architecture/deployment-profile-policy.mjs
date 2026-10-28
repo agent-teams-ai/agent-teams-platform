@@ -124,9 +124,7 @@ function addUniqueIds(items, kind, errors) {
 }
 
 function validateQualificationGates(catalog, errors) {
-  const gateById = new Map(
-    (catalog.qualificationGateCatalog ?? []).map((gate) => [gate.id, gate]),
-  );
+  const gateById = new Map((catalog.qualificationGateCatalog ?? []).map((gate) => [gate.id, gate]));
   for (const [gateId, requiredClaims] of requiredQualificationGates) {
     const gate = gateById.get(gateId);
     if (!gate) {
@@ -144,7 +142,9 @@ function validateQualificationGates(catalog, errors) {
   }
   for (const gate of catalog.qualificationGateCatalog ?? []) {
     if (!requiredQualificationGates.has(gate.id)) {
-      errors.push(`DEPLOY-GATE-005 ${gate.id}: adding a qualification gate requires a superseding ADR`);
+      errors.push(
+        `DEPLOY-GATE-005 ${gate.id}: adding a qualification gate requires a superseding ADR`,
+      );
     }
     if (gate.requiredForQualification && gate.allowNotApplicable) {
       errors.push(
@@ -175,7 +175,9 @@ function validateDesignEvidenceSets(catalog, designEvidenceSetIds, errors) {
   for (const evidenceSet of catalog.designEvidenceSets ?? []) {
     for (const parentId of evidenceSet.extendsEvidenceSetIds ?? []) {
       if (!designEvidenceSetIds.has(parentId)) {
-        errors.push(`DEPLOY-DESIGNED-003 ${evidenceSet.id}: unknown parent evidence set ${parentId}`);
+        errors.push(
+          `DEPLOY-DESIGNED-003 ${evidenceSet.id}: unknown parent evidence set ${parentId}`,
+        );
       }
       if (parentId === evidenceSet.id) {
         errors.push(`DEPLOY-DESIGNED-004 ${evidenceSet.id}: evidence set cannot extend itself`);
@@ -193,7 +195,9 @@ function validateDesignEvidenceSets(catalog, designEvidenceSetIds, errors) {
 function validateAcceptedProfileDefinition(profile, errors) {
   const acceptedDefinition = acceptedProfileDefinitions.get(profile.id);
   if (!acceptedDefinition) {
-    errors.push(`DEPLOY-PROFILE-001 ${profile.id}: adding a deployment profile requires a superseding ADR`);
+    errors.push(
+      `DEPLOY-PROFILE-001 ${profile.id}: adding a deployment profile requires a superseding ADR`,
+    );
     return;
   }
   for (const [field, expected] of Object.entries(acceptedDefinition)) {
@@ -304,7 +308,9 @@ function validateProfileCatalogCoverage(profileIds, actualV1QualifiedProfiles, e
   }
   for (const profileId of actualV1QualifiedProfiles) {
     if (!requiredV1QualifiedProfiles.has(profileId)) {
-      errors.push(`DEPLOY-V1-004 ${profileId}: adding a v1 qualification target requires a superseding ADR`);
+      errors.push(
+        `DEPLOY-V1-004 ${profileId}: adding a v1 qualification target requires a superseding ADR`,
+      );
     }
   }
   if (profileIds.size === 0) {
@@ -320,9 +326,15 @@ export function validateDeploymentProfileSemantics(
   const errors = [];
   addUniqueIds(catalog.qualificationGateCatalog, "qualification gate", errors);
   const profileIds = addUniqueIds(catalog.profiles, "profile", errors);
-  const designEvidenceSetIds = addUniqueIds(catalog.designEvidenceSets, "design evidence set", errors);
+  const designEvidenceSetIds = addUniqueIds(
+    catalog.designEvidenceSets,
+    "design evidence set",
+    errors,
+  );
   const actualV1QualifiedProfiles = new Set(
-    (catalog.profiles ?? []).filter((profile) => profile.v1Scope === "QUALIFY").map((profile) => profile.id),
+    (catalog.profiles ?? [])
+      .filter((profile) => profile.v1Scope === "QUALIFY")
+      .map((profile) => profile.id),
   );
 
   validateQualificationGates(catalog, errors);
@@ -378,7 +390,9 @@ function validateUniqueContracts(record, errors) {
   const contractIds = new Set();
   for (const contract of record.releaseSet?.contracts ?? []) {
     if (contractIds.has(contract.id)) {
-      errors.push(`DEPLOY-RECORD-CONTRACT-001 ${record.recordId}: duplicate contract ${contract.id}`);
+      errors.push(
+        `DEPLOY-RECORD-CONTRACT-001 ${record.recordId}: duplicate contract ${contract.id}`,
+      );
     }
     contractIds.add(contract.id);
   }

@@ -49,6 +49,7 @@ export type ProjectPreparationCommand = Readonly<{
   commandId: ProjectPreparationCommandId;
   operationRef: ProjectPreparationOperationRef;
   expectedGeneration: number;
+  expectedResumptionCount: number;
   requesterRef: TrustedRequesterRef;
   tenantRef: TenantRef;
 }>;
@@ -60,7 +61,12 @@ export type GetScopeAdmissionReadinessQuery = Readonly<{
 }>;
 
 export type GetScopeAdmissionReadinessResult =
-  | Readonly<{ kind: "found"; readiness: ScopeAdmissionReadiness }>
+  | Readonly<{
+      kind: "found";
+      generation: number;
+      resumptionCount: number;
+      readiness: ScopeAdmissionReadiness;
+    }>
   | Readonly<{ kind: "not-found" }>
   | Readonly<{ kind: "denied"; dependency: string; reason: string }>
   | Readonly<{
@@ -150,9 +156,7 @@ export type ProjectManagementDependencies = Readonly<{
 }>;
 
 export type ProjectManagementApplication = Readonly<{
-  createProductProject(
-    command: CreateProductProjectCommand,
-  ): Promise<CreateProductProjectResult>;
+  createProductProject(command: CreateProductProjectCommand): Promise<CreateProductProjectResult>;
   cancelProjectPreparation(
     command: ProjectPreparationCommand,
   ): Promise<CancelProjectPreparationResult>;

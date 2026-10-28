@@ -10,7 +10,8 @@ const execFileAsync = promisify(execFile);
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const modelConformanceEntry =
   "dist/features/managed-project-scope-admission/testing/model-conformance/model-conformance-fixture.js";
-const forbiddenPackagePath = /(?:^|\/)(?:__tests__|tests)(?:\/|$)|(?:^|\/)test-fixture\.|\.(?:test|spec)\./u;
+const forbiddenPackagePath =
+  /(?:^|\/)(?:__tests__|tests)(?:\/|$)|(?:^|\/)test-fixture\.|\.(?:test|spec)\./u;
 
 async function productionFiles() {
   const files = await readdir(path.join(packageRoot, "dist"), {
@@ -19,9 +20,16 @@ async function productionFiles() {
   });
   return files
     .filter((entry) => entry.isFile())
-    .map((entry) => path.posix.join("dist", entry.parentPath
-      .slice(path.join(packageRoot, "dist").length + 1)
-      .split(path.sep).join("/"), entry.name));
+    .map((entry) =>
+      path.posix.join(
+        "dist",
+        entry.parentPath
+          .slice(path.join(packageRoot, "dist").length + 1)
+          .split(path.sep)
+          .join("/"),
+        entry.name,
+      ),
+    );
 }
 
 async function packedFiles() {
@@ -39,7 +47,10 @@ async function packedFiles() {
 
 function assertProductionBoundary(files) {
   assert.ok(files.includes(modelConformanceEntry));
-  assert.deepEqual(files.filter((file) => forbiddenPackagePath.test(file)), []);
+  assert.deepEqual(
+    files.filter((file) => forbiddenPackagePath.test(file)),
+    [],
+  );
 }
 
 test("production build excludes executable tests and test-only support", async () => {
@@ -51,15 +62,19 @@ test("packed artifact retains the testing export without test-only files", async
 });
 
 test("rejects a compiled .spec file from the built dist inventory", () => {
-  assert.throws(() => assertProductionBoundary([
-    modelConformanceEntry,
-    "dist/features/managed-project-scope-admission/production-leak.spec.js",
-  ]));
+  assert.throws(() =>
+    assertProductionBoundary([
+      modelConformanceEntry,
+      "dist/features/managed-project-scope-admission/production-leak.spec.js",
+    ]),
+  );
 });
 
 test("rejects a .spec artifact from the dry-run pack inventory", () => {
-  assert.throws(() => assertProductionBoundary([
-    modelConformanceEntry,
-    "dist/features/managed-project-scope-admission/packed-leak.spec.d.ts",
-  ]));
+  assert.throws(() =>
+    assertProductionBoundary([
+      modelConformanceEntry,
+      "dist/features/managed-project-scope-admission/packed-leak.spec.d.ts",
+    ]),
+  );
 });

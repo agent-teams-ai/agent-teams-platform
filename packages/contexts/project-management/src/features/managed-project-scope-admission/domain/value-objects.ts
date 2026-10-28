@@ -8,40 +8,16 @@ export type ProductProjectId = Brand<string, "ProductProjectId">;
 export type TenantRef = Brand<string, "TenantRef">;
 export type TrustedRequesterRef = Brand<string, "TrustedRequesterRef">;
 export type CommandScope = Brand<string, "CommandScope">;
-export type CreateProductProjectCommandId = Brand<
-  string,
-  "CreateProductProjectCommandId"
->;
-export type ProjectPreparationCommandId = Brand<
-  string,
-  "ProjectPreparationCommandId"
->;
+export type CreateProductProjectCommandId = Brand<string, "CreateProductProjectCommandId">;
+export type ProjectPreparationCommandId = Brand<string, "ProjectPreparationCommandId">;
 export type CanonicalCommandDigest = Brand<string, "CanonicalCommandDigest">;
-export type ManagedScopeAdmissionProcessId = Brand<
-  string,
-  "ManagedScopeAdmissionProcessId"
->;
-export type ProjectPreparationOperationRef = Brand<
-  string,
-  "ProjectPreparationOperationRef"
->;
-export type ScopeAdmissionStepCommandId = Brand<
-  string,
-  "ScopeAdmissionStepCommandId"
->;
+export type ManagedScopeAdmissionProcessId = Brand<string, "ManagedScopeAdmissionProcessId">;
+export type ProjectPreparationOperationRef = Brand<string, "ProjectPreparationOperationRef">;
+export type ScopeAdmissionStepCommandId = Brand<string, "ScopeAdmissionStepCommandId">;
 export type ScopeAdmissionOutboxId = Brand<string, "ScopeAdmissionOutboxId">;
-export type OpaqueAuthorityEvidenceRef = Brand<
-  string,
-  "OpaqueAuthorityEvidenceRef"
->;
-export type OpaqueAuthorityRevision = Brand<
-  string,
-  "OpaqueAuthorityRevision"
->;
-export type OpaqueOrchestratorReceiptRef = Brand<
-  string,
-  "OpaqueOrchestratorReceiptRef"
->;
+export type OpaqueAuthorityEvidenceRef = Brand<string, "OpaqueAuthorityEvidenceRef">;
+export type OpaqueAuthorityRevision = Brand<string, "OpaqueAuthorityRevision">;
+export type OpaqueOrchestratorReceiptRef = Brand<string, "OpaqueOrchestratorReceiptRef">;
 export type ScopeAdmissionLeaseId = Brand<string, "ScopeAdmissionLeaseId">;
 
 export type Instant = number;
@@ -61,22 +37,16 @@ export const ids = {
   tenant: (value: string) => nonEmpty(value, "TenantRef"),
   requester: (value: string) => nonEmpty(value, "TrustedRequesterRef"),
   commandScope: (value: string) => nonEmpty(value, "CommandScope"),
-  createCommand: (value: string) =>
-    nonEmpty(value, "CreateProductProjectCommandId"),
-  preparationCommand: (value: string) =>
-    nonEmpty(value, "ProjectPreparationCommandId"),
+  createCommand: (value: string) => nonEmpty(value, "CreateProductProjectCommandId"),
+  preparationCommand: (value: string) => nonEmpty(value, "ProjectPreparationCommandId"),
   digest: (value: string) => nonEmpty(value, "CanonicalCommandDigest"),
   process: (value: string) => nonEmpty(value, "ManagedScopeAdmissionProcessId"),
-  operation: (value: string) =>
-    nonEmpty(value, "ProjectPreparationOperationRef"),
+  operation: (value: string) => nonEmpty(value, "ProjectPreparationOperationRef"),
   scopeCommand: (value: string) => nonEmpty(value, "ScopeAdmissionStepCommandId"),
   outbox: (value: string) => nonEmpty(value, "ScopeAdmissionOutboxId"),
-  authorityEvidence: (value: string) =>
-    nonEmpty(value, "OpaqueAuthorityEvidenceRef"),
-  authorityRevision: (value: string) =>
-    nonEmpty(value, "OpaqueAuthorityRevision"),
-  orchestratorReceipt: (value: string) =>
-    nonEmpty(value, "OpaqueOrchestratorReceiptRef"),
+  authorityEvidence: (value: string) => nonEmpty(value, "OpaqueAuthorityEvidenceRef"),
+  authorityRevision: (value: string) => nonEmpty(value, "OpaqueAuthorityRevision"),
+  orchestratorReceipt: (value: string) => nonEmpty(value, "OpaqueOrchestratorReceiptRef"),
   lease: (value: string) => nonEmpty(value, "ScopeAdmissionLeaseId"),
 } as const;
 

@@ -93,9 +93,7 @@ const requiredHeadings = [
 ];
 
 async function schemaValidator(schemaSpecifier) {
-  const schema = JSON.parse(
-    await readFile(new URL(import.meta.resolve(schemaSpecifier)), "utf8"),
-  );
+  const schema = JSON.parse(await readFile(new URL(import.meta.resolve(schemaSpecifier)), "utf8"));
   return new Ajv2020({ allErrors: true, strict: true }).compile(schema);
 }
 
@@ -103,9 +101,7 @@ const validatorsPromise = Promise.all([
   schemaValidator(
     "@agent-teams/engineering-foundation/schemas/scaffold-target-catalog/v1.schema.json",
   ),
-  schemaValidator(
-    "@agent-teams/engineering-foundation/schemas/scaffolding-config/v1.schema.json",
-  ),
+  schemaValidator("@agent-teams/engineering-foundation/schemas/scaffolding-config/v1.schema.json"),
 ]);
 
 function validateSchema(value, validator, subject, errors) {
@@ -113,9 +109,7 @@ function validateSchema(value, validator, subject, errors) {
     return;
   }
   for (const error of validator.errors ?? []) {
-    errors.push(
-      `DOMAIN-SCHEMA-001 ${subject}${error.instancePath}: ${error.message}`,
-    );
+    errors.push(`DOMAIN-SCHEMA-001 ${subject}${error.instancePath}: ${error.message}`);
   }
 }
 
@@ -151,13 +145,7 @@ function validateDossierShape(dossier, errors) {
   if (!["accepted", "proposed"].includes(metadata.status)) {
     errors.push(`DOMAIN-DOSSIER-003 ${dossier.path} has invalid status`);
   }
-  for (const field of [
-    "id",
-    "owner",
-    "classification",
-    "package_target",
-    "summary",
-  ]) {
+  for (const field of ["id", "owner", "classification", "package_target", "summary"]) {
     if (typeof metadata[field] !== "string" || metadata[field].length === 0) {
       errors.push(`DOMAIN-DOSSIER-004 ${dossier.path} lacks ${field}`);
     }
@@ -176,9 +164,7 @@ function validateDossierShape(dossier, errors) {
 }
 
 function validateDossierIdentities(dossiers, errors) {
-  const metadata = dossiers
-    .map((dossier) => dossier.metadata)
-    .filter((item) => item !== null);
+  const metadata = dossiers.map((dossier) => dossier.metadata).filter((item) => item !== null);
   validateUniqueFields(metadata, ["id", "package_target"], "DOSSIER", errors);
 }
 
@@ -198,9 +184,7 @@ function validateCatalogBindings(catalog, dossiers, errors) {
   for (const target of packages) {
     const dossier = dossiersById.get(target.owner_document);
     if (dossier === undefined) {
-      errors.push(
-        `DOMAIN-CATALOG-002 ${target.id} has no owner ${target.owner_document}`,
-      );
+      errors.push(`DOMAIN-CATALOG-002 ${target.id} has no owner ${target.owner_document}`);
       continue;
     }
     const expected = {
@@ -229,22 +213,16 @@ function validateCatalogBindings(catalog, dossiers, errors) {
 
 function validateScaffoldingPolicy(config, errors) {
   if (!isDeepStrictEqual(config, requiredScaffoldingPolicy)) {
-    errors.push(
-      "DOMAIN-SCAFFOLD-001 scaffolding must admit only accepted bounded-context owners",
-    );
+    errors.push("DOMAIN-SCAFFOLD-001 scaffolding must admit only accepted bounded-context owners");
   }
 }
 
 function validateSourceDependencyCoverage(config, catalog, dossiers, errors) {
   const governedRoots = new Set(config?.governedRoots ?? []);
-  const dossierById = new Map(
-    dossiers.map((dossier) => [dossier.metadata?.id, dossier]),
-  );
+  const dossierById = new Map(dossiers.map((dossier) => [dossier.metadata?.id, dossier]));
   const acceptedRoots = new Set(
     (catalog?.packages ?? [])
-      .filter(
-        (target) => dossierById.get(target.owner_document)?.metadata?.status === "accepted",
-      )
+      .filter((target) => dossierById.get(target.owner_document)?.metadata?.status === "accepted")
       .flatMap((target) => [`${target.path}/src`, `${target.path}/tests`]),
   );
   for (const root of acceptedRoots) {
@@ -331,10 +309,7 @@ function validateProductDecisionResolution(resolution, errors) {
     acceptedDocuments.includes("domain.product-decision-packet") &&
     acceptedDocuments.includes("domain.context-map") &&
     Array.isArray(acceptedDecisions) &&
-    isDeepStrictEqual(
-      [...acceptedDecisions].toSorted(),
-      [...productDecisionIds].toSorted(),
-    )
+    isDeepStrictEqual([...acceptedDecisions].toSorted(), [...productDecisionIds].toSorted())
   ) {
     return;
   }
@@ -343,9 +318,7 @@ function validateProductDecisionResolution(resolution, errors) {
 
 function validateProductDecisionIds(packet, decisions, errors) {
   const actualIds =
-    typeof decisions === "object" && decisions !== null
-      ? Object.keys(decisions).toSorted()
-      : [];
+    typeof decisions === "object" && decisions !== null ? Object.keys(decisions).toSorted() : [];
   if (!isDeepStrictEqual(actualIds, [...productDecisionIds].toSorted())) {
     errors.push("DOMAIN-PO-002 product decision packet must contain exactly PO-PLAT-001...007");
   }
@@ -401,17 +374,16 @@ export async function validatePlatformDomain(repositoryRoot) {
     productDecisions,
     productDecisionResolution,
     sourceDependencies,
-  ] =
-    await Promise.all([
-      loadYaml(repositoryRoot, catalogPath, errors),
-      loadYaml(repositoryRoot, scaffoldingPath, errors),
-      loadDossiers(repositoryRoot, errors),
-      loadMarkdown(repositoryRoot, contextMapPath, errors),
-      loadMarkdown(repositoryRoot, dossierIndexPath, errors),
-      loadMarkdown(repositoryRoot, productDecisionPacketPath, errors),
-      loadMarkdown(repositoryRoot, productDecisionResolutionPath, errors),
-      loadYaml(repositoryRoot, sourceDependenciesPath, errors),
-    ]);
+  ] = await Promise.all([
+    loadYaml(repositoryRoot, catalogPath, errors),
+    loadYaml(repositoryRoot, scaffoldingPath, errors),
+    loadDossiers(repositoryRoot, errors),
+    loadMarkdown(repositoryRoot, contextMapPath, errors),
+    loadMarkdown(repositoryRoot, dossierIndexPath, errors),
+    loadMarkdown(repositoryRoot, productDecisionPacketPath, errors),
+    loadMarkdown(repositoryRoot, productDecisionResolutionPath, errors),
+    loadYaml(repositoryRoot, sourceDependenciesPath, errors),
+  ]);
   validateSchema(catalog, catalogValidator, catalogPath, errors);
   validateSchema(scaffolding, scaffoldingValidator, scaffoldingPath, errors);
   for (const dossier of dossiers) {
@@ -420,20 +392,11 @@ export async function validatePlatformDomain(repositoryRoot) {
   validateDossierIdentities(dossiers, errors);
   validateCatalogBindings(catalog, dossiers, errors);
   validateScaffoldingPolicy(scaffolding, errors);
-  validateSourceDependencyCoverage(
-    sourceDependencies,
-    catalog,
-    dossiers,
-    errors,
-  );
+  validateSourceDependencyCoverage(sourceDependencies, catalog, dossiers, errors);
   await validateMaterialization(repositoryRoot, catalog, dossiers, errors);
   validateNavigation(contextMap, index, dossiers, errors);
   validateContextMap(contextMap, errors);
-  validateProductDecisionPacket(
-    productDecisions,
-    productDecisionResolution,
-    errors,
-  );
+  validateProductDecisionPacket(productDecisions, productDecisionResolution, errors);
   return errors;
 }
 

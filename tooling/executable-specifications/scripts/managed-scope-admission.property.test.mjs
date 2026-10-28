@@ -32,10 +32,7 @@ const traces = JSON.parse(
 ).traces;
 
 function safeBoundary(limit, delta, minimum) {
-  return Math.min(
-    Number.MAX_SAFE_INTEGER,
-    Math.max(minimum, limit + delta),
-  );
+  return Math.min(Number.MAX_SAFE_INTEGER, Math.max(minimum, limit + delta));
 }
 
 test("arbitrary histories preserve revision, fencing and cross-axis invariants", () => {
@@ -56,10 +53,7 @@ test("arbitrary histories preserve revision, fencing and cross-axis invariants",
           assert.equal(event.type, "RESUME_NEW_GENERATION");
         }
         if (current.context.resumptionCount !== previous.context.resumptionCount) {
-          assert.ok(
-            event.type === "RESUME_NEW_GENERATION" ||
-              event.type === "RESUME_ADMITTED",
-          );
+          assert.ok(event.type === "RESUME_NEW_GENERATION" || event.type === "RESUME_ADMITTED");
         }
         if (current.context.attemptCount !== previous.context.attemptCount) {
           assert.ok(
@@ -98,16 +92,8 @@ test("arbitrary production policy bounds match model guard boundaries", () => {
         retainsAdmittedReceipt,
       ) => {
         const attemptCount = safeBoundary(maxAttempts, attemptDelta, 0);
-        const generation = safeBoundary(
-          maxPreparationGenerations,
-          generationDelta,
-          1,
-        );
-        const resumptionCount = safeBoundary(
-          maxPreparationGenerations,
-          resumptionDelta,
-          0,
-        );
+        const generation = safeBoundary(maxPreparationGenerations, generationDelta, 1);
+        const resumptionCount = safeBoundary(maxPreparationGenerations, resumptionDelta, 0);
         const bounds = {
           attempts: maxAttempts,
           generations: maxPreparationGenerations,
@@ -124,18 +110,9 @@ test("arbitrary production policy bounds match model guard boundaries", () => {
           ...specification.initialContext,
           attemptCount,
         };
-        for (const eventType of [
-          "CLAIM",
-          "RELEASE_RETRY",
-          "RECONCILE_NOT_ACCEPTED",
-        ]) {
+        for (const eventType of ["CLAIM", "RELEASE_RETRY", "RECONCILE_NOT_ACCEPTED"]) {
           assert.equal(
-            eventAllows(
-              attemptContext,
-              eventType,
-              specification,
-              bounds,
-            ),
+            eventAllows(attemptContext, eventType, specification, bounds),
             !domain.attemptExhausted,
             `${eventType} must match safeRetryExhausted`,
           );
@@ -146,20 +123,13 @@ test("arbitrary production policy bounds match model guard boundaries", () => {
           "RECONCILE_NOT_ACCEPTED_EXHAUSTED",
         ]) {
           assert.equal(
-            eventAllows(
-              attemptContext,
-              eventType,
-              specification,
-              bounds,
-            ),
+            eventAllows(attemptContext, eventType, specification, bounds),
             domain.attemptExhausted,
             `${eventType} must match safeRetryExhausted`,
           );
         }
 
-        const eventType = retainsAdmittedReceipt
-          ? "RESUME_ADMITTED"
-          : "RESUME_NEW_GENERATION";
+        const eventType = retainsAdmittedReceipt ? "RESUME_ADMITTED" : "RESUME_NEW_GENERATION";
         assert.equal(
           eventAllows(
             {
@@ -212,12 +182,7 @@ test("four-generation production fixture boundary is not the two-step witness bo
       resumptionCount: generation - 1,
     };
     assert.equal(
-      eventAllows(
-        context,
-        "RESUME_NEW_GENERATION",
-        specification,
-        bounds,
-      ),
+      eventAllows(context, "RESUME_NEW_GENERATION", specification, bounds),
       expectedAllowed,
     );
     assert.equal(
@@ -269,9 +234,7 @@ test("authority-recheck exhaustion recovery matches every retained-receipt bound
 });
 
 test("critical error paths preserve their recovery contract under arbitrary suffixes", () => {
-  const eventArbitrary = constantFrom(
-    ...specification.events.map(({ type }) => type),
-  );
+  const eventArbitrary = constantFrom(...specification.events.map(({ type }) => type));
   assertProperty(
     property(array(eventArbitrary, { maxLength: 40 }), (suffix) => {
       for (const traceName of [

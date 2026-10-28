@@ -57,12 +57,7 @@ import {
 } from "./in-memory-project-management-state.js";
 import { recordReconciledReceiptInMemory } from "./in-memory-reconciliation.js";
 
-export type CreationFailurePoint =
-  | "project"
-  | "admission"
-  | "process"
-  | "receipt"
-  | "outbox";
+export type CreationFailurePoint = "project" | "admission" | "process" | "receipt" | "outbox";
 
 export class InMemoryProjectManagementStore implements ProjectManagementStore {
   #state = emptyProjectManagementState();
@@ -74,13 +69,21 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
 
   constructor(private readonly clock: Readonly<{ now(): number }>) {}
 
-  injectCreationFailure(point: CreationFailurePoint | null): void { this.#creationFailurePoint = point; }
+  injectCreationFailure(point: CreationFailurePoint | null): void {
+    this.#creationFailurePoint = point;
+  }
 
-  injectBeforeCreationLinearizationForTest(action: (() => void) | null): void { this.#beforeCreationLinearization = action; }
+  injectBeforeCreationLinearizationForTest(action: (() => void) | null): void {
+    this.#beforeCreationLinearization = action;
+  }
 
-  injectBeforeReceiptLinearizationForTest(action: (() => void) | null): void { this.#beforeReceiptLinearization = action; }
+  injectBeforeReceiptLinearizationForTest(action: (() => void) | null): void {
+    this.#beforeReceiptLinearization = action;
+  }
 
-  injectAfterDispatchAuthorizationForTest(action: (() => void) | null): void { this.#afterDispatchAuthorization = action; }
+  injectAfterDispatchAuthorizationForTest(action: (() => void) | null): void {
+    this.#afterDispatchAuthorization = action;
+  }
 
   advanceProjectRevisionForTest(operationRef: ProjectPreparationOperationRef): Promise<void> {
     return this.#exclusive(() => {
@@ -88,10 +91,13 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
       if (snapshot === null) {
         throw new Error("Cannot advance a missing Project revision.");
       }
-      this.#state.projects.set(snapshot.project.id, Object.freeze({
-        ...snapshot.project,
-        revision: snapshot.project.revision + 1,
-      }));
+      this.#state.projects.set(
+        snapshot.project.id,
+        Object.freeze({
+          ...snapshot.project,
+          revision: snapshot.project.revision + 1,
+        }),
+      );
     });
   }
 
@@ -113,15 +119,11 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
   ): Promise<AcceptedProjectCreationReceipt | null> {
     return this.#exclusive(
       () =>
-        this.#state.receipts.get(
-          projectCreationReceiptKey({ commandScope, commandId }),
-        ) ?? null,
+        this.#state.receipts.get(projectCreationReceiptKey({ commandScope, commandId })) ?? null,
     );
   }
 
-  commitCreation(
-    commit: ProjectCreationCommit,
-  ): Promise<ProjectCreationCommitResult> {
+  commitCreation(commit: ProjectCreationCommit): Promise<ProjectCreationCommitResult> {
     return this.#exclusive(() => {
       const key = projectCreationReceiptKey(commit.receipt);
       const prior = this.#state.receipts.get(key);
@@ -164,10 +166,7 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
       }
       expireDispatchLeasesInMemory(this.#state, input.now);
       const entry = [...this.#state.outboxes.entries()]
-        .filter(
-          ([, outbox]) =>
-            outbox.state === "pending" && outbox.notBefore <= input.now,
-        )
+        .filter(([, outbox]) => outbox.state === "pending" && outbox.notBefore <= input.now)
         .toSorted(([left], [right]) => left.localeCompare(right, "en"))[0];
       if (entry === undefined) {
         return null;
@@ -281,11 +280,7 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
       }
       this.#state.processes.set(
         current.process.id,
-        releaseUnsubmittedDispatch(
-          current.process,
-          input.exhausted,
-          input.exhaustedReason,
-        ),
+        releaseUnsubmittedDispatch(current.process, input.exhausted, input.exhaustedReason),
       );
       this.#state.outboxes.set(current.outbox.id, {
         ...current.outbox,
@@ -298,18 +293,13 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
     });
   }
 
-  recordUnknownOutcome(
-    claim: ScopeAdmissionDispatchClaim,
-  ): Promise<ScopeAdmissionMutationResult> {
+  recordUnknownOutcome(claim: ScopeAdmissionDispatchClaim): Promise<ScopeAdmissionMutationResult> {
     return this.#exclusive(() => {
       const current = currentDispatchClaimState(this.#state, this.clock, claim);
       if (current === null) {
         return { kind: "stale" };
       }
-      this.#state.processes.set(
-        current.process.id,
-        requireReconciliation(current.process),
-      );
+      this.#state.processes.set(current.process.id, requireReconciliation(current.process));
       this.#state.outboxes.set(current.outbox.id, {
         ...current.outbox,
         state: "consumed",
@@ -347,15 +337,9 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
         leaseExpiresAt: null,
       });
       if (result.process.state === "receipt-observed") {
-        scheduleAuthorityRecheckInMemory(
-          this.#state,
-          result.process,
-          authorityRecheckAt,
-        );
+        scheduleAuthorityRecheckInMemory(this.#state, result.process, authorityRecheckAt);
       }
-      return result.integrityConflict
-        ? { kind: "integrity-conflict" }
-        : { kind: "applied" };
+      return result.integrityConflict ? { kind: "integrity-conflict" } : { kind: "applied" };
     });
   }
 
@@ -391,15 +375,17 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
     authority: CurrentAuthorityDisposition,
     authorityRecheckAt: number,
   ): Promise<ScopeAdmissionMutationResult> {
-    return this.#exclusive(() => recordReconciledReceiptInMemory({
-      state: this.#state,
-      target,
-      receipt,
-      authority,
-      authorityRecheckAt,
-      clock: this.clock,
-      beforeLinearization: () => this.#beforeReceiptLinearization?.(),
-    }));
+    return this.#exclusive(() =>
+      recordReconciledReceiptInMemory({
+        state: this.#state,
+        target,
+        receipt,
+        authority,
+        authorityRecheckAt,
+        clock: this.clock,
+        beforeLinearization: () => this.#beforeReceiptLinearization?.(),
+      }),
+    );
   }
 
   claimPendingAuthorityRecheck(input: {
@@ -407,9 +393,7 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
     now: number;
     leaseExpiresAt: number;
   }): Promise<ScopeAdmissionAuthorityRecheckClaim | null> {
-    return this.#exclusive(() =>
-      claimAuthorityRecheckInMemory(this.#state, input),
-    );
+    return this.#exclusive(() => claimAuthorityRecheckInMemory(this.#state, input));
   }
 
   recordAuthorityRecheck(
@@ -434,45 +418,37 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
     target: ScopeAdmissionReconciliationTarget,
     input: Readonly<{ retryAt: number; exhausted: boolean }>,
   ): Promise<ScopeAdmissionMutationResult> {
-    return this.#exclusive(() =>
-      recordKnownNonAcceptanceInMemory(this.#state, target, input),
-    );
+    return this.#exclusive(() => recordKnownNonAcceptanceInMemory(this.#state, target, input));
   }
 
   cancelPreparation(
     input: Parameters<ProjectManagementStore["cancelPreparation"]>[0],
   ): Promise<CancelScopeAdmissionMutationResult> {
-    return this.#exclusive(() =>
-      cancelPreparationInMemory(this.#state, this.clock.now(), input),
-    );
+    return this.#exclusive(() => cancelPreparationInMemory(this.#state, this.clock.now(), input));
   }
 
   recordCancellationReconciled(
     target: ScopeAdmissionReconciliationTarget,
     receipt: ScopeAdmissionReceipt | null,
   ): Promise<ScopeAdmissionMutationResult> {
-    return this.#exclusive(() =>
-      completeCancellationInMemory(this.#state, target, receipt),
-    );
+    return this.#exclusive(() => completeCancellationInMemory(this.#state, target, receipt));
   }
 
-  resumePreparation(input: Readonly<{
-    identity: Parameters<ProjectManagementStore["resumePreparation"]>[0]["identity"];
-    expected: ScopeAdmissionSnapshot;
-    successor: ManagedScopeAdmissionProcess;
-    outbox: ScopeAdmissionOutboxRecord | null;
-    maxGenerations: number;
-    operationAuthorityValidUntil: number;
-  }>): Promise<ResumeScopeAdmissionCommitResult> {
+  resumePreparation(
+    input: Readonly<{
+      identity: Parameters<ProjectManagementStore["resumePreparation"]>[0]["identity"];
+      expected: ScopeAdmissionSnapshot;
+      successor: ManagedScopeAdmissionProcess;
+      outbox: ScopeAdmissionOutboxRecord | null;
+      maxGenerations: number;
+      operationAuthorityValidUntil: number;
+    }>,
+  ): Promise<ResumeScopeAdmissionCommitResult> {
     return this.#exclusive(() => {
       const now = this.clock.now();
       const result = resumePreparationInMemory(this.#state, now, input);
       const current = this.#state.processes.get(input.successor.id);
-      if (
-        result.kind === "applied" &&
-        !result.replayed &&
-        current?.state === "receipt-observed"
-      ) {
+      if (result.kind === "applied" && !result.replayed && current?.state === "receipt-observed") {
         scheduleAuthorityRecheckInMemory(this.#state, current, now);
       }
       return result;
@@ -484,18 +460,17 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
     commandId: Parameters<ProjectManagementStore["loadPreparationCommandReceipt"]>[1],
   ) {
     return this.#exclusive(
-      () => this.#state.preparationCommands.get(
-        preparationCommandReceiptKey({ commandScope, commandId }),
-      ) ?? null,
+      () =>
+        this.#state.preparationCommands.get(
+          preparationCommandReceiptKey({ commandScope, commandId }),
+        ) ?? null,
     );
   }
 
   loadByOperation(
     operationRef: ProjectPreparationOperationRef,
   ): Promise<ScopeAdmissionSnapshot | null> {
-    return this.#exclusive(() =>
-      projectManagementSnapshot(this.#state, operationRef),
-    );
+    return this.#exclusive(() => projectManagementSnapshot(this.#state, operationRef));
   }
 
   inspectCounts() {
@@ -508,23 +483,17 @@ export class InMemoryProjectManagementStore implements ProjectManagementStore {
     });
   }
 
-  inspectGenerationEvidence(
-    processId: ManagedScopeAdmissionProcess["id"],
-    generation: number,
-  ) {
-    return this.#state.generationHistory.get(
-      `${processId.length}:${processId}${generation}`,
-    ) ?? null;
+  inspectGenerationEvidence(processId: ManagedScopeAdmissionProcess["id"], generation: number) {
+    return (
+      this.#state.generationHistory.get(`${processId.length}:${processId}${generation}`) ?? null
+    );
   }
 
   inspectPreparationCommandReceiptCount(): number {
     return this.#state.preparationCommands.size;
   }
 
-  #authorityAtLinearization(
-    authority: CurrentAuthorityDisposition,
-  ): CurrentAuthorityDisposition {
+  #authorityAtLinearization(authority: CurrentAuthorityDisposition): CurrentAuthorityDisposition {
     return authorityDispositionAt(authority, this.clock.now());
   }
-
 }
