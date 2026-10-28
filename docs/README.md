@@ -19,7 +19,7 @@ Read documentation by responsibility instead of scanning the whole repository.
 - [Managed installation control](architecture/managed-installation-control.md)
 - [Engineering Foundation adoption](architecture/engineering-foundation-adoption.md)
 - [Managed scope-admission executable model](architecture/managed-scope-admission-executable-model.md)
-- [Platform-Orchestrator boundary direction](architecture/platform-orchestrator-boundary.md)
+- [Platform-Orchestrator product relationship and boundary](architecture/platform-orchestrator-boundary.md)
 - [Platform-Orchestrator design review](architecture/platform-orchestrator-review/README.md)
 
 ## Decisions
@@ -33,25 +33,27 @@ Read documentation by responsibility instead of scanning the whole repository.
 - [ADR-0006: Authority-reducing break-glass (Proposed)](decisions/0006-authority-reducing-break-glass.md)
 - [ADR-0007: Platform strategic context map and first Project Management slice](decisions/0007-platform-strategic-context-map-and-first-project-management-slice.md)
 - [ADR-0008: Composite managed Project scope readiness](decisions/0008-composite-managed-project-scope-readiness.md)
+- [ADR-0009: Shared backend reference and public API hosting](decisions/0009-shared-backend-reference-and-public-api-hosting.md)
 - [ADR-0010: Fully Local V1 and shared backend profiles](decisions/0010-fully-local-v1-and-shared-backend-profiles.md)
 
 ## Sources of truth
 
-| Concern                                                   | Canonical source                                                                                                                                                                                  |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Decision rationale                                        | Accepted ADR                                                                                                                                                                                      |
-| Shared backend selection and Platform applicability       | The exact central reference and local scope in [ADR-0009](decisions/0009-shared-backend-reference-and-public-api-hosting.md); frontend choices remain separate                                    |
-| Fully Local V1 and shared implementation boundary         | [ADR-0010](decisions/0010-fully-local-v1-and-shared-backend-profiles.md) resolves the historical local release-scope note in ADR-0009; profile readiness still comes from the deployment manifest |
-| Current profile status and evidence                       | `architecture/deployment-profiles/deployment-profiles.yaml`                                                                                                                                       |
-| Exact manifest shape                                      | `architecture/deployment-profiles/deployment-profiles.schema.json`                                                                                                                                |
-| Managed BYOC installation invariants                      | `architecture/managed-installation/managed-installation-policy.yaml`                                                                                                                              |
-| Shared engineering-tool adoption                          | `architecture/engineering-foundation-adoption.md`                                                                                                                                                 |
-| Internal managed scope-admission executable specification | `architecture/project-management/managed-scope-admission-process.json`                                                                                                                            |
-| Accepted Platform strategic topology                      | `docs/domain/context-map.md` and ADR-0007                                                                                                                                                         |
-| Tactical context design and materialization status        | Bounded-context dossiers and their owning ADRs                                                                                                                                                    |
-| Reserved package identities                               | `architecture/package-catalog.yaml`                                                                                                                                                               |
-| Current architecture rules                                | Architecture documents                                                                                                                                                                            |
-| Exact cross-system contracts under review                 | Proposed boundary document and its eight review artifacts                                                                                                                                         |
+| Concern                                                         | Canonical source                                                                                                                                                                                  |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Decision rationale                                              | Accepted ADR                                                                                                                                                                                      |
+| Shared backend selection and Platform applicability             | The exact central reference and local scope in [ADR-0009](decisions/0009-shared-backend-reference-and-public-api-hosting.md); frontend choices remain separate                                    |
+| Fully Local V1 and shared implementation boundary               | [ADR-0010](decisions/0010-fully-local-v1-and-shared-backend-profiles.md) resolves the historical local release-scope note in ADR-0009; profile readiness still comes from the deployment manifest |
+| Current profile status and evidence                             | `architecture/deployment-profiles/deployment-profiles.yaml`                                                                                                                                       |
+| Exact manifest shape                                            | `architecture/deployment-profiles/deployment-profiles.schema.json`                                                                                                                                |
+| Managed BYOC installation invariants                            | `architecture/managed-installation/managed-installation-policy.yaml`                                                                                                                              |
+| Shared engineering-tool adoption                                | `architecture/engineering-foundation-adoption.md`                                                                                                                                                 |
+| Internal managed scope-admission executable specification       | `architecture/project-management/managed-scope-admission-process.json`                                                                                                                            |
+| Accepted Platform strategic topology                            | `docs/domain/context-map.md` and ADR-0007                                                                                                                                                         |
+| Tactical context design and materialization status              | Bounded-context dossiers and their owning ADRs                                                                                                                                                    |
+| Reserved package identities                                     | `architecture/package-catalog.yaml`                                                                                                                                                               |
+| Current architecture rules                                      | Architecture documents                                                                                                                                                                            |
+| Exact cross-system contracts under review                       | Proposed boundary document and its eight review artifacts                                                                                                                                         |
+| Product relationship, growth direction, and research navigation | `architecture/platform-orchestrator-boundary.md`                                                                                                                                                  |
 
 The manifest is operational truth. A roadmap target in an ADR never upgrades a
 profile's current status.
