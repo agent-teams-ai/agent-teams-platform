@@ -16,11 +16,12 @@ related:
 ## Context
 
 Proposed follow-through dated 2026-11-03 for source-backed competitor research.
-The planned central source is `agent-teams-ai/engineering-research`,
-`docs/competitors/paperclip.md`. Publication is pending; this path is a plan,
-not a published source or evidence of completed migration. Shared competitor
-facts, comparisons and methods belong centrally. Platform retains its own
-architecture, decisions, integration mapping and qualification.
+The shared [Paperclip source dossier](https://github.com/agent-teams-ai/engineering-research/blob/12c40892e805944719d6fbec14d2c26874803b2c/docs/competitors/paperclip.md)
+is published in [Engineering Research draft PR #1](https://github.com/agent-teams-ai/engineering-research/pull/1) at commit
+`12c40892e805944719d6fbec14d2c26874803b2c`. The [shared research index](https://github.com/agent-teams-ai/engineering-research/blob/docs/shared-research-2026-11-04/docs/README.md)
+is the maintained discovery route. Shared facts, comparisons and methods belong
+centrally; publication remains a draft and accepts no product policy. Platform
+retains its own architecture, decisions, integration mapping and qualification.
 
 The source review inspected Paperclip at
 [`61e8d5c7eb097664958e00c30ccd88bb51359043`](https://github.com/paperclipai/paperclip/tree/61e8d5c7eb097664958e00c30ccd88bb51359043).
@@ -98,8 +99,12 @@ lessons. Existing immutable research links and owner-specific matrices remain
 valid historical evidence. Central publication cannot accept a proposed
 cross-system wire contract or promote a deployment profile.
 
-The shared research will distinguish inspected source, existing upstream tests,
-reported component evidence and unexecuted product qualification. Do not infer
+The shared [evaluation method](https://github.com/agent-teams-ai/engineering-research/blob/12c40892e805944719d6fbec14d2c26874803b2c/docs/methodology/evaluation-methodology.md)
+and [decision cards](https://github.com/agent-teams-ai/engineering-research/blob/12c40892e805944719d6fbec14d2c26874803b2c/docs/lessons/preimplementation-decisions.md)
+distinguish inspected source, existing upstream tests, reported component evidence
+and unexecuted product qualification. The [source inventory](https://github.com/agent-teams-ai/engineering-research/blob/12c40892e805944719d6fbec14d2c26874803b2c/data/source-inventory.json)
+retains original evidence identities; Platform's boundary and review matrices
+remain local. Do not infer
 active-fleet capacity from package/module counts, controller fixtures or
 Runtime's ordinary S1-S5 program; its separate C0-C3 capacity delivery owns that
 technical envelope. Cross-pool global/tenant/provider accounting needs one
