@@ -12,8 +12,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: node26-compatibility-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Keep independent Node 26 evidence for every main commit and manual run.
+  group: node26-compatibility-${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   node26-focused:
