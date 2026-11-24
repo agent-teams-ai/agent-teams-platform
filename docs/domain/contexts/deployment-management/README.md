@@ -134,15 +134,19 @@ created speculatively.
 
 ## Foundation-first placement review, 2026-11-24
 
-The [organization ecosystem vision](https://github.com/agent-teams-ai/.github/blob/bb7b1c00f18a8c532681f286afa51dda954469b4/docs/architecture/ecosystem-vision.md) prioritizes global architecture and qualified reusable foundations before main product implementation. The following design packet is proposed; ADR-0005/0007, Platform authority boundaries and the actual materialization gate remain in force.
+The [organization ecosystem vision](https://github.com/agent-teams-ai/.github/blob/main/docs/architecture/ecosystem-vision.md) prioritizes global architecture and qualified reusable foundations before main product implementation. The following design packet is proposed; ADR-0005/0007, Platform authority boundaries and the actual materialization gate remain in force.
 
 Evaluate cell-ready placement before committing the tactical identity and storage contracts. Separate logical customer/project identity, desired placement, actual placement, deployment incarnation, authority and route revision. Platform owns managed placement intent and eligibility, not Orchestrator's scope binding or AR execution fencing.
 
-| Alternative | Reliability /10 | Complexity /10 | Confidence /10 | Incremental implementation and test LOC |
-| --- | ---: | ---: | ---: | ---: |
-| Single initial stamp with cell-ready, location-independent contracts | 9 | 5 | 9 | 2,000–5,000 across owners |
-| Multi-cell placement and transfer infrastructure immediately | 9 | 9 | 7 | 10,000–25,000 across owners |
-| One permanently global deployment with horizontal replicas | 6 | 4 | 8 | 1,000–3,000 across owners |
+Compare incremental work from the first Managed Shared SaaS placement/installation-intent baseline. These hypotheses retain the same accepted authority and safety rules but promise different topology and failure envelopes. U is provisional confidence in fitness; C is implementation/maintenance complexity, with higher C meaning more burden. Neither score measures availability.
+
+| Alternative | Declared envelope | U /10 | C /10 | Reliability N /10 | P LOC | T LOC | Engineer-days |
+| --- | --- | ---: | ---: | --- | --- | --- | --- |
+| Single initial stamp with cell-ready, location-independent contracts | Bounded initial stamp; seams permit later placement evolution | 9 | 5 | Not estimated | Not estimated | Not estimated | Not estimated |
+| Multi-cell placement and transfer infrastructure immediately | Multiple placements, transfer and independent placement isolation | 7 | 9 | Not estimated | Not estimated | Not estimated | Not estimated |
+| One permanently global deployment with horizontal replicas | Bounded global placement; no independent-cell isolation claim | 8 | 4 | Not estimated | Not estimated | Not estimated | Not estimated |
+
+N and separate handwritten production/integration LOC (P), tests/fixtures LOC (T), and engineer-days remain unestimated pending owner-seam and failure-case inventories. Sizing confidence is low; this is an incomplete packet, not ready for owner acceptance. Complete it through the [existing first-slice placement decision](#open-decisions). Exclude generated, vendor, documentation and already qualified foundation code; identify new work in each affected owner and account for native, infrastructure and release effort separately. Future time ranges assume one experienced engineer, existing prerequisites and focused review; they are not delivery promises.
 
 Prefer the first hypothesis, subject to review. Before affected code, agree on an authority partition key, routing and transfer protocol, fencing/restore generations, eligibility and residency, large-tenant placement and independent failure/resource bounds. No physical shard ID becomes a business identifier. The old writer and external effects are fenced before activating a successor; uncertain transfer remains unavailable or reconciling. Define per-owner receipts and cross-store restore compatibility. A shared library can implement the mechanism, never the product decision.
 
