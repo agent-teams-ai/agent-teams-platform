@@ -132,6 +132,22 @@ qualification evidence. Managed Dedicated, BYOC, and Hybrid remain design-only
 until their exact compositions and gates exist. No cloud-specific package is
 created speculatively.
 
+## Foundation-first placement review, 2026-11-24
+
+The [organization ecosystem vision](https://github.com/agent-teams-ai/.github/blob/bb7b1c00f18a8c532681f286afa51dda954469b4/docs/architecture/ecosystem-vision.md) prioritizes global architecture and qualified reusable foundations before main product implementation. The following design packet is proposed; ADR-0005/0007, Platform authority boundaries and the actual materialization gate remain in force.
+
+Evaluate cell-ready placement before committing the tactical identity and storage contracts. Separate logical customer/project identity, desired placement, actual placement, deployment incarnation, authority and route revision. Platform owns managed placement intent and eligibility, not Orchestrator's scope binding or AR execution fencing.
+
+| Alternative | Reliability /10 | Complexity /10 | Confidence /10 | Incremental implementation and test LOC |
+| --- | ---: | ---: | ---: | ---: |
+| Single initial stamp with cell-ready, location-independent contracts | 9 | 5 | 9 | 2,000–5,000 across owners |
+| Multi-cell placement and transfer infrastructure immediately | 9 | 9 | 7 | 10,000–25,000 across owners |
+| One permanently global deployment with horizontal replicas | 6 | 4 | 8 | 1,000–3,000 across owners |
+
+Prefer the first hypothesis, subject to review. Before affected code, agree on an authority partition key, routing and transfer protocol, fencing/restore generations, eligibility and residency, large-tenant placement and independent failure/resource bounds. No physical shard ID becomes a business identifier. The old writer and external effects are fenced before activating a successor; uncertain transfer remains unavailable or reconciling. Define per-owner receipts and cross-store restore compatibility. A shared library can implement the mechanism, never the product decision.
+
+Qualification should eventually exercise two placements, stale clients, a concentrated tenant, failed or ambiguous transfer, restore with newer external effects, and isolation of unrelated placements. Automatic rebalancing and multi-region deployment are later separately qualified profiles. Platform, Orchestrator and Runtime must agree on their interfaces before production implementation; none imports another owner's private data model.
+
 ## Open Decisions
 
 - Managed Shared SaaS stamp/placement lifecycle and authority owner.
