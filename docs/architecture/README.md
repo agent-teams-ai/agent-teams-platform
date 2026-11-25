@@ -8,6 +8,8 @@ summary: Navigation for current and proposed Platform architecture.
 
 # Architecture
 
+- [Shared Research Integration Plan](shared-research-integration-plan.md)
+
 - [Shared backend reference and Platform applicability](../decisions/0009-shared-backend-reference-and-public-api-hosting.md)
   records the reviewed central stack, public/private API boundary and capability
   scope without changing product ownership or release qualification.

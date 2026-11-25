@@ -12,6 +12,8 @@ Read documentation by responsibility instead of scanning the whole repository.
 
 ## Architecture
 
+- [Shared Research Integration Plan](architecture/shared-research-integration-plan.md)
+
 - [Architecture index](architecture/README.md)
 - [Platform strategic context map](domain/context-map.md)
 - [Bounded-context dossiers](domain/contexts/README.md)
