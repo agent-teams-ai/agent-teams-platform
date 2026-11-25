@@ -8,6 +8,8 @@ Use [.agents/skills/docs-authoring/SKILL.md](.agents/skills/docs-authoring/SKILL
 
 Start here:
 
+- [Organization Foundation-first vision](https://github.com/agent-teams-ai/.github/blob/main/docs/architecture/ecosystem-vision.md) — global ecosystem, intended library consumers and implementation sequencing.
+
 - [Documentation index](docs/README.md)
 - [Shared backend reference and Platform applicability](docs/decisions/0009-shared-backend-reference-and-public-api-hosting.md)
 - [Fully Local V1 and shared backend profiles](docs/decisions/0010-fully-local-v1-and-shared-backend-profiles.md)
