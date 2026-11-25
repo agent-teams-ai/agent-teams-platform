@@ -89,6 +89,14 @@ system must not silently switch placement, authority, durability, or isolation.
 
 ## Scaling rules
 
+Platform supports the product-owned
+[execution-scale target](https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/main/docs/architecture/deployment-profiles.md#concurrent-execution-target)
+through stable authority and resource identities, versioned deployment/runtime
+bindings, and evidence-backed profile qualification. The target preserves shared
+product semantics and owned contracts without requiring identical physical
+topology. Local and Standalone use their selected authority artifact; the target
+adds no Platform runtime dependency or qualified-capacity claim to those profiles.
+
 - Stable Platform, Orchestrator, and AR identities do not encode region, host,
   cloud, profile, or endpoint.
 - Placement and runtime bindings are versioned references with generations.
