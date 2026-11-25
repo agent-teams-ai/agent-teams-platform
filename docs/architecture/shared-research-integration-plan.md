@@ -17,11 +17,12 @@ related:
 
 Proposed follow-through dated 2026-11-03 for source-backed competitor research.
 The shared [Paperclip source dossier](https://github.com/agent-teams-ai/engineering-research/blob/12c40892e805944719d6fbec14d2c26874803b2c/docs/competitors/paperclip.md)
-is published in [Engineering Research draft PR #1](https://github.com/agent-teams-ai/engineering-research/pull/1) at commit
-`12c40892e805944719d6fbec14d2c26874803b2c`. The [shared research index](https://github.com/agent-teams-ai/engineering-research/blob/docs/shared-research-2026-11-04/docs/README.md)
+was published in [Engineering Research PR #1](https://github.com/agent-teams-ai/engineering-research/pull/1) at commit
+`12c40892e805944719d6fbec14d2c26874803b2c`. The [shared research index](https://github.com/agent-teams-ai/engineering-research/blob/main/docs/README.md)
 is the maintained discovery route. Shared facts, comparisons and methods belong
-centrally; publication remains a draft and accepts no product policy. Platform
-retains its own architecture, decisions, integration mapping and qualification.
+centrally. The central corpus merged to `main` on 2026-11-05; publication accepts
+no product policy. Platform retains its own architecture, decisions, integration
+mapping and qualification.
 
 The source review inspected Paperclip at
 [`61e8d5c7eb097664958e00c30ccd88bb51359043`](https://github.com/paperclipai/paperclip/tree/61e8d5c7eb097664958e00c30ccd88bb51359043).

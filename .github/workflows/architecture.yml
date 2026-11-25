@@ -11,8 +11,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: architecture-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Retain exact-source main and merge queue proof; supersede stale PR heads only.
+  group: architecture-${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   architecture:
