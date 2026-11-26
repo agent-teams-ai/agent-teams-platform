@@ -20,6 +20,39 @@ test("accepts the canonical Platform-Orchestrator review", async () => {
   assert.deepEqual(await validatePlatformOrchestratorReview(repositoryRoot), []);
 });
 
+test("accepts the linked ADR-0100 Agent identity distinction", async () => {
+  const documents = await loadReviewDocuments(repositoryRoot);
+  const file = "03-principal-delegation-model.md";
+  documents.set(
+    file,
+    `${documents.get(file)}
+- \`CONFIRMED\`: Agent identity is distinct from principal, credential, Run
+  participant, and runtime session under [Orchestrator ADR-0100](https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/3dccf2c53bf11f3939a19734a58f5e64d96673d0/docs/decisions/0100-persistent-agents-and-exclusive-team-membership.md).
+  Exact principal bindings and provider topology remain open under Orchestrator OD-012.
+`,
+  );
+  assert.deepEqual(validateReviewDocuments(documents), []);
+});
+
+test("rejects longer, wrong-owner, unknown and review-only ADR-0100 source labels", async () => {
+  for (const source of [
+    "Orchestrator ADR-01000",
+    "Platform ADR-0100",
+    "Orchestrator ADR-9999",
+    "Review proposal",
+  ]) {
+    const documents = await loadReviewDocuments(repositoryRoot);
+    const file = "03-principal-delegation-model.md";
+    documents.set(
+      file,
+      `${documents.get(file)}\n- \`CONFIRMED\`: Agent identity is distinct from principal under [${source}](https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/3dccf2c53bf11f3939a19734a58f5e64d96673d0/docs/decisions/0100-persistent-agents-and-exclusive-team-membership.md).\n`,
+    );
+    const errors = validateReviewDocuments(documents);
+    assert.equal(errors.length, 1, source);
+    assert.match(errors[0], /^REVIEW-CONFIRMED-003 03-principal-delegation-model\.md/u);
+  }
+});
+
 test("rejects confirmed rows without accepted evidence", async () => {
   const documents = await loadReviewDocuments(repositoryRoot);
   const file = "01-authority-ownership-matrix.md";

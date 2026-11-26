@@ -42,7 +42,7 @@ TypeScript coverage. No new maintained JavaScript file is planned.
    rejection checks for unknown and review-only sources, the longer
    `Orchestrator ADR-01000` label and the wrong owner `Platform ADR-0100`.
 3. Add only the exact ADR-0100 pattern to the existing accepted-source list.
-4. In an isolated fixture, load the actual PR #64 review document bytes and
+4. In an isolated fixture, load the actual PR #64 review document bytes
    (whole blob `e8d3b4cdd6a0002d2ee6da3588c70e12c2ff42c9`) without editing
    unrelated evidence. Prove the old validator rejects the claim and the
    corrected validator accepts the review. This is scoped validator evidence,
@@ -71,3 +71,23 @@ diagnostic loader refused that module before its execution; this is not a
 passing gate. Full validation must use an ordinary owner-supported corrected
 route or remain explicitly pending. Do not change pins, suppress that load,
 skip the gate or claim the installed dependency is qualified by this fix.
+
+## Review and bounded execution record
+
+- Round 1 reviewed plan commit `33cef920df22b0d97dcc0ab3b9c3fd4f9e8279ba`
+  and required explicit longer-ID and wrong-owner rejections, unchanged whole
+  PR #64 document bytes and a truthful full-gate limitation.
+- Round 2 approved revised plan `a89061a27f13a5e2f6a336d49f1f704b502c3af2`
+  before the validator or tests changed. These are two critique rounds of this
+  correction plan, not acceptance of new architecture.
+- Before the one-pattern correction, the focused suite had 26 passes and one
+  failure: the actual linked ADR-0100 claim produced `REVIEW-CONFIRMED-003`.
+  Afterward, all 27 tests passed on Node 24.22.3 and Node 26.11.1, with zero
+  failures, cancellations, skips or TODOs. Changed-file lint also passed.
+- The complete pinned PR #64 document produced exactly one
+  `REVIEW-CONFIRMED-003` before the fix and no review-validator errors afterward.
+  The same document blob was used both times. Other PR #64 checks and its merge
+  are not established by this result.
+
+Independent final diff review, full-gate qualification, ordinary merge and
+actual-main results still need their actual delivery receipts in the owning PR.
