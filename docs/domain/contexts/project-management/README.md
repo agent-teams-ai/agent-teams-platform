@@ -200,6 +200,34 @@ create-Project-authority, commercial-authority, and Orchestration-scope-admissio
 ports. Test fakes prove application semantics only; they do not qualify a
 production persistence or transport adapter.
 
+### Proposed next persistence increment
+
+Extend this existing feature through `ProjectManagementStore` and its Unit of
+Work ports; do not create another context or repeat the application state
+machine in a database adapter. Native PostgreSQL is selected by ADR-0009. The
+next slice still needs its concrete schema/migration mapping and qualification.
+
+- Persist the five-record create transaction atomically and enforce command
+  identity/digest replay and conflict behavior with database constraints.
+- Persist dispatch leases, expected revisions, process generations, bounded
+  authority rechecks and cancellation/resume receipts. CAS must reject stale
+  workers and predecessor evidence after restart or a successor transition.
+- Resume pending dispatch/reconciliation from durable state. Keep network calls
+  outside transactions and preserve the original downstream intent after an
+  unknown outcome; a worker restart cannot mint a replacement request.
+- Reuse the existing conformance scenarios against the PostgreSQL adapter and
+  add the actual competing-transaction, crash/restart and migration evidence.
+  Record retention and restore assumptions for the records this slice owns.
+
+Contract-respecting authority and scope-provider fakes may support this isolated
+qualification, only in tests. The increment grants no public API admission,
+real managed authority, Orchestrator wire compatibility or deployment-profile
+qualification. Production authority adapters stay with their owners; the real
+scope adapter waits only for the exact composite Orchestrator contract described
+by ADR-0008. Future authority features and AR runtime activation do not block
+owner-local persistence work. The [incremental integration handoff](../../../architecture/platform-orchestrator-boundary.md#incremental-iam-and-managed-integration-delivery)
+owns cross-repository sequencing without duplicating those owners' logic.
+
 ## Open Decisions
 
 - Exact production persistence, migration, outbox-dispatch, and crash-recovery

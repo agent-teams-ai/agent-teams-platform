@@ -204,8 +204,11 @@ provider qualification, acceptance of every tactical DTO or implementation work.
   membership, commercial rights, repository tokens or Orchestrator business data.
 - Independent A/B membership and independent recovery remain the target.
   Corporate proof must not become unrestricted global authentication. Direct
-  social login does not qualify custody: the [Identity plan](https://github.com/agent-teams-ai/identity/blob/aa07b44435339777e3d2b45f9e6b2115732aad6d/docs/plans/identity-service-implementation-plan.md)
-  keeps ongoing social-root policy in D3 and lost native-session logout in D8.
+  social login does not qualify custody: the [Identity plan](https://github.com/agent-teams-ai/identity/blob/deb399260bea43e8486e2b6c2c35efeb659e572e/docs/plans/identity-service-implementation-plan.md)
+  records the owner-selected D3 continuity option A: progressive independent
+  proof before declared protected organizational use, while ordinary social
+  login remains available. The real proof mechanism and protected surfaces need
+  qualification; D8's native-session controls remain a separate decision.
 - Versioned fixed roles with bounded grantable permissions, product-owned BFF
   sessions, distinct personal/organization connections, one-use owner-local
   consumption, closed restore and bounded protected queries are selected first
@@ -239,6 +242,75 @@ There is no copied task engine, shared business schema/transaction or universal
 identity/authorization service. These statements record owner planning direction
 while the exact cross-repository contracts and existing acceptance gates remain
 open.
+
+## Incremental IAM and managed integration delivery
+
+The existing [Orchestrator MVP collaboration brief](https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/8c908d6303d761e5d51016922d2eaedf1a362ef8/docs/research/orchestrator-mvp-research-and-collaboration-2026-11-08.md#delivery-partition-and-agent-handoff--2026-11-26)
+remains the existing product-direction and collaboration record, rather than
+an implementation-admission contract. This handoff describes the next Platform
+increment; it does not create another MVP or
+make every future IAM capability a prerequisite. Use the Orchestrator's
+[implementation readiness gates](https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/8c908d6303d761e5d51016922d2eaedf1a362ef8/docs/architecture/implementation-readiness-gates.md#incremental-implementation-route)
+and [OD-012](https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/8c908d6303d761e5d51016922d2eaedf1a362ef8/docs/open-decisions/OD-012-identity-authorization-tenant-isolation.md#first-iam-implementation-increments)
+for its scoped implementation admission and remaining authority contracts.
+An open future feature blocks only the slice that actually depends on it.
+
+### First Platform increment
+
+Extend the existing accepted `managed-project-scope-admission` feature in
+[Project Management](../domain/contexts/project-management/README.md). Its
+domain, application, composition and in-memory adapters already exist. The next
+proposed increment adds native PostgreSQL persistence through its existing
+Unit of Work/store ports, migrations and restart-safe dispatch/reconciliation.
+Preserve atomic creation of ProductProject, denied admission, command receipt,
+scope-admission intent and outbox; preserve command replay, generation/revision
+CAS and bounded recovery. This is owner-local durability work, not a new public
+admission API or implementation of the other six Platform contexts.
+
+Contract-respecting authority and scope-provider fakes remain test tools. They
+may exercise the durable slice without waiting for remote integrations, but
+cannot become production allow decisions or evidence of wire compatibility.
+Qualify the persistence boundary and its crash/restart behavior separately from
+profile, managed authority and transport readiness.
+
+### Dependencies attach to their actual consumers
+
+Before real managed access, connect the narrow Tenant-admission,
+create-ProductProject, applicable commercial-authority and preparation-control
+ports to their real owners. Each owner accepts its required first feature and
+materialization boundary; future invitations, custom roles or complete
+delegation breadth need not be implemented merely to provide one capability.
+Required unavailable authority still fails closed. Project Management must not
+invent memberships, grant storage or a generic authorization service to bypass
+an unfinished owner contract.
+
+The real Managed Lifecycle ACL depends on the Orchestrator's exact composite
+scope-admission contract: request identity/fingerprint, Operation and replay
+query, terminal readiness evidence and compatibility rules. It does not wait for
+all IAM work or AR runtime activation. [ADR-0008](../decisions/0008-composite-managed-project-scope-readiness.md)
+still requires current Platform authority plus terminal composite readiness;
+a scope ID, binding receipt or live process cannot open Project admission.
+Platform stores its durable intent and opaque recovery references; the
+stateless ACL translates the published capability rather than issuing separate
+Orchestrator create/bind/admit subcommands.
+
+### Independent delivery and later growth
+
+Standalone and personal-local Orchestrator do not wait for Platform or the
+complete cloud Identity service. Their selected Standalone Authority and scoped
+readiness gates remain authoritative. Fully Local remains a V1 qualification
+target under [ADR-0010](../decisions/0010-fully-local-v1-and-shared-backend-profiles.md);
+incremental delivery does not silently defer it beyond V1. Enterprise SSO/SCIM,
+custom-role breadth, Dedicated/BYOC/Hybrid implementation and later extension
+adoption are not prerequisites of the first Platform durability increment.
+
+Reuse qualified technical mechanisms through their owned contracts, not a
+shared domain or database. Platform Access and Authority retains the one product
+grant/revoke ledger; OpenFGA is its projection, and ACLs do not become another
+ledger. Identity's AccountId and factor evidence do not replace PlatformPrincipalId,
+membership, grant or consumer-local admission checks. Shared hosting or a common
+login cannot widen authority. Changes to protected surfaces and proof/recovery
+policy follow their owning contracts without rebuilding these boundaries.
 
 ## Cross-repository source records
 
