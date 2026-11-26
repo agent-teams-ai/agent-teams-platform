@@ -186,7 +186,6 @@ selection and its remaining implementation/qualification limits. The detailed op
 scores, estimates, primary sources, and qualification scenarios remain in the
 linked report rather than a second research copy here.
 
-
 ## Owner-endorsed IAM direction and shared Identity — 2026-11-26
 
 The owner endorsed the recommended directions in the [28 October follow-up](https://github.com/agent-teams-ai/engineering-research/blob/578b166650b916efa51f011598a42fabadaeff2f/evidence/imports/iam/iam-open-decisions-review-2026-10-28.md)
