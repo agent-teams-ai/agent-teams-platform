@@ -39,12 +39,14 @@ TypeScript coverage. No new maintained JavaScript file is planned.
    concrete corrections before implementation.
 2. Add a regression using the actual multiline linked ADR-0100 claim and
    observe its failure before changing the validator. Preserve independent
-   rejection checks for unknown, wrong-owner and review-only sources.
+   rejection checks for unknown and review-only sources, the longer
+   `Orchestrator ADR-01000` label and the wrong owner `Platform ADR-0100`.
 3. Add only the exact ADR-0100 pattern to the existing accepted-source list.
 4. In an isolated fixture, load the actual PR #64 review document bytes and
-   prove the old validator rejects the claim and the corrected validator accepts
-   the review. This is scoped validator evidence, not a claim that all PR #64
-   gates pass.
+   (whole blob `e8d3b4cdd6a0002d2ee6da3588c70e12c2ff42c9`) without editing
+   unrelated evidence. Prove the old validator rejects the claim and the
+   corrected validator accepts the review. This is scoped validator evidence,
+   not a claim that all PR #64 gates pass.
 5. Run the focused suite, changed-file and fast gates, then authoritative
    `pnpm check` with frozen dependencies and the accepted Node/pnpm toolchain.
    Publish coherent commits promptly, obtain independent final review, use
@@ -62,3 +64,10 @@ Plan publication does not establish executed regression, review, merge or CI
 success. Keep the original failing witness and subsequent actual results in the
 owning PR. The separate hosted cohort `/cohorts/44` failure reported on PR #64
 remains with its controller owner.
+
+The installed Foundation 1.7.2 CLI attempts to initialize TypeScript 5.9.3
+through API Extractor 7.58.12 before selecting configured capabilities. A
+diagnostic loader refused that module before its execution; this is not a
+passing gate. Full validation must use an ordinary owner-supported corrected
+route or remain explicitly pending. Do not change pins, suppress that load,
+skip the gate or claim the installed dependency is qualified by this fix.
