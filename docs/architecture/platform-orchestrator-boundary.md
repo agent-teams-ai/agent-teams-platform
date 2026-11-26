@@ -158,7 +158,8 @@ authorization, data-sharing, lifecycle, and recovery contracts.
 
 The [IAM critical-decisions review dated 2026-10-23][iam-critical-research]
 records additional evidence for Platform Identity, Access and Authority, and
-the cross-product authority adapters. Its recommendations remain unaccepted:
+the cross-product authority adapters. At that review's original date its
+recommendations were unaccepted; the later owner endorsement is recorded below:
 the report does not select production providers, accept exact contracts, or
 authorize packages.
 
@@ -179,20 +180,76 @@ becoming a dependency of standalone Orchestrator.
 
 Keycloak plus OpenFGA remains provisional. SpiceDB is a bounded consistency
 comparator, not an accepted provider change. Personal single-owner local access,
-neutral account recovery, fixed role templates, and a browser BFF are research
-recommendations rather than selected Platform policy. The detailed options,
+neutral account recovery, fixed role templates, and a browser BFF were research
+recommendations at that checkpoint. The November section records the later
+selection and its remaining implementation/qualification limits. The detailed options,
 scores, estimates, primary sources, and qualification scenarios remain in the
 linked report rather than a second research copy here.
 
+
+## Owner-endorsed IAM direction and shared Identity — 2026-11-26
+
+The owner endorsed the recommended directions in the [28 October follow-up](https://github.com/agent-teams-ai/engineering-research/blob/578b166650b916efa51f011598a42fabadaeff2f/evidence/imports/iam/iam-open-decisions-review-2026-10-28.md)
+on 26 November, including the original first-scope and growth conditions, and
+asked to preserve the alternatives. The report retains all 18 three-way
+comparisons, ratings, scoped LOC estimates and its historical status. The
+selection now has the following consequences for Platform planning; it is not
+provider qualification, acceptance of every tactical DTO or implementation work.
+
+- Product Access and Authority owns memberships, rich grant lifecycle and
+  grant/revoke history in its PostgreSQL. Keycloak authenticates and OpenFGA
+  projects the needed relationships; ACLs are not another ledger.
+- Shared Identity owns an external AccountId and global account lifecycle.
+  Platform Identity retains PlatformPrincipalId, its scoped external binding,
+  product eligibility and historical authorship. Identity does not own Platform
+  membership, commercial rights, repository tokens or Orchestrator business data.
+- Independent A/B membership and independent recovery remain the target.
+  Corporate proof must not become unrestricted global authentication. Direct
+  social login does not qualify custody: the [Identity plan](https://github.com/agent-teams-ai/identity/blob/aa07b44435339777e3d2b45f9e6b2115732aad6d/docs/plans/identity-service-implementation-plan.md)
+  keeps ongoing social-root policy in D3 and lost native-session logout in D8.
+- Versioned fixed roles with bounded grantable permissions, product-owned BFF
+  sessions, distinct personal/organization connections, one-use owner-local
+  consumption, closed restore and bounded protected queries are selected first
+  directions. Exact schemas, browser behavior, propagation SLO and operational
+  scope still require their owning evidence.
+- Offboard-to-rehire creates a new membership period with baseline roles only;
+  sensitive grants require fresh decisions. Access and Authority owns that
+  policy; provisioning adapters apply it and Identity supplies principal
+  lifecycle facts. Temporary suspension is a distinct transition.
+- Redacted support diagnostics and authority-reducing emergency behavior are
+  the default direction. Temporary customer-approved support access requires a
+  real need and an exact future contract; the proposed Platform break-glass ADR
+  is not accepted merely by this cross-link.
+- Personal single-owner Fully Local is selected in Orchestrator's owner record.
+  Platform may reuse its technical mechanisms without becoming a prerequisite
+  of local/standalone authentication, grants or release delivery.
+
+The expanded Identity plan is a future external authority integration, not a
+replacement for Platform Identity or Access and Authority. Before adoption,
+record the exact external-account-to-local-principal mapping and distinguish
+global logout, account suspend/close, consumer detach, local principal disable,
+membership end, grant/delegation revoke and API-key compromise. ADR-0003's
+subject-bound and tenant-autonomous Run rules remain separate; a human logout
+does not automatically terminate autonomous organization work. Current
+account-status evidence neither grants a product permission nor proves AR
+containment.
+
+The other selected Agent, Task, context and approval directions remain with
+their Orchestrator owners; Platform consumes those capabilities through API/SDK.
+There is no copied task engine, shared business schema/transaction or universal
+identity/authorization service. These statements record owner planning direction
+while the exact cross-repository contracts and existing acceptance gates remain
+open.
+
 ## Cross-repository source records
 
-The companion links below pin reviewed source at Orchestrator `51052e63`, from
-[Orchestrator draft PR #86][orchestrator-pr]; the critical IAM report retains its
-original publication snapshot. These are pending branch records, not merged
-main-branch authority, implementation evidence, or deployment qualification.
-Their owning accepted decisions and explicit open questions retain their status.
-The PR link provides navigation to subsequent updates without changing these
-reviewed source references.
+The companion links below retain the historical reviewed source at Orchestrator
+`51052e63` from [PR #86][orchestrator-pr]; the critical IAM report retains its
+original publication snapshot. PR #86 was subsequently merged at
+`981dd836ca3d35b764561bdc11dc2e0544d83416`; these older pins remain provenance,
+not a claim that their former Draft state is current. Accepted owner decisions
+and explicit open questions retain their status; neither publication nor merge
+establishes implementation or deployment qualification.
 
 - [Identity-provider comparison and source review][identity-research].
 - [IAM critical decisions, adversarial review, and qualification questions][iam-critical-research].
