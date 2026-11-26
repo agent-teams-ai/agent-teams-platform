@@ -43,6 +43,7 @@ const acceptedSourcePatterns = [
   /\bOrchestrator ADR-0071\b/u,
   /\bOrchestrator ADR-0079\b/u,
   /\bOrchestrator ADR-0080\b/u,
+  /\bOrchestrator ADR-0100\b/u,
   /\bAR ADR-0001\b/u,
   /\bAR ADR-0002\b/u,
   /\bAR ADR-0003\b/u,
