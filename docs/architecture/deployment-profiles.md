@@ -131,5 +131,7 @@ adds no Platform runtime dependency or qualified-capacity claim to those profile
 `pnpm architecture:check` validates the strict schema, accepted-evidence
 maturity, review-input separation, and lifecycle semantics. It also uses the
 TypeScript AST to reject profile literals, profile-switch identifiers, and
-inward imports from `domain/` or `application/` source. The check is already
-active even though production source packages do not yet exist.
+inward imports from `domain/` or `application/` source. The check already governs
+the materialized Project Management package and its in-memory first slice.
+That source is not evidence of production persistence, transport or an
+implemented/qualified deployment profile; the manifest retains those statuses.

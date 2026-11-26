@@ -36,8 +36,9 @@ client   which application carries the request
   (Platform ADR-0002 and Platform ADR-0007).
 - `CONFIRMED`: OAuth client is not a principal unless an explicit service-principal binding
   grants that identity (Platform ADR-0007).
-- `PROPOSED`: `AgentProfileId` is not a principal in Orchestrator authority; the
-  separation is directionally agreed but has no accepted owning ADR yet.
+- `CONFIRMED`: Agent identity is distinct from principal, credential, Run
+  participant, and runtime session under [Orchestrator ADR-0100](https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/3dccf2c53bf11f3939a19734a58f5e64d96673d0/docs/decisions/0100-persistent-agents-and-exclusive-team-membership.md).
+  Exact principal bindings and provider topology remain open under Orchestrator OD-012.
 - `CONFIRMED`: Email and display name cannot auto-link identities (Platform
   ADR-0002 and Platform ADR-0007).
 - `PROPOSED`: One Platform principal may map to a different tenant-scoped
