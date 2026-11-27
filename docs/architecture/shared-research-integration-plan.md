@@ -90,6 +90,56 @@ item count and subscription cardinality, and make gaps explicit. A separate
 presentation service is an implementation alternative only after measured load
 or isolation needs justify its extra failure and deployment boundaries.
 
+## Fleet and rollout follow-through (2026-11-27)
+
+The [research action index](https://github.com/agent-teams-ai/engineering-research/blob/e2a5f6c47e008f93094dc88ed39ea9618722f28d/docs/lessons/preimplementation-decisions.md#priorities-before-the-affected-implementation)
+routes the latest source-backed findings to existing owners. The commitments
+below guide the affected design; exact multi-cell and compatibility choices
+remain proposed. They do not promote a deployment profile or add a release gate.
+
+The [managed installation contract](managed-installation-control.md#distinct-authority-dimensions)
+already separates desired revision, enrollment incarnation, local authority
+epoch, writer lease and product/runtime generations. Its acceptance, recovery
+and custody rules close those baseline findings; retain them instead of creating
+another authority model. [Deployment profiles](deployment-profiles.md#scaling-rules)
+keep stable identities, standalone independence and evidence-backed qualification.
+
+1. **Placement ownership.** Platform owns managed installation intent and
+   deployment topology. Orchestration Scope retains Project-to-runtime binding
+   authority under [Orchestrator ADR-0079](https://github.com/agent-teams-ai/agent-teams-orchestrator/blob/3dccf2c53bf11f3939a19734a58f5e64d96673d0/docs/decisions/0079-runtime-authority-binding-cutoff-and-disposition.md).
+   A route directory or observation cannot become a second binding writer.
+   Keep physical cell placement out of stable product identity and do not move
+   an existing Run implicitly when a routing or installation revision changes.
+2. **Future physical moves.** A separately selected cross-cell profile must
+   preserve original command IDs/digests, receipts, deduplication/tombstones,
+   pending outbox work and unresolved obligations through each owning transfer
+   boundary; do not assume atomic commit across stores. Name source fencing,
+   destination staging, the authority handoff and recovery at each durable step.
+   AR retains physical execution custody;
+   lease expiry, a copied database or a deployment status does not prove release.
+   This is a future profile refinement, not first-slice migration implementation.
+3. **Mixed-version rollout.** Keep desired, accepted, staged, active and observed
+   states distinct. A deployment or readiness ACK does not prove useful work
+   by the intended generation. The receiving owner checks actual contract and
+   capability versions; retain compatible old recovery/cleanup paths until
+   their obligations end. Rollback to compatible content uses fresh authority,
+   never an old epoch. Reuse existing [upgrade and rollback](managed-installation-control.md#upgrade-and-rollback)
+   policy and owner receipts rather than a second update controller.
+4. **Partition and revocation.** Access and Authority and the receiving owner
+   specify the applicable freshness/cutoff and fail-closed boundary. Test stale
+   grants, lost Platform connectivity, delayed revocation and restored state;
+   no layer may expand another owner's authority or silently weaken isolation.
+   Preserve [bounded offline reconciliation](managed-installation-control.md#offline-and-recovery)
+   under accepted unexpired evidence. Do not require a synchronous Platform
+   lookup on every agent step; delegated/local evidence needs its declared
+   freshness and receiver enforcement, and uncertain effects remain unresolved.
+
+Reuse the existing [cross-repository review matrices and failure traces](platform-orchestrator-review/README.md)
+for stale-writer rejection, lost ACK, mixed versions and one isolated tenant/cell
+while unrelated admitted work continues. Add only uncovered cases for the
+selected profile. These are documentation targets, not executed qualification,
+a new shared scheduler, or permission to rewrite accepted ADRs.
+
 ## Evidence and open decisions
 
 Read [deployment profiles](deployment-profiles.md),
