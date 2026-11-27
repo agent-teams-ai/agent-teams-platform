@@ -168,3 +168,34 @@ work and count the remaining slice once. Concrete alternatives receive the
 repository's confidence, reliability and complexity scores with scoped
 production, test and deployment costs when an implementation decision is needed.
 No new production package or profile is admitted by this proposal.
+
+## Evolution-readiness application (design guidance)
+
+The organization [evolution-readiness proposal](https://github.com/agent-teams-ai/.github/blob/ea13fbfc7965fce16d9af3c4d7cf8dcca6ff6d29/docs/architecture/evolution-readiness.md)
+supplies the common authoring and evidence baseline. These owner-local
+applications are proposed design guidance, not new grants or adopted
+deployment profiles.
+
+- Deployment Management keeps desired/accepted/staged/active/observed
+  revisions and rollout eligibility at its existing owner. Preserve mixed
+  version and fresh-authority rollback semantics before implementing a
+  cohort; use LMU only for the real qualified replacement operation, not
+  another deployment controller.
+- Project Management preserves stable logical identities and explicit
+  authorized export/import and deletion epochs. Separate physical backup,
+  installation transfer and mergeable offline drafts; do not introduce
+  two authoritative writers for execution, grants or commercial state.
+- Access and Authority retains subject, actor, audience, scope, expiry and
+  current receiver enforcement; optional workload identity federation
+  and delegated/local evidence must fit existing IAM decisions.
+- Commercial Access and evaluation owners retain their own authoritative
+  criteria and receipts; model quality/rollout eligibility cannot imply
+  permission or a second budget authority.
+
+Use existing review matrices and deployment/profile qualification for
+stale grants, wrong cohort, incompatible rollback and restored/deleted data.
+Reuse existing GM/EF/LMU mechanisms and Foundation evidence routes where
+applicable; the local first profile does not require an extra flag server,
+identity federation, sync engine, global version schema or new shared
+scheduler. Select stronger guarantees only with a named consumer and
+deliberately rejecting evidence.
